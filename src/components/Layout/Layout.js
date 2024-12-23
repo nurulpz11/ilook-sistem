@@ -4,10 +4,10 @@ import { Link, Outlet } from 'react-router-dom';
 
 const Layout = () => {
   return (
-    <div className="home-container">
+    <div className="layout-container">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <h3>Ilook Fashion Indonesia</h3>
+          <h3>Ilook Fashion</h3>
         </div>
         <nav className="sidebar-menu">
           <ul>
@@ -18,14 +18,19 @@ const Layout = () => {
               <Link to="/jahit" className="sidebar-link">CMT</Link>
             </li>
             <li>
-              Gudang
+              <Link to="/gudang" className="sidebar-link">Gudang</Link>
             </li>
-            <li className="disabled">Disabled menu</li>
+            <li className="sidebar-link disabled">Disabled Menu</li>
           </ul>
         </nav>
       </aside>
       <main className="main-content">
-        <Outlet /> {/* Render konten dinamis di sini */}
+        <header className="main-header">
+          <h1>Welcome to Ilook Fashion</h1>
+        </header>
+        <div className="content-area">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

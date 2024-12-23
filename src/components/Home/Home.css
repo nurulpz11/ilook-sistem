@@ -11,7 +11,7 @@ body {
   /* Sidebar styles */
   .sidebar {
     width: 300px;
-    background-color: #2b3e50;
+    background: linear-gradient(135deg, #667eea, #28a4c4);
     color: #fff;
     min-height: 100vh;
     padding: 20px;
@@ -37,7 +37,7 @@ body {
   
   .sidebar-menu li.active,
   .sidebar-menu li:hover {
-    background-color: #1a2938;
+    background: linear-gradient(135deg, #667eea, #28a4c4);
   }
   
   .sidebar-menu li.disabled {

@@ -1,78 +1,117 @@
 /* General styles */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-  }
-  
-  .home-container {
-    display: flex;
-  }
-  
-  /* Sidebar styles */
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Arial', sans-serif;
+}
+
+.sidebar {
+  width: 250px;
+  background: linear-gradient(135deg, #667eea, #28a4c4);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.sidebar-header h3 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.sidebar-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin: 10px 0;
+}
+
+.sidebar-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 10px;
+  display: block;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-link.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f9f9f9;
+}
+
+.main-header {
+  background: #fff;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.main-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.content-area {
+  flex: 1;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
   .sidebar {
-    width: 300px;
-    background-color: #2b3e50;
-    color: #fff;
-    min-height: 100vh;
-    padding: 20px;
-    box-sizing: border-box;
+    width: 200px;
   }
-  
-  .sidebar-header h3 {
-    margin: 0;
-    margin-bottom: 20px;
+
+  .sidebar-link {
+    font-size: 14px;
   }
-  
+
+  .main-header h1 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
   .sidebar-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .sidebar-menu li {
-    padding: 10px 15px;
-    cursor: pointer;
-    
-  }
-  
-  .sidebar-menu li.active,
-  .sidebar-menu li:hover {
-    background-color: #1a2938;
-  }
-  
-  .sidebar-menu li.disabled {
-    color: #666;
-    cursor: not-allowed;
-  }
-  
-  /* Main content styles */
-  .main-content {
-    flex: 1;
-    background-color: #f5f5f5;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-  
-  .main-header {
     display: flex;
-    justify-content: flex-end;
-    padding: 10px 0;
+    gap: 10px;
   }
-  
-  .dashboard .card {
-    background-color: #fff;
-    width: 50%;
-    height: 50%;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .sidebar-link {
+    white-space: nowrap;
   }
-  
-  .sidebar-menu li a {
-    color: inherit; /* Warna mengikuti elemen induk (li) */
-    text-decoration: none; /* Hilangkan garis bawah */
-  }
+}
   
   
   

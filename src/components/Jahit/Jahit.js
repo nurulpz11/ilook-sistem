@@ -26,7 +26,7 @@ const Jahit = () => {
                     <h3>{card.title}</h3>
                     {card.children.map((child) => (
                         <div className="child-card" key={child.id}>
-                            <p>Child Card </p>
+                            <p>SPK CMT 1 </p>
                         </div>
                     ))}
                     <div

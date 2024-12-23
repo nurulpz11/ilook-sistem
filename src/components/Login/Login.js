@@ -1,59 +1,53 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-import "./Login.css";
-import Logo from "../../assets/images/Logo.jpg";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import './Login.css'; // Import file CSS
 
 const Login = () => {
-  const navigate = useNavigate(); // Inisialisasi hook navigate
-  const [email, setEmail] = useState(""); // State untuk email
-  const [password, setPassword] = useState(""); // State untuk password
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post('http://localhost:8000/api/login', { email, password });
+            console.log(response.data.token); // Simpan token sesuai kebutuhan (localStorage, state management)
 
-    // Logika login sementara: jika email dan password cocok, arahkan ke halaman home
-    if (email && password) {
-      navigate("/Home"); // Arahkan ke halaman Home jika login sukses
-    } else {
-      alert("Email atau password tidak boleh kosong!");
-    }
-  };
+            // Arahkan ke halaman Home setelah login berhasil
+            navigate('/home');
+        } catch (error) {
+            console.error(error.response.data);
+        }
+    };
 
-  return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="login-image">
-          <img src={Logo} alt="Logo" />
-        </div>
-        <div className="login-form-container">
-          <h1 className="login-title">Login</h1>
-          <form className="login-form" onSubmit={handleLogin}>
-            <div className="form-group">
-              <label>Email</label>
-              <input
-                type="email"
-                placeholder="Masukkan email anda"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)} // Update state email
-              />
+    return (
+        <div className="login-container">
+            <div className="login-card">
+                <h2>Welcome</h2>
+                <p>Please login to your account</p>
+                <form onSubmit={handleLogin} className="login-form">
+                    <input 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        placeholder="Email" 
+                        required 
+                        className="login-input"
+                    />
+                    <input 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        placeholder="Password" 
+                        required 
+                        className="login-input"
+                    />
+                    <button type="submit" className="login-button">Login</button>
+                </form>
             </div>
-            <div className="form-group">
-              <label>Password</label>
-              <input
-                type="password"
-                placeholder="Masukkan password anda"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)} // Update state password
-              />
-            </div>
-            <button type="submit" className="btn-create-account">
-              Login
-            </button>
-          </form>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Login;
