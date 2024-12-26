@@ -24,27 +24,40 @@ const Login = () => {
     return (
         <div className="login-container">
             <div className="login-card">
-                <h2>Welcome</h2>
-                <p>Please login to your account</p>
+                <div className="login-header">
+                    <img src="/path/to/logo.png" alt="Logo" className="logo" />
+                    <h1>Ilook Admin</h1>
+                    <p>Please input your email and password</p>
+                </div>
                 <form onSubmit={handleLogin} className="login-form">
-                    <input 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        placeholder="Email" 
-                        required 
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Username"
+                        required
                         className="login-input"
                     />
-                    <input 
-                        type="password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        placeholder="Password" 
-                        required 
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Password"
+                        required
                         className="login-input"
                     />
-                    <button type="submit" className="login-button">Login</button>
+                    <div className="login-options">
+                        <label>
+                            <input type="checkbox" />
+                            Remember this Device
+                        </label>
+                        <a href="/forgot-password" className="forgot-password">Forgot Password?</a>
+                    </div>
+                    <button type="submit" className="login-button">Sign In</button>
                 </form>
+                <div className="login-footer">
+                    <p>New to Spike? <a href="/register">Create an account</a></p>
+                </div>
             </div>
         </div>
     );

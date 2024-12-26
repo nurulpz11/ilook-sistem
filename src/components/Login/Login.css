@@ -10,7 +10,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(135deg, #667eea, #28a4c4);
+    background-color: #f4f7fc;
     font-family: 'Arial', sans-serif;
     color: #fff;
 }
@@ -64,7 +64,7 @@ body {
     font-size: 14px;
     font-weight: bold;
     border: none;
-    border-radius: 6px;
+    border-radius: 15px;
     cursor: pointer;
     transition: background 0.3s;
 }

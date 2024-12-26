@@ -1,117 +1,156 @@
-/* General styles */
+
 .layout-container {
   display: flex;
-  min-height: 100vh;
-  font-family: 'Arial', sans-serif;
+  height: 97vh; /* Gunakan 100vh untuk mengambil seluruh tinggi layar */
+  background-color: #f4f7fc;
+  padding: 15px;
 }
-
+/* Sidebar Styles */
 .sidebar {
   width: 250px;
-  background: linear-gradient(135deg, #667eea, #28a4c4);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
+  height: '90%';
+  background-color: #ffffff;
+  padding: 20px 10px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  border-radius: 20px; /* Radius di semua sisi */
+  overflow: hidden; /* Konten di dalam sidebar mengikuti radius */
 }
+
 
 .sidebar-header {
-  margin-bottom: 20px;
   text-align: center;
-}
-
-.sidebar-header h3 {
   font-size: 20px;
   font-weight: bold;
-  margin: 0;
+  margin-bottom: 50px;
+}
+
+.sidebar-logo {
+  margin-right: 10px;
 }
 
 .sidebar-menu ul {
   list-style: none;
   padding: 0;
   margin: 0;
+ 
 }
 
-.sidebar-menu li {
-  margin: 10px 0;
+.menu-section {
+  font-size: 12px;
+  font-weight: bold;
+  color: #6c757d;
+  text-transform: uppercase;
+  margin: 20px 10px 10px;
+  margin-top: 60px;
 }
 
 .sidebar-link {
-  color: #fff;
-  text-decoration: none;
-  font-size: 16px;
-  padding: 10px;
-  display: block;
-  border-radius: 8px;
-  transition: background 0.3s;
-}
-
-.sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.sidebar-link.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.main-content {
-  flex: 1;
   display: flex;
-  flex-direction: column;
-  background: #f9f9f9;
+  align-items: center;
+  font-size: 14px;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #495057;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 80%;
+  margin-top: 3px;
+  
+}
+
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background-color: #ecf2f8;
+  color: #000;
+}
+
+
+
+/* Styling for the icon */
+.icon {
+  display: inline-block;
+  width: 20px; /* Set width for consistent spacing */
+  height: 20px;
+  margin-right: 10px; /* Add space between icon and text */
+  color: #9eb0c4;
+}
+
+/* Styling for the arrow */
+.arrow {
+  margin-left: auto; /* Push arrow to the far right */
+  font-size: 18px; /* Adjust arrow size */
+  color: #993a3a; /* Default color */
+  transition: transform 0.3s ease; /* Smooth rotation */
+}
+
+/* Rotate the arrow when menu is open */
+.arrow.open {
+  transform: rotate(180deg); /* Rotate the arrow */
+}
+
+/* Example styling for FaChevronUp and FaChevronDown */
+.arrow > svg {
+  width: 16px; /* Adjust size of SVG icons */
+  height: 16px;
+  color: #d7d8db; /* Default color for arrow icons */
+}
+
+
+/* Main Content */
+.main-content {
+  flex-grow: 1;
+  padding: 20px;
+
 }
 
 .main-header {
-  background: #fff;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 20px; /* Radius di semua sisi */
+  overflow: hidden; /* Konten di dalam sidebar mengikuti radius */
+}
+.dropdown-menu {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0 30px; /* Indentasi agar terlihat hierarkis */
+  width: 100%;
+ 
 }
 
-.main-header h1 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.content-area {
-  flex: 1;
-  padding: 20px;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    width: 200px;
-  }
-
-  .sidebar-link {
-    font-size: 14px;
-  }
-
-  .main-header h1 {
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 576px) {
-  .layout-container {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    flex-direction: row;
-    overflow-x: auto;
-  }
-
-  .sidebar-menu ul {
-    display: flex;
-    gap: 10px;
-  }
-
-  .sidebar-link {
-    white-space: nowrap;
-  }
-}
+.dropdown-link {
+  display: block;
+  padding: 8px 12px;
+  font-size: 14px;
+  text-decoration: none;
+  color: #495057;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 3px;
+  width: 220px;
   
+}
+.dropdown-link::before {
+  content: '●'; /* Gunakan Unicode untuk lingkaran hitam */
+  font-size: 10px; /* Sesuaikan ukuran */
+  color: #a8aaac; /* Warna lingkaran */
+  margin-left: 18px; /* Jarak antara lingkaran dan teks */
+  margin-right: 15px;
+  width:200px;
+}
+.dropdown-link:hover {
+  background-color: #ecf2f8;
+  color: #422f4e;
+  width: 203px;
   
-  
+}
+
+.dropdown-link.active {
+  background-color: #ecf2f8;
+  font-size: 14px;
+  color: #000;
+  width: 203px;
+}
