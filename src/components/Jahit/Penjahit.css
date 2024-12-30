@@ -86,6 +86,8 @@
     padding: 30px;
     border-radius: 15px;
     width: 450px;
+    max-height: 80vh; /* Batas tinggi modal */
+    overflow-y: auto; /* Aktifkan scroll vertikal */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     animation: slide-down 0.3s ease-out;
   }
@@ -176,5 +178,67 @@
       transform: translateY(0);
       opacity: 1;
     }
+  }
+  
+
+  .spk-cmt-container {
+    margin: 20px;
+  }
+  
+  .spk-cmt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .spk-cmt-table th,
+  .spk-cmt-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .spk-cmt-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
+  .spk-form {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+  }
+  
+  .spk-form div {
+    margin-bottom: 15px;
+  }
+  
+  .spk-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .spk-form input,
+  .spk-form textarea,
+  .spk-form select {
+    width: 100%;                                             
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .add-button {
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    background-color: #89b1db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .add-button:hover {
+    background-color: #0056b3;
   }
   

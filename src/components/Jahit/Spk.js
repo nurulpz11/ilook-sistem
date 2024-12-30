@@ -44,21 +44,33 @@ const Spk = () => {
   // Handle submit form
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    // Simpan data spk baru ke server
+  
+    console.log("Payload sebelum dikirim:", newSpk);
+  
     fetch("http://localhost:8000/api/spkcmt", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newSpk),
     })
-      .then((response) => response.json())
-      .then((data) => {
-        setSpk([...spk, data]); // Tambahkan data baru ke list
-        setShowForm(false); // Tutup modal
-        setNewSpk({ nama_produk: "",  jumlah_produk: "",deadline: "", id_penjahit: "" ,  id_penjahit: "", keterangan: "", tgl_spk: "", status: ""}); // Reset form
-      })
-      .catch((error) => console.error("Error adding data:", error));
+    .then((response) => {
+      if (!response.ok) {
+        return response.json().then((err) => {
+          console.error("Error response:", err);
+          alert(err.message || "Terjadi kesalahan saat menyimpan data.");
+          throw new Error("Error submitting data");
+        });
+      }
+      return response.json();
+    })
+    .then((data) => {
+      // proses data berhasil
+    })
+    .catch((error) => {
+      console.error("Terjadi kesalahan:", error);
+    });
+    
   };
-
+  
 
    return (
      <div className="penjahit-container">
@@ -164,7 +176,7 @@ const Spk = () => {
                <option value="">Pilih Penjahit</option>
                {penjahits.map((penjahit) => (
                  <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
-                   {penjahit.nama_penjahit}
+                   {penjahit.id_penjahit}
                  </option>
                ))}
              </select>
@@ -181,6 +193,20 @@ const Spk = () => {
                required
              ></textarea>
            </div>
+
+
+           <div className="form-group">
+            <label>Tanggal SPK:</label>
+            <input
+              type="date"
+              name="tgl_spk"
+              value={newSpk.tgl_spk}
+              onChange={(e) =>
+                setNewSpk({ ...newSpk, tgl_spk: e.target.value })
+              }
+              required
+            />
+          </div>
            <div className="form-group">
               <label>Status</label>
               <select

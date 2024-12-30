@@ -6,6 +6,7 @@ import Home from "./components/Home/Home";
 import Penjahit from "./components/Jahit/Penjahit";
 import Spk from "./components/Jahit/Spk";
 import Layout from "./components/Layout/Layout";
+import SpkCmt from "./components/Jahit/SpkCmt";
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
           <Route path="home" element={<Home />} />
           <Route path="penjahit" element={<Penjahit />} />
           <Route path="spk" element={<Spk />} />
+          <Route path="spkcmt" element={<SpkCmt />} />
           </Route>
         
       </Routes>
