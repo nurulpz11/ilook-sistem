@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\SpkCmt;
 use App\Models\Penjahit;
+use App\Models\Warna;
 use PDF;
 
 
@@ -13,8 +14,10 @@ class SpkCmtController extends Controller
     // Menampilkan semua SPK
     public function index()
     {
-        $spk_cmt = SpkCmt::all();
-        return response()->json($spk_cmt); // Mengembalikan data SPK dalam format JSON
+        $spk = SpkCmt::with('warna')->get();
+        
+        // Mengembalikan response dengan data SPK dan warna
+        return response()->json($spk);
     }
 
     // Menampilkan form untuk membuat SPK baru (untuk React, ini bisa digantikan dengan form di frontend)
@@ -29,40 +32,53 @@ class SpkCmtController extends Controller
     {
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:100',
-            'jumlah_produk' => 'required|integer',
             'deadline' => 'required|date',
             'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
             'keterangan' => 'nullable|string',
-            'tgl_spk' => 'required|date',  // Pastikan tgl_spk ada di sini
-           'status' => 'required|string|in:Pending,In Progress,Completed', // Validasi status
+            'tgl_spk' => 'required|date',
+            'status' => 'required|string|in:Pending,In Progress,Completed',
             'nomor_seri' => 'nullable|string',
-           'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
             'tanggal_ambil' => 'nullable|date',
             'catatan' => 'nullable|string',
             'markeran' => 'nullable|string',
             'aksesoris' => 'nullable|string',
             'handtag' => 'nullable|string',
             'merek' => 'nullable|string',
-    ]);
-  // Jika ada file gambar, unggah dan simpan path-nya
-  if ($request->hasFile('gambar_produk')) {
-    $file = $request->file('gambar_produk');
-    $fileName = time() . '_' . $file->getClientOriginalName();
-    $filePath = $file->storeAs('public/images', $fileName);
-
-    $validated['gambar_produk'] = 'images/' . $fileName;
-
-}
-
-
-
-        
-    // Membuat SPK baru dengan menambahkan kolom status
-    $spk = SpkCmt::create($validated);
-
-    return response()->json(['message' => 'SPK berhasil dibuat!', 'data' => $spk], 201); // Mengembalikan pesan dan data SPK yang baru
-
-}
+            'warna' => 'required|array',
+            'warna.*.nama_warna' => 'required|string|max:50',
+            'warna.*.qty' => 'required|integer|min:1',
+        ]);
+    
+        // Hitung total jumlah produk
+        $jumlahProduk = collect($validated['warna'])->sum('qty');
+    
+        // Tambahkan jumlah_produk ke dalam data yang akan disimpan
+        $validated['jumlah_produk'] = $jumlahProduk;
+    
+        // Jika ada file gambar, unggah dan simpan path-nya
+        if ($request->hasFile('gambar_produk')) {
+            $file = $request->file('gambar_produk');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('public/images', $fileName);
+            $validated['gambar_produk'] = 'images/' . $fileName;
+        }
+    
+        // Membuat SPK baru
+        $spk = SpkCmt::create($validated);
+    
+        // Simpan warna ke dalam tabel warna
+        foreach ($validated['warna'] as $warna) {
+            Warna::create([
+                'id_spk' => $spk->id_spk,
+                'nama_warna' => $warna['nama_warna'],
+                'qty' => $warna['qty'],
+            ]);
+        }
+    
+        return response()->json(['message' => 'SPK dan Warna berhasil dibuat!', 'data' => $spk], 201);
+    }
+    
     // Menampilkan SPK berdasarkan ID
     public function show($id)
     {
@@ -83,42 +99,44 @@ class SpkCmtController extends Controller
     {
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:100',
-            'jumlah_produk' => 'required|integer',
             'deadline' => 'required|date',
             'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
             'keterangan' => 'nullable|string',
-            'tgl_spk' => 'required|date',  // Pastikan tgl_spk ada di sini
-          'status' => 'required|string|in:Pending,In Progress,Completed', // Validasi status yang konsisten
+            'tgl_spk' => 'required|date',
+            'status' => 'required|string|in:Pending,In Progress,Completed',
             'nomor_seri' => 'nullable|string',
-           'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tanggal_ambil' => 'nullable|date',
             'catatan' => 'nullable|string',
             'markeran' => 'nullable|string',
             'aksesoris' => 'nullable|string',
             'handtag' => 'nullable|string',
             'merek' => 'nullable|string',
-        
-        ]); 
+            'warna' => 'required|array',
+            'warna.*.id_warna' => 'nullable|integer|exists:warna,id_warna',
+            'warna.*.nama_warna' => 'required|string|max:50',
+            'warna.*.qty' => 'required|integer|min:1',
+        ]);
     
         $spk = SpkCmt::findOrFail($id);
+
+
+        // Hitung total jumlah produk
+        $jumlahProduk = collect($validated['warna'])->sum('qty');
+
+        // Tambahkan jumlah_produk ke dalam data yang akan diperbarui
+        $validated['jumlah_produk'] = $jumlahProduk;
 
             // Jika ada file gambar baru, unggah dan simpan path-nya
             if ($request->hasFile('gambar_produk')) {
                 $file = $request->file('gambar_produk');
-            
                 // Debugging untuk memastikan file diterima
                 \Log::info('Nama file: ' . $file->getClientOriginalName());
                 \Log::info('Mime type: ' . $file->getMimeType());
-            
                 // Simpan file
                 $path = $file->store('images', 'public');
-                
                 // Debugging untuk memastikan path penyimpanan
                 \Log::info('File disimpan di: ' . $path);
-            
-
-
-
                 \Log::debug("Request Method: " . $request->method());
                 \Log::debug("Request URL: " . $request->url());
                 \Log::debug("All Request Data: ", $request->all()); // Menamp
@@ -127,9 +145,28 @@ class SpkCmtController extends Controller
             
 
         $spk->update($validated);
-    
-        return response()->json(['message' => 'SPK berhasil diperbarui!', 'data' => $spk]);
-    }
+
+          // Perbarui atau tambahkan warna
+        foreach ($validated['warna'] as $warna) {
+            if (isset($warna['id_warna'])) {
+                // Update warna yang sudah ada
+                $existingWarna = Warna::find($warna['id_warna']);
+                $existingWarna->update([
+                    'nama_warna' => $warna['nama_warna'],
+                    'qty' => $warna['qty'],
+                ]);
+            } else {
+                // Buat warna baru
+                Warna::create([
+                    'id_spk' => $spk->id_spk,
+                    'nama_warna' => $warna['nama_warna'],
+                    'qty' => $warna['qty'],
+                ]);
+            }
+        }
+
+    return response()->json(['message' => 'SPK dan Warna berhasil diperbarui!', 'data' => $spk]);
+}
 
     // Menghapus SPK
     public function destroy($id)

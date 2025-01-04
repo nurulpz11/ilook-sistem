@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SpkCmtController;
 use App\Http\Controllers\PenjahitController;
 use App\Http\Controllers\LaporanCmtController;
-
+use App\Http\Controllers\WarnaController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -24,4 +24,5 @@ Route::resource('spkcmt', SpkCmtController::class);
 Route::resource('laporancmt', LaporanCmtController::class);
 Route::apiResource('penjahit', PenjahitController::class);
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
-
+// Nested resource untuk warna (dalam SPK tertentu)
+Route::resource('spkcmt.warna', WarnaController::class)->shallow();

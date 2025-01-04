@@ -35,4 +35,11 @@ class SpkCmt extends Model
     {
         return $this->belongsTo(Penjahit::class, 'id_penjahit');
     }
+
+
+    // Relasi ke tabel warna (One-to-Many)
+    public function warna()
+    {
+        return $this->hasMany(Warna::class, 'id_spk', 'id_spk');
+    }
 }

@@ -15,10 +15,13 @@ class CreateWarnaTable extends Migration
             $table->unsignedBigInteger('id_spk'); // Foreign Key ke tabel SPK CMT
             $table->timestamps(); // Kolom created_at dan updated_at
 
-            // Definisi Foreign Key
-            $table->foreign('id_spk')->references('id_spk')->on('spk_cmt')->onDelete('cascade');
+             // Definisi Foreign Key
+            $table->foreign('id_spk')
+            ->references('id_spk') // Mengacu ke kolom id_spk di spk_cmt
+            ->on('spk_cmt')
+            ->onDelete('cascade'); // Hapus warna jika SPK dihapus
         });
-    }
+            }
 
     public function down()
     {
