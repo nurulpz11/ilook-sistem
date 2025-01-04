@@ -20,7 +20,7 @@ const Layout = () => {
       <aside className="sidebar">
         <div className="sidebar-header">
           <h3>
-            <span className="sidebar-logo">🚀</span> Ilook Fashion
+            <span className="sidebar-logo"></span> ILOOK FASHION
           </h3>
         </div>
         <nav className="sidebar-menu">

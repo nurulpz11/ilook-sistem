@@ -43,23 +43,26 @@ const Penjahit = () => {
   };
 
   return (
-    <div className="penjahit-container">
-      <h1>Daftar Penjahit</h1>
+    <div>
+      <div className="penjahit-container">
+        <h1>Daftar Penjahit</h1>
 
-      {/* Search Bar */}
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Cari nama penjahit..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button className="add-button" onClick={() => setShowForm(true)}>
-          Tambah 
-        </button>
+        {/* Search Bar */}
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Cari nama penjahit..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button className="add-button" onClick={() => setShowForm(true)}>
+            Tambah 
+          </button>
+        </div>
       </div>
 
-      {/* Tabel */}
+      
+      <div className="table-container">
       <table className="penjahit-table">
         <thead>
           <tr>
@@ -80,7 +83,7 @@ const Penjahit = () => {
           ))}
         </tbody>
       </table>
-
+      </div>
       {/* Modal Form */}
       {showForm && (
         <div className="modal">
@@ -141,7 +144,9 @@ const Penjahit = () => {
           </div>
         </div>
       )}
-    </div>
+    
+      </div>
+
   );
 };
 
