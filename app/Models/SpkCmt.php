@@ -27,9 +27,16 @@ class SpkCmt extends Model
         'aksesoris', 
         'handtag', 
         'merek',
+        'harga_per_barang',
+        'total_harga',
+        'harga_per_jasa',
     ];
    
-
+    public function getTotalHargaAttribute()
+    {
+        return $this->harga_per_barang * $this->jumlah_produk;
+    }
+    
     // Relasi ke tabel penjahit
     public function penjahit()
     {
@@ -42,4 +49,9 @@ class SpkCmt extends Model
     {
         return $this->hasMany(Warna::class, 'id_spk', 'id_spk');
     }
+    public function logDeadlines()
+{
+    return $this->hasMany(LogDeadline::class, 'id_spk');
+}
+
 }

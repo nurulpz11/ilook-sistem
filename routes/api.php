@@ -7,6 +7,12 @@ use App\Http\Controllers\SpkCmtController;
 use App\Http\Controllers\PenjahitController;
 use App\Http\Controllers\LaporanCmtController;
 use App\Http\Controllers\WarnaController;
+use App\Http\Controllers\PengirimanController;
+use App\Http\Controllers\CashboanController;
+use App\Http\Controllers\LogPembayaranCashbonController;
+use App\Http\Controllers\HutangController;
+use App\Http\Controllers\LogPembayaranHutangController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -24,5 +30,22 @@ Route::resource('spkcmt', SpkCmtController::class);
 Route::resource('laporancmt', LaporanCmtController::class);
 Route::apiResource('penjahit', PenjahitController::class);
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
+Route::get('/spk-cmt/{id}/download-staff-pdf', [SpkCmtController::class, 'downloadStaffPdf'])->name('spk.downloadStaffPdf');
 // Nested resource untuk warna (dalam SPK tertentu)
 Route::resource('spkcmt.warna', WarnaController::class)->shallow();
+Route::put('/spk/{id}/deadline', [SpkCmtController::class, 'updateDeadline']);
+Route::get('/spk/{id}/log-deadline', [SpkCmtController::class, 'getLogDeadline']);
+Route::post('/pengiriman', [PengirimanController::class, 'store']);
+Route::get('/pengiriman', [PengirimanController::class, 'index']);
+// Tambahkan route untuk mengambil warna berdasarkan ID SPK
+Route::get('/spk-cmt/{id}/warna', [SpkCmtController::class, 'getWarna']);
+// routes/api.php
+Route::get('/pengiriman/{id}', [PengirimanController::class, 'show']);
+Route::resource('cashboan', CashboanController::class);
+Route::resource('log-pembayaran-cashboan', LogPembayaranCashbonController::class);
+Route::resource('hutang', HutangController::class);
+Route::resource('log-pembayaran-hutang', LogPembayaranHutangController::class);
+
+
+
+

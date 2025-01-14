@@ -18,8 +18,6 @@ class CreateSpkCmtTable extends Migration
             $table->text('keterangan')->nullable(); // Catatan Tambahan
             $table->enum('status', ['Pending', 'In Progress', 'Completed'])->default('Pending')->change();
             $table->timestamps(); // Created_at dan Updated_at
-
-            // Foreign Key
             $table->foreign('id_penjahit')->references('id_penjahit')->on('penjahit_cmt')->onDelete('cascade');
         });
     }
