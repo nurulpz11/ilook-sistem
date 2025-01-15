@@ -12,6 +12,7 @@ use App\Http\Controllers\CashboanController;
 use App\Http\Controllers\LogPembayaranCashbonController;
 use App\Http\Controllers\HutangController;
 use App\Http\Controllers\LogPembayaranHutangController;
+use App\Http\Controllers\PendapatanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,11 @@ Route::resource('cashboan', CashboanController::class);
 Route::resource('log-pembayaran-cashboan', LogPembayaranCashbonController::class);
 Route::resource('hutang', HutangController::class);
 Route::resource('log-pembayaran-hutang', LogPembayaranHutangController::class);
+
+Route::get('/pendapatan', [PendapatanController::class, 'index']); // Untuk melihat daftar pendapatan atau form
+Route::post('/calculate', [PendapatanController::class, 'calculate']); // Untuk kalkulasi pendapatan
+Route::post('/pendapatan', [PendapatanController::class, 'store']);
+
 
 
 

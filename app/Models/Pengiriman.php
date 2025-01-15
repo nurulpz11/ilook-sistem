@@ -49,4 +49,27 @@ public function getSisaBarangPerWarnaAttribute()
     {
         return $this->hasMany(PengirimanWarna::class, 'id_pengiriman');
     }
+
+    public function spk()
+    {
+        return $this->belongsTo(SpkCmt::class, 'id_spk', 'id_spk');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($pengiriman) {
+            // Ambil SPK terkait
+            $spk = $pengiriman->spk;
+
+            // Periksa apakah semua pengiriman untuk SPK ini memiliki sisa_barang = 0
+            $semuaSisaBarangNol = $spk->pengiriman()->where('sisa_barang', '>', 0)->doesntExist();
+
+            // Jika semua sisa_barang nol, ubah status SPK menjadi Completed
+            if ($semuaSisaBarangNol) {
+                $spk->update(['status' => 'Completed']);
+            }
+        });
+    }
+
+
 }

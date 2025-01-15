@@ -161,6 +161,7 @@ public function store(Request $request)
                 'claim' => $totalClaim,  // Simpan total claim di pengiriman
                 'refund_claim' => $totalRefundClaim,  // Simpan total refund_claim di pengiriman
             ]);
+            
 
             // Simpan detail pengiriman_warna
             foreach ($validated['warna'] as $warna) {
@@ -171,6 +172,13 @@ public function store(Request $request)
                     'sisa_barang_per_warna' => $sisaBarangPerWarna[$warna['warna']], // Simpan sisa barang
                 ]);
             }
+            Log::info('Sisa Barang Total:', ['sisa_barang_total' => $sisaBarangTotal]);
+
+            if ((int) $sisaBarangTotal === 0) {
+                $spk->update(['status' => 'Completed']);
+                Log::info('Status SPK diperbarui menjadi Completed', ['id_spk' => $spk->id_spk]);
+            }
+            
 
             // Respons dengan `sisa_barang_per_warna`
             return response()->json([
@@ -183,6 +191,8 @@ public function store(Request $request)
                 'total_bayar_sebelumnya' => $totalBayarSebelumnya,
                 'total_harga_spk' => $spk->total_harga,
             ], 201);
+
+            
         } 
 
     }     

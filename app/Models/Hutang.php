@@ -24,4 +24,9 @@ class Hutang extends Model
     {
         return $this->belongsTo(SpkCmt::class, 'id_spk');
     }
+    public function logPembayaran()
+    {
+        return $this->hasMany(LogPembayaranHutang::class, 'id_hutang');
+    }
+
 }
