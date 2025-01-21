@@ -25,8 +25,8 @@ const Login = () => {
         <div className="login-container">
             <div className="login-card">
                 <div className="login-header">
-                    <img src="/path/to/logo.png" alt="Logo" className="logo" />
-                    <h1>Ilook Admin</h1>
+                    <img src="/path/to/logo.png" alt="" className="logo" />
+                    <h1>ILOOK ADMIN </h1>
                     <p>Please input your email and password</p>
                 </div>
                 <form onSubmit={handleLogin} className="login-form">

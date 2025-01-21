@@ -10,7 +10,7 @@ const Penjahit = () => {
     kontak: "",
     alamat: "",
   }); // State untuk form data penjahit baru
-
+  const [successMessage, setSuccessMessage] = useState("");
   // Fetch data penjahit
   useEffect(() => {
     fetch("http://localhost:8000/api/penjahit") // Ganti dengan endpoint API Anda
@@ -38,28 +38,37 @@ const Penjahit = () => {
         setPenjahits([...penjahits, data]); // Tambahkan data baru ke list
         setShowForm(false); // Tutup modal
         setNewPenjahit({ nama_penjahit: "", kontak: "", alamat: "" }); // Reset form
+        setSuccessMessage("Penjahit berhasil ditambahkan!"); // Set pesan sukses
+        setTimeout(() => setSuccessMessage(""), 3000); 
       })
       .catch((error) => console.error("Error adding data:", error));
   };
 
   return (
     <div>
-      <div className="penjahit-container">
-        <h1>Daftar Penjahit</h1>
+    <div className="penjahit-container">
+      <h1>Daftar Penjahit</h1>
 
-        {/* Search Bar */}
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Cari nama penjahit..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button className="add-button" onClick={() => setShowForm(true)}>
-            Tambah 
-          </button>
-        </div>
+      {/* Search Bar */}
+      <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Cari nama penjahit..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <button className="add-button" onClick={() => setShowForm(true)}>
+          Tambah
+        </button>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="success-message">
+          {successMessage}
+        </div>
+      )}
+    </div>
 
       
       <div className="table-container">
@@ -111,7 +120,7 @@ const Penjahit = () => {
                 onChange={(e) =>
                   setNewPenjahit({ ...newPenjahit, kontak: e.target.value })
                 }
-                 placeholder="Masukkan jumlah produk"
+                 placeholder="Masukkan nomor telepon"
                 required
               />
               </div>

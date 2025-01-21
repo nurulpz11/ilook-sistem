@@ -54,89 +54,163 @@
   margin-left: 20px;
 }
 .penjahit-table {
+  justify-content: center;
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin: 10px 0;
+  margin: 20px 0;
   font-size: 14px;
-  font-family: 'Assistant', sans-serif; /* atau RALEWAY', tergantung pilihan Anda */
   text-align: left;
-  border-radius: 10px;
-  overflow: hidden;  /* Agar radius berfungsi di seluruh tabel */
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Tambahkan bayangan */
+  overflow: hidden; /* Agar radius berfungsi */
+  background-color: #ffffff; /* Warna dasar tabel */
 }
 
 .penjahit-table th,
 .penjahit-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #ddd;
+  justify-content: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #ececec; /* Garis pembatas yang lembut */
+  text-align: center;
 }
 
 .penjahit-table th {
-  background-color: #e9f1f4;
-  color: #495057;
+  
+  background-color: #3d546b; /* Warna header */
+  color: #ffffff; /* Warna teks header */
   font-weight: 600;
+  text-transform: uppercase; /* Teks kapital di header */
   position: sticky;
   top: 0;
   z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Bayangan untuk header */
 }
 
 .penjahit-table tr:first-child th:first-child {
-  border-top-left-radius: 10px;
+  border-top-left-radius: 12px;
 }
 
 .penjahit-table tr:first-child th:last-child {
-  border-top-right-radius: 10px;
+  border-top-right-radius: 12px;
 }
 
 .penjahit-table tr:last-child td:first-child {
-  border-bottom-left-radius: 10px;
+  border-bottom-left-radius: 12px;
 }
 
 .penjahit-table tr:last-child td:last-child {
-  border-bottom-right-radius: 10px;
+  border-bottom-right-radius: 12px;
+}
+
+.penjahit-table tr {
+  transition: background-color 0.3s ease; /* Efek transisi untuk hover */
 }
 
 .penjahit-table tr:hover {
-  background-color: #f1f1f1;
+  background-color: #f9fafb; /* Warna hover baris */
 }
 
 .gambar-produk {
-  width: 50px; /* Set lebar gambar */
-  height: 50px; /* Set tinggi gambar */
+  width: 60px; /* Sedikit lebih besar untuk estetika */
+  height: 60px;
   border-radius: 10px;
-  object-fit: cover; /* Menjaga proporsi gambar sambil mengisi elemen */
-  display: block; /* Pastikan gambar tidak melanggar tata letak */
-}
-
-.penjahit-table .btn {
-  font-size: 13px;
-  padding: 8px 12px;
-  margin: 4px;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
-
+  object-fit: cover;
+  display: block;
+  justify-content: center;
 }
 
 
+/* Styling untuk tombol dengan ikon */
 
-.btn-detail {
-  background-color: #a5d6ec;
-  color: white;
-}
-.btn-detail:hover {
-  background-color: #7fc1e0
-}
 
-.btn-download {
-  background-color: #d37a7f;
-  color: white;
-}
 
-.btn-download:hover {
-  background-color: #c9565c
+/* Card untuk tombol aksi */
+/* Card untuk tombol aksi */
+.action-card {
+  display: flex;
+  gap: 5px; /* Jarak antar tombol */
+  justify-content: center; /* Pusatkan tombol secara horizontal */
+  align-items: center; /* Pusatkan tombol secara vertikal */
 }
 
+.btn1-icon,
+.btn1-icon2 {
+  display: flex; /* Gunakan flexbox untuk tombol */
+  align-items: center; /* Vertikal tengah */
+  justify-content: center; /* Horizontal tengah */
+  background-color: green; /* Warna hijau untuk contoh */
+  border: none; /* Hilangkan border */
+  border-radius: 5px; /* Membulatkan sudut */
+  padding: 10; /* Hilangkan padding tambahan */
+  width: 30px; /* Lebar tombol */
+  height: 20px; /* Tinggi tombol */
+  cursor: pointer; /* Cursor pointer */
+  color: rgb(235, 230, 230); /* Warna teks atau ikon */
+}
+
+.btn1-icon:hover,
+.btn1-icon2:hover {
+  opacity: 0.8; /* Efek hover */
+}
+
+/* Gaya spesifik untuk tombol */
+.btn1-icon {
+  background-color: rgb(66, 130, 173);
+  
+}
+
+.btn1-icon2 {
+  background-color: rgb(211, 71, 71); /* Warna merah untuk tombol "Detail" */
+}
+
+/* Gaya ikon di dalam tombol */
+.icon {
+  font-size: 15x; /* Ukuran ikon */
+  line-height: 1;
+  align-items: center;
+
+  margin: 0; 
+  padding: 0;  
+}
+
+
+/* Untuk tombol dengan hover efek */
+.btn1-icon:hover .icon {
+  color: #7cb7f7; /* Ganti warna ikon saat hover */
+}
+
+
+.btn1-icon2:hover {
+  background-color: #e0e0e0;
+}
+
+.icon2 {
+  width: 30px;
+  color: #fcfdff;
+
+}
+
+/* Untuk tombol dengan hover efek */
+.btn1-icon3:hover .icon {
+  color: #7cb7f7; /* Ganti warna ikon saat hover */
+}
+
+
+.btn1-icon3:hover {
+  background-color: #e0e0e0;
+}
+
+.icon3 {
+  width: 30px;
+  color: #fcfdff;
+
+}
+
+/* Untuk tombol dengan hover efek */
+.btn1-icon3:hover .icon {
+  color: #7cb7f7; /* Ganti warna ikon saat hover */
+}
 
 
 
@@ -156,32 +230,73 @@
   
   .modal-content {
     background-color: #ffffff;
-    padding: 12px 30px; /* Atas-bawah: 20px, Kiri-kanan: 15px */
+    padding: 30px 30px; /* Atas-bawah: 20px, Kiri-kanan: 15px */
     border-radius:20px;
-    width: 450px;
+    width: 750px;
     max-height: 80vh; /* Batas tinggi modal */
     overflow-y: auto; /* Aktifkan scroll vertikal */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     animation: slide-down 0.3s ease-out;
-    font-family: 'Raleway', sans-serif; /* atau RALEWAY' */
+    
   }
   
   .modal-content h2 {
     text-align: center;
-    font-size: 1.6rem;
-    margin-bottom: 20px;
-    font-weight: 600;
-    color: #81abc0;
+    font-size: 16px;
+    margin-bottom: 40px;
+    font-weight: 700;
+    color: #3c4c53;
   }
   
   .modern-form .form-group {
-    margin-bottom: 5px;
+    margin-bottom: 2px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column; /* Mengatur elemen dalam kolom */
+    gap: 10px; /* Menambahkan jarak antar elemen */
+  }
+  
+  .warna-item {
+    display: flex; /* Menyusun elemen dalam baris */
+    gap: 10px; /* Jarak antar elemen */
+    align-items: center; /* Menyusun elemen secara vertikal */
+  }
+  
+  .warna-item input {
+    padding: 5px;
+    margin-right: 10px;
+  }
+  
+  .warna-item button {
+    padding: 5px 10px;
+    cursor: pointer;
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  button[type="button"] {
+    background-color: #b9b9b9;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  /* Mengatur jarak antara tombol "Tambah Warna" dan input */
+  button[type="button"] .icon {
+    margin-right: 5px;
+    
   }
   
   .modern-form label {
     display: block;
-    margin-bottom: 4px;
-    font-weight: 560;
+    margin-bottom: 2px;
+    font-weight: 550;
     font-size: 14px;
     color: #6b8fa1;
   }
@@ -228,14 +343,6 @@
     transition: background-color 0.3s ease;
   }
   
-  .btn-submit {
-    background-color: #89b1db;
-    color: white;
-  }
-  
-  .btn-submit:hover {
-    background-color: #5882af;
-  }
   
   .btn-cancel {
     background-color: #e0e0e0;
@@ -308,7 +415,7 @@
   
   .add-button {
     padding: 10px 15px;
-    background-color: #a5d6ec;
+    background-color: #73c6df;
     color: white;
     border: none;
     border-radius: 4px;
@@ -342,98 +449,459 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
-  
-  .popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+ 
+/* Popup Overlay */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Popup Card */
+.popup-card {
+  background: #ffffff;
+  width: 90%;
+  max-width: 700px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Popup Header */
+.popup-header {
+  background: #3d546b;
+  color: #ffffff;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.popup-header h2 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.btn-close:hover {
+  color: #ffd700;
+}
+
+/* Popup Content */
+.popup-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Gambar Produk */
+.popup-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f7f7f7;
+  border-radius: 15px;
+  padding: 10px;
+}
+
+.popup-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.popup-no-image {
+  font-size: 1rem;
+  color: #999999;
+}
+
+/* Detail Produk */
+.popup-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-group p {
+  margin: 0;
+  font-size: 1rem;
+  color: #333333;
+}
+
+.detail-group p span {
+  font-weight: bold;
+  color: #3d546b;
+}
+
+/* Animasi */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+  .modal-card {
+    background-color: #ffffff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50px);
+  transition: transform 0.3s ease;
   }
   
-  .popup-card {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 15px;
-    width: 600px;
-    height: 500px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    position: relative;
-  }
-  
-  .popup-card h2 {
-    margin-bottom: 15px;
-    font-size: 22px;
-    font-weight: bold;
-  }
-  
-  .popup-card p {
-    line-height: 1.6;
-    color: #555;
-    margin: 10px 0;
-  }
-  
-  .popup-card button {
-    background-color: #000;
+  .modal-header {
+    padding: 16px;
+    background: #7fc1db;
     color: #fff;
-    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  
+  .close-button {
+    background: none;
     border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 15px;
-  }
-  
-  .popup-card .status-badge {
-    background-color: #f4d03f;
     color: #fff;
-    padding: 8px 16px;
-    border-radius: 20px;
-    position: absolute;
-    top: 20px;
-    right: 20px;
-  }
-  .popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    font-size: 1.5rem;
+    cursor: pointer;
   }
   
-  .popup-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 10px;
+  .modal-body {
+    padding: 16px;
+    font-size: 0.95rem;
+    color: #333;
   }
   
-  .status-badge {
-    background-color: #f4d03f;
-    color: #5c5c5c;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
+  .modal-body h4 {
+    margin-bottom: 8px;
+    font-size: 1.2rem;
   }
   
-  .popup-details {
-    display: flex;
-    justify-content: space-between;
-    margin: 10px 0;
+  .log-item {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
   }
   
-  .popup-details div {
-    margin-right: 30px;
+  .no-logs {
+    text-align: center;
+    color: #777;
   }
   
-  .popup-actions {
-    display: flex;
-    gap: 10px;
+  .modal-footer {
+    padding: 16px;
+    text-align: right;
+    border-top: 1px solid #ddd;
   }
   
+  .btn-close {
+    background: #d8dbdf;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
   
+  .btn-close:hover {
+    background: #919191;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+
+  /* Modal Form Pembayaran */
+.modal-bayar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-bayar.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-bayar .modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.modal-bayar h2 {
+  font-size: 14PXx;
+  color: #333;
+  text-align: center;
+}
+
+/* Form Group */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-size: 13px;
+  color: #363636;
+ 
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  background-color: #ffffff;
+  transition: border 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #007bff;
+  background-color: #fff;
+  outline: none;
+}
+
+/* Button Styles */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-submit {
+  background-color: #315a85;
+  color: #fff;
+}
+
+.btn-submit:hover {
+  background-color: #0056b3;
+}
+
+.btn-cancel {
+  background-color: #f44336;
+  color: #fff;
+}
+
+.btn-cancel:hover {
+  background-color: #d32f2f;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+  .modal-bayar .modal-content {
+    padding: 20px;
+  }
+
+  .modal-bayar h2 {
+    font-size: 1.2rem;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-bayar .modal-content {
+    width: 90%;
+  }
+
+  .modal-bayar h2 {
+    font-size: 1rem;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    font-size: 0.85rem;
+  }
+}
+
+
+
+
+
+/* Modal Pendapatan container */
+.modal-pendapatan {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s 0.3s;
+}
+
+/* Modal content for Pendapatan */
+.modal-pendapatan-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 700px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-out;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Close button for Pendapatan Modal */
+.modal-pendapatan-close {
+  background-color: transparent;
+  border: none;
+  font-size: 2rem;
+  color: #333;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+/* Title of the modal */
+.modal-pendapatan h2 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Table styling for Pendapatan */
+.table-pendapatan {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.table-pendapatan th,
+.table-pendapatan td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.table-pendapatan th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  color: #333;
+}
+
+.table-pendapatan td {
+  background-color: #fafafa;
+}
+
+.table-pendapatan tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Modal visibility when active */
+.modal-pendapatan.show {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #c3e6cb;
+  border-radius: 5px;
+}

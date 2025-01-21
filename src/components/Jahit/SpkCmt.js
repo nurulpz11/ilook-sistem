@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Penjahit.css';
-import { FaPlus, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList,  } from 'react-icons/fa';
 
 const SpkCmt = () => {
   const [spkCmtData, setSpkCmtData] = useState([]);
@@ -10,6 +10,8 @@ const SpkCmt = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpk, setSelectedSpk] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [showDeadlineForm, setShowDeadlineForm] = useState(false);  // Form Update Deadline
+  const [showStatusForm, setShowStatusForm] = useState(false); 
   const [penjahitList, setPenjahitList] = useState([]); // State untuk menyimpan data penjahit
   const [newSpk, setNewSpk] = useState({
     nama_produk: '',
@@ -26,10 +28,106 @@ const SpkCmt = () => {
     aksesoris: '',
     handtag: '',
     merek: '',
+    harga_per_barang: '',
+    harga_per_jasa: '',
+    total_harga:'',
     gambar_produk: null,
     warna: [{ nama_warna: '', qty: 0 }], // Array warna dengan qty default 0
   });
+  const [newDeadline, setNewDeadline] = useState({
+    deadline: '',
+    keterangan: '',
+  });
+  const [newStatus, setNewStatus] = useState({
+    status: '',
+    keterangan: '',
+  });
+  
 
+  //fungsi untuk input form
+  const handleDeadlineChange = (e) => {
+    const { name, value } = e.target;
+    setNewDeadline((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  // Fungsi untuk input form status
+  const handleStatusChange = (e) => {
+    const { name, value } = e.target;
+    setNewStatus((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  
+  //fungsi untuk kirim update dadline ke API
+  const updateDeadline = async (spkId) => {
+    const { deadline, keterangan } = newDeadline;
+    try {
+      const response = await fetch(`http://localhost:8000/api/spk/${spkId}/deadline`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deadline, keterangan }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update deadline');
+      }
+  
+      const data = await response.json();
+      alert(data.message); // Menampilkan pesan sukses
+      setShowPopup(false); // Menutup popup setelah status berhasil diperbarui
+      setShowForm(false); // Menyembunyikan form update setelah berhasil
+    } catch (error) {
+      alert('Error: ' + error.message); // Menampilkan pesan error
+    }
+  };
+
+   // Fungsi untuk kirim update status ke API
+   const updateStatus = async (spkId) => {
+    const { status, keterangan } = newStatus;
+    try {
+      const response = await fetch(`http://localhost:8000/api/spk/${spkId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status, keterangan }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      const data = await response.json();
+      alert(data.message); // Menampilkan pesan sukses
+      setShowPopup(false); // Menutup popup setelah status berhasil diperbarui
+      setShowForm(false); // Menyembunyikan form update setelah berhasil
+    } catch (error) {
+      alert('Error: ' + error.message); // Menampilkan pesan error
+    }
+  };
+  
+
+  //nampilin form update deadline
+  const handleUpdateDeadlineClick = (spk) => {
+    setSelectedSpk(spk);  // Menyimpan data SPK yang dipilih
+    setShowDeadlineForm(true);  // Tampilkan form update deadline
+    setShowForm(false);  // Pastikan form SPK tidak tampil
+  };
+ 
+   // Menampilkan form update status
+   const handleUpdateStatusClick = (spk) => {
+    setSelectedSpk(spk);  // Menyimpan data SPK yang dipilih
+    setShowStatusForm(true);  // Menampilkan form update status
+    setShowForm(false);  // Pastikan form SPK tidak tampil
+  };
+  
+  
+  
   useEffect(() => {
     const fetchSpkCmtData = async () => {
       try {
@@ -70,13 +168,68 @@ useEffect(() => {
 }, []);
   
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewSpk((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setNewSpk((prev) => {
+    const updatedData = { ...prev, [name]: value };
+
+    // Jika yang berubah adalah harga_per_barang, hitung total_harga
+    if (name === 'harga_per_barang') {
+      const totalProduk = calculateJumlahProduk(updatedData.warna);
+      const totalHarga = value * totalProduk; // harga_per_barang * jumlah_produk
+      updatedData.total_harga = totalHarga;
+    }
+
+    return updatedData;
+  });
+};
+
+
+const handleUpdateSubmit = async (e, spkId) => {
+  e.preventDefault();
+
+  const formData = new FormData();
+  Object.keys(newSpk).forEach((key) => {
+    if (key !== "warna") {
+      formData.append(key, newSpk[key]);
+    }
+  });
+
+  // Tambahkan data warna
+  newSpk.warna.forEach((warna, index) => {
+    formData.append(`warna[${index}][nama_warna]`, warna.nama_warna);
+    formData.append(`warna[${index}][qty]`, warna.qty);
+  });
+
+  // Tambahkan file jika ada
+  if (newSpk.gambar_produk) {
+    formData.append("gambar_produk", newSpk.gambar_produk);
+  }
+
+  try {
+    const response = await fetch(`http://localhost:8000/api/spkcmt/${spkId}`, {
+      method: "PUT",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update SPK");
+    }
+
+    const updatedSpk = await response.json();
+    alert("SPK berhasil diupdate!");
+    setShowForm(false);
+
+    // Update state dengan data terbaru
+    setSpkCmtData((prev) =>
+      prev.map((spk) => (spk.id === updatedSpk.data.id ? updatedSpk.data : spk))
+    );
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+};
+
+
 
 // Filter data berdasarkan pencarian
 const filteredSpk = spkCmtData.filter((spk) =>
@@ -96,15 +249,19 @@ const filteredSpk = spkCmtData.filter((spk) =>
   
     // Hitung ulang jumlah_produk sebelum mengirim data
     const totalJumlahProduk = newSpk.warna.reduce((sum, warna) => sum + Number(warna.qty || 0), 0);
-  
-    const formData = new FormData();
-  
+
+    // Tambahkan total_harga ke dalam formData
+  const formData = new FormData();
+
     // Tambahkan semua field kecuali 'warna'
     Object.keys(newSpk).forEach((key) => {
       if (key !== 'warna') {
         formData.append(key, key === 'jumlah_produk' ? totalJumlahProduk : newSpk[key]);
       }
     });
+
+   
+
   
     // Tambahkan data warna ke FormData
     if (newSpk.warna && newSpk.warna.length > 0) {
@@ -147,27 +304,36 @@ const filteredSpk = spkCmtData.filter((spk) =>
     window.open(url, '_blank'); // Membuka file PDF di tab baru
 };
 
+const downloadStaffPdf = (id) => {
+  const url = `http://localhost:8000/api/spk-cmt/${id}/download-staff-pdf`;
+  window.open(url, '_blank'); // Membuka file PDF di tab baru
+};
 
 const handleWarnaChange = (e, index) => {
   const { name, value } = e.target;
   const updatedWarna = [...newSpk.warna];
-  
- // Update nilai nama_warna atau qty
- if (name.includes('nama_warna')) {
-  updatedWarna[index].nama_warna = value;
-} else if (name.includes('qty')) {
-  updatedWarna[index].qty = value;
-}
 
-// Hitung ulang jumlah_produk
-const totalProduk = calculateJumlahProduk(updatedWarna);
+  // Update nilai nama_warna atau qty
+  if (name.includes('nama_warna')) {
+    updatedWarna[index].nama_warna = value;
+  } else if (name.includes('qty')) {
+    updatedWarna[index].qty = value;
+  }
 
-setNewSpk({
-  ...newSpk,
-  warna: updatedWarna,
-  jumlah_produk: totalProduk, // Perbarui jumlah_produk secara otomatis
-});
+  // Hitung ulang jumlah_produk
+  const totalProduk = calculateJumlahProduk(updatedWarna);
+
+  // Hitung total_harga berdasarkan harga_per_barang dan jumlah_produk
+  const totalHarga = newSpk.harga_per_barang * totalProduk;
+
+  setNewSpk({
+    ...newSpk,
+    warna: updatedWarna,
+    jumlah_produk: totalProduk, // Perbarui jumlah_produk secara otomatis
+    total_harga: totalHarga,    // Perbarui total_harga secara otomatis
+  });
 };
+
 
 const handleAddWarna = () => {
   const updatedWarna = [...newSpk.warna, { nama_warna: '', qty: 0 }];
@@ -216,6 +382,12 @@ const calculateJumlahProduk = (warnaArray) => {
   const total = warnaArray.reduce((sum, item) => sum + Number(item.qty || 0), 0);
   return total;
 };
+const handleEditClick = (spk) => {
+  setSelectedSpk(spk); // Simpan data SPK yang dipilih
+  setNewSpk({ ...spk, warna: spk.warna || [] }); // Isi data ke form
+  setShowForm(true); // Tampilkan form
+};
+
 
 return (
   <div>
@@ -246,10 +418,10 @@ return (
             <th>NAMA PRODUK</th>
             <th>JUMLAH PRODUK</th>
             <th>DEADLINE</th>
+            <th>SISA HARI</th>
             <th>NAMA PENJAHIT</th>
             <th>TANGGAL SPK</th>
             <th>STATUS</th>
-            <th>NOMOR SERI</th>
             <th>TANGGAL AMBIL</th>
             <th>GAMBAR</th>
             <th>AKSI</th>
@@ -263,6 +435,7 @@ return (
               <td>{spk.nama_produk}</td>
               <td>{spk.jumlah_produk}</td>
               <td>{formatTanggal(spk.deadline)}</td>
+              <td>{spk.sisa_hari}</td> 
               <td>
                 {
                   penjahitList.find(penjahit => penjahit.id_penjahit === spk.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
@@ -270,8 +443,8 @@ return (
               </td>
               <td>{formatTanggal(spk.tgl_spk)}</td>
               <td>{spk.status}</td>
-              <td>{spk.nomor_seri}</td>
-              <td>{formatTanggal(spk.tanggal_ambil)}</td>
+    
+             
               <td>
                 {spk.gambar_produk ? (
                   <img
@@ -284,61 +457,200 @@ return (
                 )}
               </td>
               <td>
-                <button
-                  className="btn btn-detail"
-                  onClick={() => handleDetailClick(spk)}
-                >
-                  Detail
-                </button>
+       
+                <div className="action-card">
+                  <button 
+                    className="btn1-icon" 
+                    onClick={() => handleDetailClick(spk)}
+                  >
+                    <FaInfoCircle className="icon" />
+                  </button>
+                  <button 
+                    className="btn1-icon2" 
+                    onClick={() => handleUpdateDeadlineClick(spk)}
+                  >
+                    <FaClock className="icon" />
+                  </button>
+                  <button 
+                    className="btn1-icon" 
+                     onClick={() => handleEditClick(spk)}
+                     > 
+                     <FaEdit className="icon" />
+                   </button>
+                </div>
+         
+
+              
               </td>
               <td>
                 <button
                   onClick={() => downloadPdf(spk.id_spk)}
-                  className="btn btn-download"
-                >
-                  Download PDF
+                  className="btn1-icon3" 
+                  >
+                        <FaSave className="icon" />
+
+               
+               
                 </button>
-                  </td>
-                </tr>
+              
+                <button
+                  onClick={() => downloadStaffPdf(spk.id_spk)}
+                  className="btn1-icon3" 
+                  >
+                        <FaSave className="icon" />
+
+                </button>
+              </td>
+            </tr>
           ))}
         </tbody>
       </table>
     </div>
 
-    {/* Pop-Up Card */}
-    {showPopup && (
+   
+ {/* Pop-Up Card */}
+{showPopup && selectedSpk && (
   <div className="popup-overlay">
     <div className="popup-card">
-      {selectedSpk && (
-        <>
-          <div className="popup-header">
+      <div className="popup-header">
+        <h2>Detail SPK</h2>
+        <button className="btn-close" onClick={closePopup}>
+          &times;
+        </button>
+      </div>
+
+      <div className="popup-content">
+        {/* Gambar Produk */}
+        <div className="popup-image-container">
+          {selectedSpk.gambar_produk ? (
             <img
               src={`http://localhost:8000/storage/${selectedSpk.gambar_produk}`}
               alt="Gambar Produk"
               className="popup-image"
             />
-            <span className="status-badge">{selectedSpk.status}</span>
-          </div>
-          <h2>Order #{selectedSpk.id_spk}</h2>
-          <div className="popup-details">
-            <div>
-              <p><strong>Item</strong></p>
-              <p>{selectedSpk.nama_produk}</p>
-            </div>
+          ) : (
+            <div className="popup-no-image">No Image</div>
+          )}
+        </div>
+
+        {/* Detail Produk */}
+        <div className="popup-details">
+          <div className="detail-group">
+            <p><span>Nama Produk:</span> {selectedSpk.nama_produk}</p>
+            <p><span>Jumlah Produk:</span> {selectedSpk.jumlah_produk}</p>
+            <p><span>Total Harga:</span> Rp {selectedSpk.total_harga}</p>
+            <p><span>Harga Barang:</span> Rp {selectedSpk.harga_per_barang}</p>
+            <p><span>Harga Jasa</span> Rp {selectedSpk.harga_per_jasa}</p>
+            <p><span>Warna </span> {selectedSpk.nama_warna}</p>
             
-            <div>
-              <p><strong>Start time</strong></p>
-              <p>{selectedSpk.tgl_spk}</p>
-            </div>
-            <div>
-              <p><strong>Address</strong></p>
-              <p>4517 Washington Ave. Manchester, Kentucky</p>
-            </div>
+            
+            
           </div>
-         
-        </>
-      )}
-      <button onClick={closePopup} className="close-btn">Tutup</button>
+          <div className="detail-group">
+            <p><span>Tanggal SPK:</span> {selectedSpk.tgl_spk}</p>
+            <p><span>Deadline:</span> {selectedSpk.deadline}</p>
+            <p><span>Status:</span> {selectedSpk.status}</p>
+          </div>
+          <div className="detail-group">
+            <p><span>Merek:</span> {selectedSpk.merek}</p>
+            <p><span>Aksesoris:</span> {selectedSpk.aksesoris}</p>
+            <p><span>Catatan:</span> {selectedSpk.catatan}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+
+
+{showDeadlineForm && selectedSpk && (
+  <div className="modal">
+ <div className="modal-content">
+ <h2>Update Deadline</h2>
+    <form onSubmit={(e) => { e.preventDefault(); updateDeadline(selectedSpk.id_spk); }} className="modern-form">
+    <div className="form-group">
+        <label>Deadline Baru</label>
+        <input
+          type="date"
+          name="deadline"
+          value={newDeadline.deadline}
+          onChange={handleDeadlineChange}
+          required
+        />
+      </div>
+      <div>
+        <label>Keterangan</label>
+        <input
+          type="text"
+          name="keterangan"
+          value={newDeadline.keterangan}
+          onChange={handleDeadlineChange}
+          required
+        />
+      </div>
+      <div className="form-actions">
+        <button type="submit" className="btn btn-submit">
+            <FaSave /> Simpan
+          </button>
+        <button
+            type="button"
+            className="btn btn-cancel"
+            onClick={() => setShowDeadlineForm(false)}
+          >
+            <FaTimes /> Batal
+        </button>
+        </div>
+        </form>
+    </div>
+  </div>
+)}
+
+
+
+{showStatusForm && selectedSpk && (
+  <div className="modal">
+ <div className="modal-content">
+ <h2>Update Status</h2>
+    <form onSubmit={(e) => { e.preventDefault(); updateStatus(selectedSpk.id_spk); }} className="modern-form">
+    <div className="form-group">
+        <label>Status Baru</label>
+        <select
+                name="status"
+                value={newStatus.status}
+                onChange={handleStatusChange}
+              >
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+      </div>
+      <div>
+        <label>Keterangan</label>
+        <input
+          type="text"
+          name="keterangan"
+          value={newStatus.keterangan}
+          onChange={handleStatusChange}
+          
+        />
+      </div>
+      <div className="form-actions">
+        <button type="submit" className="btn btn-submit">
+            <FaSave /> Simpan
+          </button>
+        <button
+            type="button"
+            className="btn btn-cancel"
+            onClick={() => setShowStatusForm(false)}
+          >
+            <FaTimes /> Batal
+        </button>
+        </div>
+        </form>
     </div>
   </div>
 )}
@@ -349,7 +661,7 @@ return (
 {showForm && (
   <div className="modal">
     <div className="modal-content">
-      <h2>Tambah Data SPK</h2>
+      <h2>TAMBAH DATA SPK</h2>
       <form onSubmit={handleSubmit} className="modern-form">
         <div className="form-group">
           <label>Nama Produk</label>
@@ -509,7 +821,7 @@ return (
             required
           />
         </div>
-
+        
         <div className="form-group">
           <label>Gambar Produk</label>
           <input
@@ -546,9 +858,10 @@ return (
               type="button"
               onClick={() => handleRemoveWarna(index)}
             >
-             <FaTrash /> Hapus Warna
+             <FaTrash /> 
             </button>
           </div>
+          
         ))}
         <button type="button" onClick={handleAddWarna}>
         <FaPlus /> Tambah Warna
@@ -564,24 +877,112 @@ return (
           readOnly
         />
       </div>
+      <div className="form-group">
+          <label>Harga per barang</label>
+          <input
+            type="number"
+            name="harga_per_barang"
+            value={newSpk.harga_per_barang}
+            onChange={handleInputChange}
+            placeholder="Masukkan harga"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Harga per jasa</label>
+          <input
+            type="number"
+            name="harga_per_jasa"
+            value={newSpk.harga_per_jasa}
+            onChange={handleInputChange}
+            placeholder="Masukkan harga"
+            required
+          />
+        </div>
+         
+        <div className="form-group">
+          <label>Total Harga</label>
+          <input
+            type="number"
+             name="total_harga"
+            value={newSpk.total_harga}
+            readOnly // Total harga dihitung otomatis
+          />
+        </div>
 
 
         <div className="form-actions">
         <button type="submit" className="btn btn-submit">
-            <FaSave /> Simpan
+             Simpan
           </button>
-          <button
+        <button
             type="button"
             className="btn btn-cancel"
             onClick={() => setShowForm(false)}
           >
-            <FaTimes /> Batal
-          </button>
+            Batal
+        </button>
         </div>
       </form>
     </div>
   </div>
 )}
+
+
+{showForm && selectedSpk && (
+  <div className="update-form">
+    <h3>Update SPK</h3>
+    <form onSubmit={(e) => handleUpdateSubmit(e, selectedSpk.id)}>
+      <label>
+        Nama Produk:
+        <input
+          type="text"
+          name="nama_produk"
+          value={newSpk.nama_produk}
+          onChange={handleInputChange}
+        />
+      </label>
+      <label>
+        Deadline:
+        <input
+          type="date"
+          name="deadline"
+          value={newSpk.deadline}
+          onChange={handleInputChange}
+        />
+      </label>
+      <label>
+        Harga per Barang:
+        <input
+          type="number"
+          name="harga_per_barang"
+          value={newSpk.harga_per_barang}
+          onChange={handleInputChange}
+        />
+      </label>
+      <label>
+        Penjahit:
+        <select
+          name="id_penjahit"
+          value={newSpk.id_penjahit}
+          onChange={handleInputChange}
+        >
+          <option value="">Pilih Penjahit</option>
+          {penjahitList.map((penjahit) => (
+            <option key={penjahit.id} value={penjahit.id}>
+              {penjahit.nama}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button type="submit">Update</button>
+      <button type="button" onClick={() => setShowForm(false)}>
+        Cancel
+      </button>
+    </form>
+  </div>
+)}
+
  </div>
   );
 };
