@@ -12,7 +12,7 @@ class Hutang extends Model
     protected $primaryKey = 'id_hutang';
 
     protected $fillable = [
-        'id_spk',
+        'id_penjahit',
         'jumlah_hutang',
         'status_pembayaran',
         'tanggal_jatuh_tempo',
@@ -20,10 +20,11 @@ class Hutang extends Model
     ];
 
     // Relasi ke tabel SPK
-    public function spk()
+    public function penjahit()
     {
-        return $this->belongsTo(SpkCmt::class, 'id_spk');
+        return $this->belongsTo(Penjahit::class, 'id_penjahit', 'id_penjahit');
     }
+
     public function logPembayaran()
     {
         return $this->hasMany(LogPembayaranHutang::class, 'id_hutang');

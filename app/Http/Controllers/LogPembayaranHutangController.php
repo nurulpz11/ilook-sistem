@@ -16,19 +16,70 @@ class LogPembayaranHutangController extends Controller
             'success' => true,
             'data' => $logPembayaranHutang,
         ]);
-    }
-
-    
-    public function create($id_hutang)
+    } 
+    public function show($id_hutang)
     {
-        $hutang = Hutang::find($id_hutang);
-        if (!$hutang){
+        // Mengambil semua log pembayaran berdasarkan id_hutang
+        $logPembayaranHutang = LogPembayaranHutang::where('id_hutang', $id_hutang)->get();
+    
+        if ($logPembayaranHutang->isEmpty()) {
             return response()->json([
-                'success'=> false,
-                'message'=> 'Hutang tidak ditemukan'
+                'success' => false,
+                'message' => 'Log pembayaran hutang tidak ditemukan untuk ID hutang tersebut'
             ], 404);
         }
+    
+        return response()->json([
+            'success' => true,
+            'data' => $logPembayaranHutang
+        ]);
     }
+    
+    
+    public function createLogPembayaran(Request $request, $id_hutang)
+    {
+        $hutang = Hutang::find($id_hutang);
+    
+        if (!$hutang) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hutang tidak ditemukan'
+            ], 404);
+        }
+    
+        $validated = $request->validate([
+            'jumlah_dibayar' => 'required|numeric|min:1',
+            'tanggal_bayar' => 'required|date',
+            'catatan' => 'nullable|string',
+        ]);
+    
+        // Simpan log pembayaran
+        $logPembayaranHutang = LogPembayaranHutang::create([
+            'id_hutang' => $id_hutang,
+            'jumlah_dibayar' => $validated['jumlah_dibayar'],
+            'tanggal_bayar' => $validated['tanggal_bayar'],
+            'catatan' => $validated['catatan'],
+        ]);
+    
+        // Update status pembayaran hutang
+        $totalPembayaranHutang = LogPembayaranHutang::where('id_hutang', $id_hutang)->sum('jumlah_dibayar');
+    
+        if ($totalPembayaranHutang >= $hutang->jumlah_hutang) {
+            $hutang->status_pembayaran = 'lunas';
+        } elseif ($totalPembayaranHutang > 0) {
+            $hutang->status_pembayaran = 'dibayar sebagian';
+        } else {
+            $hutang->status_pembayaran = 'belum lunas';
+        }
+        $hutang->save();
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Log pembayaran hutang berhasil dibuat!',
+            'data' => $logPembayaranHutang
+        ], 201);
+    }
+    
 
     public function store(Request $request)
     {
@@ -110,4 +161,7 @@ class LogPembayaranHutangController extends Controller
             'message' => 'Log pembayaran hutang  berhasil dihapus!'
         ]);
     }
+
+   
+    
 }

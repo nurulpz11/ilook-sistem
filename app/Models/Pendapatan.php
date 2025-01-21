@@ -31,4 +31,9 @@ class Pendapatan extends Model
         return $this->belongsTo(Penjahit::class, 'id_penjahit', 'id_penjahit');
     }
 
+    public function pengiriman()
+    {
+        return $this->hasMany(Pengiriman::class, 'id_penjahit', 'id_penjahit');
+    }
+
 }

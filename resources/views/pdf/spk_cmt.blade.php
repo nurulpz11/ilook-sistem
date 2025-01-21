@@ -250,11 +250,7 @@
                 <td>{{ $spk->keterangan ?? 'N/A' }}</td>
             </tr>
         
-            <tr>
-                <td><strong>Catatan</strong></td>
-                <td>{{ $spk->catatan ?? 'N/A' }}</td>
-            </tr>
-            
+           
             <tr>
                 <td><strong>Markeran</strong></td>
                 <td>{{ $spk->markeran ?? 'N/A' }}</td>
@@ -285,6 +281,10 @@
             <tr>
                 <td><strong>Jumlah</strong></td>
                 <td>{{ $spk->jumlah_produk ?? 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td><strong>Catatan</strong></td>
+                <td>{{ $spk->catatan ?? 'N/A' }}</td>
             </tr>
             
 

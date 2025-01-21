@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 
 use App\Models\Hutang;
-use App\Models\SpkCmt;
+use App\Models\Penjahit;
 use Illuminate\Http\Request;
 
 class HutangController extends Controller
@@ -12,30 +12,32 @@ class HutangController extends Controller
     
     public function index()
     {
-        
-        $hutangs = Hutang::with('spk')->get(); // Mengambil semua hutang beserta relasi SPK
+
+       
+        // Mengambil semua hutang beserta relasi Penjahit
+        $hutangs = Hutang::with('penjahit')->get();
         return response()->json([
             'success' => true,
             'data' => $hutangs,
         ]);
     }
 
-    
+
     public function create()
     {
-       // Ambil data SPK untuk memilih penjahit
-       $spks = SpkCmt::all();
+       // Ambil data penjahit untuk memilih penjahit
+       $penjahits = Penjahit::all();
        return response()->json([
            'success' => true,
-           'spks' =>  $spks
+           'penjahits' => $penjahits // Menyesuaikan dengan nama Penjahit
        ]);
     }
 
-   
+
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_spk' => 'required|exists:spk_cmt,id_spk',
+            'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
             'jumlah_hutang' => 'required|numeric|min:1',
             'status_pembayaran' => 'required|in:belum lunas,lunas,dibayar sebagian',
             'tanggal_jatuh_tempo' => 'required|date',
@@ -53,34 +55,35 @@ class HutangController extends Controller
 
     }
 
-    
+
     public function show($id)
     {
-        $hutang = Hutang::with('spk')->findOrFail($id);
+        $hutang = Hutang::with('penjahit')->findOrFail($id);
         return response()->json([
             'success' => true,
             'data' => $hutang,
         ]);
     }
 
-   
+
     public function edit($id)
     {
-        $hutang = Hutang::findOrFail($id); // Mengambil data hutang berdasarkan id
-        $spks = SpkCmt::all(); // Ambil data SPK untuk memilih penjahit
+        // Mengambil data Hutang dan Penjahit
+        $hutang = Hutang::findOrFail($id);
+        $penjahits = Penjahit::all(); // Mengambil semua Penjahit
         return response()->json([
             'success' => true,
-            'hutang' => $hutang, // Mengembalikan data hutang
-            'spks' => $spks // Mengembalikan data SPK
+            'hutang' => $hutang,
+            'penjahits' => $penjahits // Menyertakan data Penjahit
         ]);
     }
 
-   
+
     public function update(Request $request, $id)
     {
          // Validasi inputan
          $validated = $request->validate([
-            'id_spk' => 'required|exists:spk_cmt,id_spk',
+            'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
             'jumlah_hutang' => 'required|numeric|min:1',
             'status_pembayaran' => 'required|in:belum lunas,lunas,dibayar sebagian',
             'tanggal_jatuh_tempo' => 'required|date',
@@ -98,7 +101,7 @@ class HutangController extends Controller
         ]);
     }
 
-   
+
     public function destroy($id)
     {
         $hutang = Hutang::findOrFail($id);

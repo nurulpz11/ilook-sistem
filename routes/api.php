@@ -28,6 +28,7 @@ use App\Http\Controllers\PendapatanController;
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::resource('spkcmt', SpkCmtController::class);
+
 Route::resource('laporancmt', LaporanCmtController::class);
 Route::apiResource('penjahit', PenjahitController::class);
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
@@ -36,6 +37,10 @@ Route::get('/spk-cmt/{id}/download-staff-pdf', [SpkCmtController::class, 'downlo
 Route::resource('spkcmt.warna', WarnaController::class)->shallow();
 Route::put('/spk/{id}/deadline', [SpkCmtController::class, 'updateDeadline']);
 Route::get('/spk/{id}/log-deadline', [SpkCmtController::class, 'getLogDeadline']);
+Route::get('/log-deadlines', [SpkCmtController::class, 'getAllLogDeadlines']);
+
+Route::put('/spk/{id}/status', [SpkCmtController::class, 'updateStatus']);
+Route::get('/spk/{id}/log-status', [SpkCmtController::class, 'getLogStatus']);
 Route::post('/pengiriman', [PengirimanController::class, 'store']);
 Route::get('/pengiriman', [PengirimanController::class, 'index']);
 // Tambahkan route untuk mengambil warna berdasarkan ID SPK
@@ -44,12 +49,19 @@ Route::get('/spk-cmt/{id}/warna', [SpkCmtController::class, 'getWarna']);
 Route::get('/pengiriman/{id}', [PengirimanController::class, 'show']);
 Route::resource('cashboan', CashboanController::class);
 Route::resource('log-pembayaran-cashboan', LogPembayaranCashbonController::class);
+Route::post('/log-pembayaran-cashboan/{id_cashboan}', [LogPembayaranCashbonController::class, 'createLogPembayaran']);
+Route::get('/log-pembayaran-cashboan/{id_cashboan}', [LogPembayaranCashbonController::class, 'show']);
+
 Route::resource('hutang', HutangController::class);
 Route::resource('log-pembayaran-hutang', LogPembayaranHutangController::class);
+Route::post('/log-pembayaran-hutang/{id_hutang}', [LogPembayaranHutangController::class, 'createLogPembayaran']);
+Route::get('/log-pembayaran-hutang/{id_hutang}', [LogPembayaranHutangController::class, 'show']);
 
 Route::get('/pendapatan', [PendapatanController::class, 'index']); // Untuk melihat daftar pendapatan atau form
-Route::post('/calculate', [PendapatanController::class, 'calculate']); // Untuk kalkulasi pendapatan
+Route::post('pendapatan/calculate', [PendapatanController::class, 'calculate']);
 Route::post('/pendapatan', [PendapatanController::class, 'store']);
+Route::get('pendapatan/{id}/pengiriman', [PendapatanController::class, 'showPengiriman']);
+Route::get('/penjahit-list', [PendapatanController::class, 'getPenjahitList']);
 
 
 

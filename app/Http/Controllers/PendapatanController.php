@@ -36,13 +36,14 @@ class PendapatanController extends Controller
             ->selectRaw('SUM(pengiriman.total_bayar) as total_pendapatan, SUM(pengiriman.claim) as total_claim, SUM(pengiriman.refund_claim) as total_refund_claim')
             ->first();
 
+
         // Ambil semua id_spk dari pengiriman
         $idSpkList = Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
             ->where('spk_cmt.id_penjahit', $idPenjahit)
             ->whereBetween('pengiriman.tanggal_pengiriman', [$periodeAwal, $periodeAkhir])
-            ->pluck('id_spk');
+            ->pluck('pengiriman.id_spk'); // Berikan tabel eksplisit
 
-        // Hitung total pembayaran cashbon berdasarkan tanggal bayar
+            // Hitung total pembayaran cashbon berdasarkan tanggal bayar
         $totalCashboan = Cashboan::whereIn('id_spk', $idSpkList)
         ->with(['logPembayaran' => function ($query) use ($periodeAwal, $periodeAkhir) {
             $query->whereBetween('tanggal_bayar', [$periodeAwal, $periodeAkhir]);
@@ -51,16 +52,16 @@ class PendapatanController extends Controller
         ->flatMap(fn($cashboan) => $cashboan->logPembayaran)
         ->sum('jumlah_dibayar');
 
-    // Hitung total pembayaran hutang berdasarkan tanggal bayar
-    $totalHutang = Hutang::whereIn('id_spk', $idSpkList)
+        // Hitung total pembayaran hutang berdasarkan tanggal bayar
+    
+        $totalHutang = Hutang::where('id_penjahit', $idPenjahit)
         ->with(['logPembayaran' => function ($query) use ($periodeAwal, $periodeAkhir) {
             $query->whereBetween('tanggal_bayar', [$periodeAwal, $periodeAkhir]);
         }])
         ->get()
         ->flatMap(fn($hutang) => $hutang->logPembayaran)
         ->sum('jumlah_dibayar');
-
-
+    
         return response()->json([
             'total_pendapatan' => $pengiriman->total_pendapatan ?? 0,
             'total_claim' => $pengiriman->total_claim ?? 0,
@@ -107,13 +108,14 @@ class PendapatanController extends Controller
             ->sum('jumlah_dibayar');
 
         // Hitung total pembayaran hutang berdasarkan tanggal bayar
-        $totalHutang = Hutang::whereIn('id_spk', $idSpkList)
+        $totalHutang = Hutang::where('id_penjahit', $idPenjahit)
             ->with(['logPembayaran' => function ($query) use ($periodeAwal, $periodeAkhir) {
                 $query->whereBetween('tanggal_bayar', [$periodeAwal, $periodeAkhir]);
             }])
             ->get()
             ->flatMap(fn($hutang) => $hutang->logPembayaran)
             ->sum('jumlah_dibayar');
+        
 
         // Kalkulasi total transfer
         $handtag = $request->handtag;
@@ -159,4 +161,33 @@ class PendapatanController extends Controller
         ]);
         
     }
+
+    public function showPengiriman($id)
+{
+    // Cari pendapatan berdasarkan ID
+    $pendapatan = Pendapatan::find($id);
+
+    if (!$pendapatan) {
+        return response()->json(['message' => 'Pendapatan tidak ditemukan.'], 404);
+    }
+
+    // Ambil data pengiriman terkait
+    $pengiriman = Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
+        ->where('spk_cmt.id_penjahit', $pendapatan->id_penjahit)
+        ->whereBetween('pengiriman.tanggal_pengiriman', [$pendapatan->periode_awal, $pendapatan->periode_akhir])
+        ->get();
+
+    return response()->json([
+        'pendapatan' => $pendapatan,
+        'pengiriman' => $pengiriman,
+    ]);
+}
+
+public function getPenjahitList()
+{
+    $penjahit = Penjahit::select('id_penjahit', 'nama_penjahit')->get();
+    return response()->json(['data' => $penjahit]);
+}
+
+
 }

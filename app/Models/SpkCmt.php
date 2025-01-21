@@ -55,6 +55,12 @@ class SpkCmt extends Model
         return $this->hasMany(LogDeadline::class, 'id_spk');
     }
 
+    public function logStatus()
+    {
+        return $this->hasMany(LogStatus::class, 'id_spk', 'id_spk');
+    }
+
+
     public function pengiriman()
     {
         return $this->hasMany(Pengiriman::class, 'id_spk', 'id_spk');

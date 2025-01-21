@@ -6,6 +6,7 @@ use App\Models\Pengiriman;
 use App\Models\PengirimanWarna;
 use App\Models\Warna; // Menambahkan import untuk model Warna
 use App\Models\SpkCmt;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -14,40 +15,39 @@ class PengirimanController extends Controller
 
      // Menampilkan semua penjahit
      public function index()
-{
-    $pengiriman = Pengiriman::with('warna') // Mengambil data pengiriman dengan warna
-        ->get()
-        ->map(function ($pengiriman) {
-            // Hitung sisa barang per warna
-            $sisaBarangPerWarna = [];
-
-            foreach ($pengiriman->warna as $warna) {
-                // Ambil stok awal dari tabel `warna`
-                $warnaData = Warna::where('id_spk', $pengiriman->id_spk)
-                    ->where('nama_warna', $warna->warna)
-                    ->first();
-
-                if ($warnaData) {
-                    // Hitung total barang yang sudah dikirim untuk warna ini
-                    $totalSudahDikirim = PengirimanWarna::whereHas('pengiriman', function ($query) use ($pengiriman) {
-                        $query->where('id_spk', $pengiriman->id_spk);
-                    })
-                    ->where('warna', $warna->warna)
-                    ->sum('jumlah_dikirim');
-
-                    // Hitung sisa barang
-                    $sisaBarang = $warnaData->qty - $totalSudahDikirim;
-                    $sisaBarangPerWarna[$warna->warna] = $sisaBarang;
-                }
-            }
-
-            // Tambahkan properti sisa_barang_per_warna ke pengiriman
-            $pengiriman->sisa_barang_per_warna = $sisaBarangPerWarna;
-            return $pengiriman;
-        });
-
-    return response()->json(['data' => $pengiriman]);
-}
+     {
+         $pengiriman = Pengiriman::with(['warna', 'spk.penjahit'])
+             ->get()
+             ->map(function ($pengiriman) {
+                 // Hitung sisa barang per warna
+                 $sisaBarangPerWarna = [];
+                 foreach ($pengiriman->warna as $warna) {
+                     $warnaData = Warna::where('id_spk', $pengiriman->id_spk)
+                         ->where('nama_warna', $warna->warna)
+                         ->first();
+     
+                     if ($warnaData) {
+                         $totalSudahDikirim = PengirimanWarna::whereHas('pengiriman', function ($query) use ($pengiriman) {
+                             $query->where('id_spk', $pengiriman->id_spk);
+                         })
+                         ->where('warna', $warna->warna)
+                         ->sum('jumlah_dikirim');
+     
+                         $sisaBarang = $warnaData->qty - $totalSudahDikirim;
+                         $sisaBarangPerWarna[$warna->warna] = $sisaBarang;
+                     }
+                 }
+     
+                 // Tambahkan properti nama_penjahit
+                 $pengiriman->sisa_barang_per_warna = $sisaBarangPerWarna;
+                 $pengiriman->nama_penjahit = $pengiriman->spk->penjahit->nama_penjahit ?? null;
+     
+                 return $pengiriman;
+             });
+     
+         return response()->json(['data' => $pengiriman]);
+     }
+     
 
 public function store(Request $request)
 {
