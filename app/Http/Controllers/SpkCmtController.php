@@ -11,21 +11,41 @@ use App\Models\LogStatus;
 use PDF;
 use Illuminate\Validation\Rule;
 
+
 class SpkCmtController extends Controller
 {
     // Menampilkan semua SPK
-    public function index()
+    public function index(Request $request)
 {
-    $spk = SpkCmt::with('warna')->get()->map(function ($item) {
+    // Ambil status filter dari request (jika ada)
+    $statusFilter = $request->query('status');
+
+    $query = SpkCmt::with(['warna', 'pengiriman']);
+    
+    // Jika ada filter status, tambahkan ke query
+    if ($statusFilter) {
+        $query->where('status', $statusFilter);
+    }
+
+    // Ambil data dari query dan lakukan mapping
+    $spk = $query->get()->map(function ($item) {
         // Hitung sisa hari dari deadline
         $deadline = \Carbon\Carbon::parse($item->deadline);
-        $item->sisa_hari = $deadline->isPast() ? 0 : $deadline->diffInDays(now());
+        $item->sisa_hari = $item->sisa_hari;  // Memanggil accessor sisa_hari
+
+        // Ambil accessor untuk status_with_color
+        $item->status_with_color = $item->status_with_color;
+
+        // Hitung total barang dikirim
+        $item->total_barang_dikirim = $item->pengiriman->sum('total_barang_dikirim');
+
         return $item;
     });
 
     return response()->json($spk);
 }
 
+    
 
     // Menampilkan form untuk membuat SPK baru (untuk React, ini bisa digantikan dengan form di frontend)
     public function create()
@@ -289,22 +309,23 @@ class SpkCmtController extends Controller
             'status' => ['required', 'string', Rule::in(['Pending', 'In Progress', 'Completed'])],
             'keterangan' => ['nullable', 'string', 'max:255'],
         ]);
-
+    
         $spk = SpkCmt::findOrFail($id);
         $statusLama = $spk->status;
-
-        if ($spk->status != $validated['status']) {
-            $spk->update(['status' => $validated['status']]);
-
+    
+        if ($spk->status !== $validated['status']) {
+            $spk->setStatus($validated['status']);
+            
+           
             LogStatus::create([
                 'id_spk' => $spk->id_spk,
                 'status_lama' => $statusLama,
                 'status_baru' => $validated['status'],
-               'keterangan' => $validated['keterangan'] ?? null,
+                'keterangan' => $validated['keterangan'] ?? null,
                 'tanggal_aktivitas' => now(),
             ]);
         }
-
+    
         return response()->json([
             'message' => 'Status berhasil diperbarui',
             'data' => [
@@ -313,7 +334,7 @@ class SpkCmtController extends Controller
             ],
         ]);
     }
-
+    
     public function getLogStatus($id)
     {
         $logs = getLogStatus::where('id_spk', $id)
@@ -322,15 +343,31 @@ class SpkCmtController extends Controller
         return response()->json($logs);
     }
     public function getAllLogDeadlines()
-{
-    // Ambil semua log deadline
-    $logs = LogDeadline::orderBy('tanggal_aktivitas', 'desc')->get();
+    {
+        // Ambil semua log deadline
+        $logs = LogDeadline::orderBy('tanggal_aktivitas', 'desc')->get();
 
-    // Kembalikan response dengan semua log deadline
-    return response()->json($logs);
+        // Kembalikan response dengan semua log deadline
+        return response()->json($logs);
+    }
+
+
+public function debugDeadlines()
+{
+    $spk = SpkCmt::all()->map(function ($item) {
+        $deadline = \Carbon\Carbon::parse($item->deadline);
+        return [
+            'id_spk' => $item->id_spk,
+            'deadline' => $item->deadline,
+            'now' => now()->toDateString(),
+            'sisa_hari' => $deadline->isPast() ? 0 : $deadline->diffInDays(now()),
+        ];
+    });
+
+    return response()->json($spk);
 }
 
-
+    
 
 
 

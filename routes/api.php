@@ -31,6 +31,8 @@ Route::resource('spkcmt', SpkCmtController::class);
 
 Route::resource('laporancmt', LaporanCmtController::class);
 Route::apiResource('penjahit', PenjahitController::class);
+Route::get('/debug-deadlines', [SpkCmtController::class, 'debugDeadlines']);
+
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
 Route::get('/spk-cmt/{id}/download-staff-pdf', [SpkCmtController::class, 'downloadStaffPdf'])->name('spk.downloadStaffPdf');
 // Nested resource untuk warna (dalam SPK tertentu)
