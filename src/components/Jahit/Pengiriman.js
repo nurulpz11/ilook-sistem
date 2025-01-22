@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "./Penjahit.css";
+import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList,  } from 'react-icons/fa';
 
 const Pengiriman = () => {
     const [pengirimans, setPengirimans] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [showForm, setShowForm] = useState(false);
+    const [selectedPengiriman, setSelectedPengiriman] = useState(null);
+    const [showPopup, setShowPopup] = useState(false);
     const [newPengiriman, setNewPengiriman] = useState({
         tanggal_pengiriman: "",
         total_barang_dikirim: "",
@@ -74,6 +77,25 @@ const Pengiriman = () => {
         const { name, value } = e.target;
         setNewPengiriman((prev) => ({ ...prev, [name]: value }));
     };
+
+    const formatTanggal = (tanggal) => {
+        const date = new Date(tanggal);
+        return new Intl.DateTimeFormat("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }).format(date);
+      };
+
+      const handleDetailClick = (pengiriman) => {
+        setSelectedPengiriman(pengiriman); // Simpan detail SPK yang dipilih
+        setShowPopup(true);  // Tampilkan pop-up
+      };
+      const closePopup = () => {
+        setShowPopup(false); // Sembunyikan pop-up
+        setSelectedPengiriman(null); // Reset data SPK
+      };
+      
     return (
         <div>
             <div className="penjahit-container">
@@ -97,42 +119,43 @@ const Pengiriman = () => {
                 <table className="penjahit-table">
                     <thead>
                         <tr>
-                            <th>ID Pengiriman</th>
+                           
                             <th>ID SPK</th>
                             <th>NAMA CMT</th>
                             <th>Tanggal Pengiriman</th>
                             <th>Total Barang Dikirim</th>
                             <th>Sisa Barang</th>
                             <th>Total Bayar</th>
-                            <th>DETAIL KIRIM</th>
-                            <th>DETAIL SISA</th>
+                          
+                            <th>AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredPengirimans.map((pengiriman) => (
                             <tr key={pengiriman.id_pengiriman}>
-                                <td>{pengiriman.id_pengiriman}</td>
+                                
                                 <td>{pengiriman.id_spk}</td>
                                 <td>{pengiriman.nama_penjahit}</td>
+                                <td>{formatTanggal(pengiriman.tanggal_pengiriman)}</td>
                                 
-                                <td>{pengiriman.tanggal_pengiriman}</td>
                                 <td>{pengiriman.total_barang_dikirim}</td>
-                                <td>{pengiriman.sisa_barang}</td>
+                                <td style={{ color: pengiriman.sisa_barang > 0 ? 'red' : 'black'}}>
+                                    {pengiriman.sisa_barang}
+                                    </td>
+
                                 <td>{pengiriman.total_bayar}</td>
+                              
+                                
                                 <td>
-                                    {pengiriman.warna.map((warnaDetail) => (
-                                        <div key={warnaDetail.id_pengiriman_warna}>
-                                            {warnaDetail.warna}: {warnaDetail.jumlah_dikirim} pcs
-                                        </div>
-                                    ))}
+                                <div className="action-card">
+                                <button 
+                                    className="btn1-icon" 
+                                    onClick={() => handleDetailClick(pengiriman)}
+                                >
+                                    <FaInfoCircle className="icon" />
+                                </button>
+                                </div>                      
                                 </td>
-                                <td>
-                                {pengiriman.warna.map((warnaDetail) => (
-                    <div key={warnaDetail.id_pengiriman_warna}>
-                        {warnaDetail.warna}: {warnaDetail.sisa_barang_per_warna} pcs
-                    </div>
-                ))}
-            </td>
                             </tr>
                         ))}
                     </tbody>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './Penjahit.css';
-import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList,  } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaCog,
+  FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList, FaCheckCircle ,FaTimesCircle, FaExclamationCircle  } from 'react-icons/fa';
 
 const SpkCmt = () => {
   const [spkCmtData, setSpkCmtData] = useState([]);
@@ -9,6 +10,9 @@ const SpkCmt = () => {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpk, setSelectedSpk] = useState(null);
+  const [selectedSpkId, setSelectedSpkId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [pengirimanDetails, setPengirimanDetails] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [showDeadlineForm, setShowDeadlineForm] = useState(false);  // Form Update Deadline
   const [showStatusForm, setShowStatusForm] = useState(false); 
@@ -78,13 +82,27 @@ const SpkCmt = () => {
       }
   
       const data = await response.json();
-      alert(data.message); // Menampilkan pesan sukses
-      setShowPopup(false); // Menutup popup setelah status berhasil diperbarui
-      setShowForm(false); // Menyembunyikan form update setelah berhasil
+  
+      // Update state lokal dengan status baru
+      setSpkCmtData((prevSpkCmtData) =>
+        prevSpkCmtData.map((spk) =>
+          spk.id_spk === spkId
+            ? { ...spk, deadline: deadline, keterangan: keterangan }
+            : spk
+        )
+      );
+  
+      // Tutup popup dan form setelah pembaruan selesai
+      setShowPopup(false);
+      setShowForm(false);
+      setShowDeadlineForm(false);
+  
+      alert(data.message);
     } catch (error) {
-      alert('Error: ' + error.message); // Menampilkan pesan error
+      alert('Error: ' + error.message);
     }
   };
+  
 
    // Fungsi untuk kirim update status ke API
    const updateStatus = async (spkId) => {
@@ -103,9 +121,19 @@ const SpkCmt = () => {
       }
 
       const data = await response.json();
+      // Update state lokal dengan status baru
+      setSpkCmtData((prevSpkCmtData) =>
+      prevSpkCmtData.map((spk) =>
+        spk.id_spk === spkId
+          ? { ...spk, status: status, keterangan: keterangan }
+          : spk
+      )
+    );
+
       alert(data.message); // Menampilkan pesan sukses
       setShowPopup(false); // Menutup popup setelah status berhasil diperbarui
       setShowForm(false); // Menyembunyikan form update setelah berhasil
+      setShowStatusForm(false); // Menutup form update status
     } catch (error) {
       alert('Error: ' + error.message); // Menampilkan pesan error
     }
@@ -387,7 +415,30 @@ const handleEditClick = (spk) => {
   setNewSpk({ ...spk, warna: spk.warna || [] }); // Isi data ke form
   setShowForm(true); // Tampilkan form
 };
+const statusColors = {
+  Pending: "orange",
+  Completed: "#74a474",
+};
 
+const getStatusColor = (status, waktuPengerjaan) => {
+  if (status === "In Progress" || status === "Pending") {
+    if (waktuPengerjaan <= 7) return "#d9af5e";
+    if (waktuPengerjaan <= 14) return "#d96a5e";
+    return "purple";
+  }
+  return statusColors[status] || "gray";
+};
+const handlePengirimanDetailClick = (spk) => {
+  setSelectedSpkId(spk.id_spk); // Simpan ID SPK yang dipilih
+  setPengirimanDetails(spk.pengiriman); // Ambil data pengiriman dari properti SPK
+  setShowModal(true); // Tampilkan modal
+};
+
+const getFilteredSpk = async (status) => {
+  const response = await fetch(`http://localhost:8000/api/spkcmt?status=${status}`);
+  const data = await response.json();
+  setSpkCmtData(data);  // Update state dengan data yang difilter
+};
 
 return (
   <div>
@@ -397,20 +448,38 @@ return (
       {error && <p className="error-message">{error}</p>}
 
       {/* Search Bar */}
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Cari data SPK..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button className="add-button" onClick={() => setShowForm(true)}>
-          Tambah
-        </button>
-      </div>
+     
     </div>
 
     <div className="table-container">
+   
+        <div className="filter-header">
+        <button onClick={() => setShowForm(true)}>
+          Tambah
+        </button>
+        <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Cari nama produk..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        
+      </div>
+          <label htmlFor="statusFilter" className="filter-label"></label>
+          <select 
+            id="statusFilter" 
+            className="filter-select" 
+            onChange={(e) => getFilteredSpk(e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+      </div>
+
+
       <table className="penjahit-table">
         <thead>
           <tr>
@@ -419,11 +488,10 @@ return (
             <th>JUMLAH PRODUK</th>
             <th>DEADLINE</th>
             <th>SISA HARI</th>
+            <th>WAKTU PENGERJAAN</th>
             <th>NAMA PENJAHIT</th>
-            <th>TANGGAL SPK</th>
+            <th>JUMLAH DIKIRIM</th>
             <th>STATUS</th>
-            <th>TANGGAL AMBIL</th>
-            <th>GAMBAR</th>
             <th>AKSI</th>
             <th>DOWNLOAD</th>
           </tr>
@@ -436,26 +504,39 @@ return (
               <td>{spk.jumlah_produk}</td>
               <td>{formatTanggal(spk.deadline)}</td>
               <td>{spk.sisa_hari}</td> 
+              <td>{spk.waktu_pengerjaan}</td> 
+             
               <td>
                 {
                   penjahitList.find(penjahit => penjahit.id_penjahit === spk.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                 }
               </td>
-              <td>{formatTanggal(spk.tgl_spk)}</td>
-              <td>{spk.status}</td>
-    
-             
               <td>
-                {spk.gambar_produk ? (
-                  <img
-                    src={`http://localhost:8000/storage/${spk.gambar_produk}`}
-                    alt="Gambar Produk"
-                    className="gambar-produk"
-                  />
-                ) : (
-                  'Tidak ada gambar'
-                )}
-              </td>
+            <button
+              onClick={() => handlePengirimanDetailClick(spk)}
+              className="btn-pengiriman-detail"
+            >
+              {spk.total_barang_dikirim || 0}
+            </button>
+        </td>
+
+
+
+              <td>
+              <span
+                style={{
+                  backgroundColor: getStatusColor(spk.status, spk.waktu_pengerjaan),
+                  color: "white",
+                  padding: "5px 10px",
+                  borderRadius: "5px",
+                }}
+              >
+                {spk.status}
+              </span>
+            </td>
+
+
+   
               <td>
        
                 <div className="action-card">
@@ -471,16 +552,21 @@ return (
                   >
                     <FaClock className="icon" />
                   </button>
-                  <button 
+                 
+                   <button 
+                    className="btn1-icon" 
+                     onClick={() =>handleUpdateStatusClick(spk)}
+                     > 
+                     <  FaCog  className="icon" />
+                   </button>
+
+                   <button 
                     className="btn1-icon" 
                      onClick={() => handleEditClick(spk)}
                      > 
                      <FaEdit className="icon" />
                    </button>
-                </div>
-         
-
-              
+                </div>      
               </td>
               <td>
                 <button
@@ -489,8 +575,6 @@ return (
                   >
                         <FaSave className="icon" />
 
-               
-               
                 </button>
               
                 <button
@@ -506,6 +590,38 @@ return (
         </tbody>
       </table>
     </div>
+
+
+    {showModal && (
+  <div className="modal-pengiriman">
+    <div className="modal-content-pengiriman">
+      <h3>Detail Pengiriman untuk SPK ID: {selectedSpkId}</h3>
+    
+      <table>
+        <thead>
+          <tr>
+            <th>ID Pengiriman</th>
+            <th>Tanggal Pengiriman</th>
+            <th>Total Barang Dikirim</th>
+            <th>Sisa Barang</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pengirimanDetails.map((detail) => (
+            <tr key={detail.id_pengiriman}>
+              <td>{detail.id_pengiriman}</td>
+              <td>{detail.tanggal_pengiriman}</td>
+              <td>{detail.total_barang_dikirim}</td>
+              <td>{detail.sisa_barang}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button onClick={() => setShowModal(false)}>Tutup</button>
+    </div>
+  </div>
+)}
+
 
    
  {/* Pop-Up Card */}
