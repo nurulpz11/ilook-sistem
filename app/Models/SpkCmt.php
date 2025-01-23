@@ -11,7 +11,8 @@ class SpkCmt extends Model
     use HasFactory;
     protected $table = 'spk_cmt'; // Nama tabel
     protected $primaryKey = 'id_spk'; // Primary key
-    protected $appends = ['waktu_pengerjaan'];
+    protected $appends = ['waktu_pengerjaan', 'sisa_hari_status'];
+    
 
     protected $fillable = [
         'tgl_spk',
@@ -72,20 +73,34 @@ class SpkCmt extends Model
 
     public function getWaktuPengerjaanAttribute()
     {
-        // Pastikan tanggal ambil ada
+        if (in_array($this->status, ['Pending', 'Completed'])) {
+            \Log::info('Status Pending atau Completed - Mengembalikan waktu_pengerjaan_terakhir', [
+                'status' => $this->status,
+                'waktu_pengerjaan_terakhir' => $this->waktu_pengerjaan_terakhir,
+            ]);
+            return $this->waktu_pengerjaan_terakhir; // Gunakan nilai terakhir
+        }
+    
         if (!$this->tanggal_ambil) {
+            \Log::info('Tanggal ambil tidak ada - Mengembalikan null');
             return null; // Jika belum ada tanggal ambil, return null
         }
     
         $tanggalMulai = Carbon::parse($this->tanggal_ambil);
+        $tanggalSelesai = now();
     
-        // Jika dianggap selesai, gunakan updated_at; jika belum, gunakan now()
-        $tanggalSelesai = now(); // Ganti $this->updated_at
-
+        $waktuPengerjaan = $tanggalMulai->diffInDays($tanggalSelesai);
     
-        // Hitung selisih hari
-        return $tanggalMulai->diffInDays($tanggalSelesai);
+        \Log::info('Menghitung waktu pengerjaan', [
+            'tanggal_ambil' => $this->tanggal_ambil,
+            'tanggal_sekarang' => now(),
+            'waktu_pengerjaan' => $waktuPengerjaan,
+        ]);
+    
+        return $waktuPengerjaan;
     }
+    
+    
     public function getStatusWithColorAttribute()
     {
         if (in_array($this->status, ['In Progress', 'Pending'])) {
@@ -123,8 +138,8 @@ class SpkCmt extends Model
 
     public function setStatus($newStatus)
     {
-        // Simpan nilai terakhir jika status berubah menjadi Pending
-        if ($newStatus === 'Pending') {
+        // Simpan nilai terakhir jika status berubah menjadi Pending atau Completed
+        if (in_array($newStatus, ['Pending', 'Completed'])) {
             $this->sisa_hari_terakhir = $this->getSisaHariAttribute();
             $this->waktu_pengerjaan_terakhir = $this->getWaktuPengerjaanAttribute();
         }
@@ -135,34 +150,46 @@ class SpkCmt extends Model
         // Simpan perubahan ke database
         $this->save();
     }
+    
     public function getSisaHariAttribute()
-{
-    if ($this->status === 'Pending') {
-        \Log::info('Status Pending - Mengembalikan sisa_hari_terakhir', [
-            'sisa_hari_terakhir' => $this->sisa_hari_terakhir,
+    {
+        if (in_array($this->status, ['Pending', 'Completed'])) {
+            \Log::info('Status Pending atau Completed - Mengembalikan sisa_hari_terakhir', [
+                'status' => $this->status,
+                'sisa_hari_terakhir' => $this->sisa_hari_terakhir,
+            ]);
+            return $this->sisa_hari_terakhir; // Gunakan nilai terakhir
+        }
+    
+        if (!$this->deadline) {
+            \Log::info('Deadline tidak ada - Mengembalikan null');
+            return null; // Jika tidak ada deadline, return null
+        }
+    
+        $deadline = Carbon::parse($this->deadline);
+    
+        $sisaHari = $deadline->isPast() ? 0 : $deadline->diffInDays(now());
+    
+        \Log::info('Menghitung sisa_hari', [
+            'deadline' => $this->deadline,
+            'tanggal_sekarang' => now(),
+            'sisaHari' => $sisaHari,
         ]);
-        return $this->sisa_hari_terakhir; // Jika status "Pending", gunakan nilai terakhir
+    
+        return $sisaHari;
+    }
+    public function getSisaHariStatusAttribute()
+    {
+        if ($this->sisa_hari <= 3) {
+            return 'danger'; // Tampilkan warna merah
+        } elseif ($this->sisa_hari > 3 && $this->sisa_hari <= 7) {
+            return 'warning'; // Warna kuning (opsional)
+        } else {
+            return 'safe'; // Warna hijau
+        }
     }
 
-    if (!$this->deadline) {
-        \Log::info('Deadline tidak ada - Mengembalikan null');
-        return null; // Jika tidak ada deadline, return null
-    }
-
-    $deadline = Carbon::parse($this->deadline);
-
-    // Menggunakan isPast() dan diffInDays()
-    $sisaHari = $deadline->isPast() ? 0 : $deadline->diffInDays(now());
-
-    \Log::info('Menghitung sisa_hari', [
-        'deadline' => $this->deadline,
-        'tanggalSekarang' => now(),
-        'sisaHari' => $sisaHari,
-    ]);
-
-    return $sisaHari;
-}
-
+    
 
 
 

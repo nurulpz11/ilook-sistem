@@ -175,9 +175,18 @@ public function store(Request $request)
             Log::info('Sisa Barang Total:', ['sisa_barang_total' => $sisaBarangTotal]);
 
             if ((int) $sisaBarangTotal === 0) {
-                $spk->update(['status' => 'Completed']);
-                Log::info('Status SPK diperbarui menjadi Completed', ['id_spk' => $spk->id_spk]);
+                $spk->update([
+                    'status' => 'Completed',
+                    'waktu_pengerjaan_terakhir' => $spk->getWaktuPengerjaanAttribute(), 
+                    'sisa_hari_terakhir' => $spk->getSisaHariAttribute(), 
+                ]);
+                Log::info('Status SPK diperbarui menjadi Completed', [
+                    'id_spk' => $spk->id_spk,
+                    'waktu_pengerjaan_terakhir' => $spk->waktu_pengerjaan_terakhir,
+                    'sisa_hari_terakhir' => $spk->sisa_hari_terakhir,
+                ]);
             }
+            
             
 
             // Respons dengan `sisa_barang_per_warna`
