@@ -440,6 +440,7 @@ const getFilteredSpk = async (status) => {
   setSpkCmtData(data);  // Update state dengan data yang difilter
 };
 
+
 return (
   <div>
     <div className="penjahit-container">
@@ -454,7 +455,8 @@ return (
     <div className="table-container">
    
         <div className="filter-header">
-        <button onClick={() => setShowForm(true)}>
+        <button 
+        onClick={() => setShowForm(true)}>
           Tambah
         </button>
         <div className="search-bar">
@@ -626,31 +628,31 @@ return (
    
  {/* Pop-Up Card */}
 {showPopup && selectedSpk && (
-  <div className="popup-overlay">
-    <div className="popup-card">
-      <div className="popup-header">
+  <div className="popup1-overlay">
+    <div className="popup1-card">
+      <div className="popup1-header">
         <h2>Detail SPK</h2>
         <button className="btn-close" onClick={closePopup}>
           &times;
         </button>
       </div>
 
-      <div className="popup-content">
+      <div className="popup1-content">
         {/* Gambar Produk */}
-        <div className="popup-image-container">
+        <div className="popup1-image-container">
           {selectedSpk.gambar_produk ? (
             <img
               src={`http://localhost:8000/storage/${selectedSpk.gambar_produk}`}
               alt="Gambar Produk"
-              className="popup-image"
+              className="popup1-image"
             />
           ) : (
-            <div className="popup-no-image">No Image</div>
+            <div className="popup1-no-image">No Image</div>
           )}
         </div>
 
         {/* Detail Produk */}
-        <div className="popup-details">
+        <div className="popup1-details">
           <div className="detail-group">
             <p><span>Nama Produk:</span> {selectedSpk.nama_produk}</p>
             <p><span>Jumlah Produk:</span> {selectedSpk.jumlah_produk}</p>

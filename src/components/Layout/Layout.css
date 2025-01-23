@@ -47,7 +47,7 @@ body, html {
 }
 
 .sidebar-link:hover, .sidebar-link.active {
-  background-color: #2980b9;
+  background-color: rgb(141, 206, 226);
 }
 
 .icon {

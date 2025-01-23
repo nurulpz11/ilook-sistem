@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import "./Penjahit.css";
+import "./Pengiriman.css";
 import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList,  } from 'react-icons/fa';
 
 const Pengiriman = () => {
     const [pengirimans, setPengirimans] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [showForm, setShowForm] = useState(false);
+    const [showModal, setShowModal] = useState(false);
     const [selectedPengiriman, setSelectedPengiriman] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [newPengiriman, setNewPengiriman] = useState({
@@ -26,15 +27,17 @@ const Pengiriman = () => {
             })
             .catch((error) => console.error("Error fetching data:", error));
     }, []);
+    
 
+  
+      
+      
     // Filter data berdasarkan pencarian
-    const filteredPengirimans = pengirimans
-    .filter((pengiriman) =>
-        pengiriman.id_spk.toString().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => a.id_spk - b.id_spk); // Urutkan dari kecil ke besar
+    const filteredPengirimans = pengirimans.filter((pengiriman) =>
+        pengiriman.nama_penjahit.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-
+    
     // Handle submit form
     const handleFormSubmit = (e) => {
         e.preventDefault();
@@ -100,22 +103,22 @@ const Pengiriman = () => {
         <div>
             <div className="penjahit-container">
         <h1>Daftar Pengiriman</h1>
-
-        {/* Search Bar */}
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Cari nama penjahit..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button className="add-button" onClick={() => setShowForm(true)}>
-            Tambah 
-          </button>
-        </div>
       </div>
-            {/* Tabel Pengiriman */}
             <div className="table-container">
+                <div className="filter-header">
+                <button 
+                onClick={() => setShowForm(true)}>
+                    Tambah 
+                </button>
+                <div className="search-bar">
+                <input
+                    type="text"
+                    placeholder="Cari nama penjahit..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                </div>
+            </div>
                 <table className="penjahit-table">
                     <thead>
                         <tr>
@@ -161,6 +164,78 @@ const Pengiriman = () => {
                     </tbody>
                 </table>
             </div>
+
+
+ {/* Pop-Up Card */}
+ {showPopup && selectedPengiriman && (
+  <div className="popup-overlay">
+      <div className="popup-card">
+      <div className="popup-header">
+        <h2>Detail Pengiriman</h2>
+        <button className="btn-close" onClick={closePopup}>
+          &times;
+        </button>
+      </div>
+            <div className="popup-content">
+            {selectedPengiriman ? (
+                <div className="popup-details">
+                    <table>
+                        <thead>
+                            <tr>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span>ID SPK:</span></td>
+                                <td>{selectedPengiriman.id_spk}</td>
+                            </tr>
+                            <tr>
+                                <td><span>Tanggal Pengiriman:</span></td>
+                                <td>{selectedPengiriman.tanggal_pengiriman}</td>
+                            </tr>
+                            <tr>
+                                <td><span>Total Barang:</span></td>
+                                <td>{selectedPengiriman.total_barang_dikirim}</td>
+                            </tr>
+                            <tr>
+                                <td><span>Sisa Barang:</span></td>
+                                <td>{selectedPengiriman.sisa_barang}</td>
+                            </tr>
+                            <tr>
+                                <td><span>Total Bayar:</span></td>
+                                <td>{selectedPengiriman.total_bayar}</td>
+                            </tr>
+                            <tr>
+                                <td><span>Detail warna dikirim:</span></td>
+                                <td>{selectedPengiriman.warna.map((warnaDetail) => (
+                                        <div key={warnaDetail.id_pengiriman_warna}>
+                                            {warnaDetail.warna}: {warnaDetail.jumlah_dikirim} pcs
+                                        </div>
+                                    ))}</td>
+                            </tr>
+                            <tr>
+                                <td><span>Detail sisa warna:</span></td>
+                                <td>{selectedPengiriman.warna.map((warnaDetail) => (
+                                        <div key={warnaDetail.id_pengiriman_warna}>
+                                            {warnaDetail.warna}: {warnaDetail.sisa_barang_per_warna} pcs
+                                        </div>
+                                    ))}</td>
+                            </tr>
+                           
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <p>Loading...</p> // Menampilkan loading atau pesan saat data belum ada
+            )}
+        </div>
+        </div>
+</div>
+)}
+
+
+
 
             {/* Modal Form */}
             {showForm && (

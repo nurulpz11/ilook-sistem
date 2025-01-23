@@ -10,11 +10,11 @@ body {
   justify-content: space-between; /* Pisahkan elemen ke kiri dan kanan */
   align-items: center; /* Ratakan elemen secara vertikal */
   padding: 20px 20px;
-width:80%;
+width:100%;
   border-radius: 10px;
   border-bottom: 1px solid #e9ecef;
   margin-top: 10px;
-  height: 310px;
+  height: 100vh; 
 }
 
 .dashboard-header {
@@ -37,48 +37,74 @@ width:80%;
 }
 
 .dashboard-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 0px;
+  display: flex;
+  flex-direction: column; /* Atur elemen secara vertikal */
+  gap: 20px; /* Jarak antar elemen */
+}
+.card-container {
+  display: flex;
+  flex-wrap: wrap; /* Agar kartu beralih ke baris baru jika tidak cukup ruang */
+  gap: 30px;
 }
 
 .card {
-  background: #f7f7f7;
+  background: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
-  text-align: center;
-  width: 70%;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card h2 {
-  font-size: 1.2rem;
-  margin-bottom: 10px;
-}
-
-.card .value {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #81c6e6;
+  width: 380px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  transition: transform 0.3s;
 }
 
 .card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-5px);
 }
 
-.card-animate {
-  animation: fadeIn 0.8s ease-in-out;
+.card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24px;
+  margin-right: 10px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.card-content {
+  flex: 1;
+}
+
+.value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 10px 0 0;
+}
+.chart-container {
+  flex-shrink: 0; /* Pastikan chart-container tidak menyusut */
+  width: 400px; /* Atur ukuran chart sesuai kebutuhan */
+}
+.chart-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.chart-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #426372;
+  margin-bottom: 20px;
+  text-align: center;
 }
