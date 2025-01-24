@@ -84,22 +84,31 @@ width:100%;
   font-weight: bold;
   margin: 10px 0 0;
 }
-.chart-container {
-  flex-shrink: 0; /* Pastikan chart-container tidak menyusut */
-  width: 400px; /* Atur ukuran chart sesuai kebutuhan */
+.charts-wrapper {
+  display: flex;
+  gap: 40px; /* Jarak antara donut chart dan pie chart */
+  justify-content: flex-start; /* Pusatkan elemen secara horizontal */
+  align-items: flex-start; /* Pastikan elemen sejajar di bagian atas */
+  margin-top: 20px; /* Tambahkan margin untuk jarak dari elemen lain */
 }
+
+.chart-container {
+ 
+  max-width: 500px; /* Atur ukuran maksimal chart */
+  margin: 0; /* Pastikan tidak ada margin di sekitar chart-container */
+  padding: 0; 
+}
+
 .chart-card {
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
-  width: 380px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin-top: 10px;
 }
+
 
 .chart-title {
   font-size: 1.5rem;
@@ -107,4 +116,52 @@ width:100%;
   color: #426372;
   margin-bottom: 20px;
   text-align: center;
+}
+
+.chart-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80%;
+}
+
+.chart-wrapper {
+  flex: 1;
+  
+ 
+}
+
+.chart-info {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.info-color {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.info-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.info-percentage {
+  font-size: 14px;
+  color: #666;
+}
+
+.info-percentage {
+  font-size: 14px;
+  color: #666;
 }
