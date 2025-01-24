@@ -10,6 +10,7 @@ use App\Models\LogDeadline;
 use App\Models\LogStatus;
 use PDF;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 
 class SpkCmtController extends Controller
@@ -352,20 +353,234 @@ class SpkCmtController extends Controller
     }
 
 
-public function debugDeadlines()
-{
-    $spk = SpkCmt::all()->map(function ($item) {
-        $deadline = \Carbon\Carbon::parse($item->deadline);
-        return [
-            'id_spk' => $item->id_spk,
-            'deadline' => $item->deadline,
-            'now' => now()->toDateString(),
-            'sisa_hari' => $deadline->isPast() ? 0 : $deadline->diffInDays(now()),
-        ];
-    });
+    public function debugDeadlines()
+    {
+        $spk = SpkCmt::all()->map(function ($item) {
+            $deadline = \Carbon\Carbon::parse($item->deadline);
+            return [
+                'id_spk' => $item->id_spk,
+                'deadline' => $item->deadline,
+                'now' => now()->toDateString(),
+                'sisa_hari' => $deadline->isPast() ? 0 : $deadline->diffInDays(now()),
+            ];
+        });
 
-    return response()->json($spk);
+        return response()->json($spk);
+    }
+
+    public function getKinerjaCmt()
+{
+    $spks = SpkCmt::with('penjahit')->get();
+
+    $penjahitKinerja = [];
+
+    foreach ($spks as $spk) {
+        $status = $spk->status;
+    
+        // Abaikan status 'In Progress'
+        if ($status === 'In Progress') {
+            continue;
+        }
+    
+        $namaPenjahit = $spk->penjahit ? trim($spk->penjahit->nama_penjahit) : 'Tidak diketahui';
+        $totalBarangDikirim = (int)$spk->total_barang_dikirim;
+        $waktuPengerjaanTerakhir = $spk->waktu_pengerjaan_terakhir;
+    
+        // Log untuk memeriksa nilai atribut yang digunakan
+        \Log::info("SPK ID: {$spk->id_spk}, Penjahit: {$namaPenjahit}, Status: {$status}, Barang Dikirim: {$totalBarangDikirim}, Waktu Pengerjaan Terakhir: {$waktuPengerjaanTerakhir}");
+    
+        // Tentukan kinerja berdasarkan waktu pengerjaan terakhir
+        $kinerja = 0;
+        if ($waktuPengerjaanTerakhir <= 7) {
+            $kinerja = 100;
+        } elseif ($waktuPengerjaanTerakhir <= 14) {
+            $kinerja = 80;
+        } elseif ($waktuPengerjaanTerakhir <= 21) {
+            $kinerja = 60;
+        } else {
+            $kinerja = 40;
+        }
+    
+        if (!isset($penjahitKinerja[$namaPenjahit])) {
+            $penjahitKinerja[$namaPenjahit] = [
+                'total_kinerja' => 0,
+                'total_spk' => 0,
+                'rata_rata' => 0,
+                'kategori' => '',
+                'spks' => [],
+            ];
+        }
+    
+        // Tambahkan detail SPK ke penjahit
+        $penjahitKinerja[$namaPenjahit]['spks'][] = [
+            'id_spk' => $spk->id_spk,
+            'total_barang_dikirim' => $spk->total_barang_dikirim,
+            'waktu_pengerjaan_terakhir' => $waktuPengerjaanTerakhir,
+            'kinerja' => $kinerja,
+            'status' => $spk->status
+        ];
+    
+        // Menambahkan kinerja untuk rata-rata
+        $penjahitKinerja[$namaPenjahit]['total_kinerja'] += $kinerja;
+        $penjahitKinerja[$namaPenjahit]['total_spk']++;
+    }
+    
+
+    // Kalkulasi rata-rata kinerja per penjahit
+    foreach ($penjahitKinerja as $namaPenjahit => &$data) {
+        $data['rata_rata'] = $data['total_spk'] > 0 ? $data['total_kinerja'] / $data['total_spk'] : 0;
+
+        // Tentukan kategori berdasarkan rata-rata kinerja
+        if ($data['rata_rata'] >= 90) {
+            $data['kategori'] = 'A';
+        } elseif ($data['rata_rata'] >= 80) {
+            $data['kategori'] = 'B';
+        } elseif ($data['rata_rata'] >= 70) {
+            $data['kategori'] = 'C';
+        } else {
+            $data['kategori'] = 'D';
+        }
+    }
+
+    return response()->json($penjahitKinerja);
 }
+
+
+    public function tentukanKategori($spk)
+    {
+        $status = $spk->status;
+    
+        if (in_array($status, ['Completed', 'Pending'])) {
+            // Gunakan waktu_pengerjaan_terakhir untuk kategori
+            $waktu = $spk->waktu_pengerjaan_terakhir;
+        } else {
+            // Jika status lain, langsung masukkan ke kategori D
+            return null;
+        }
+    
+        // Tentukan kategori berdasarkan durasi waktu
+        if ($waktu <= 7) {
+            return 'A';
+        } elseif ($waktu > 7 && $waktu <= 14) {
+            return 'B';
+        } elseif ($waktu > 14 && $waktu <= 21) {
+            return 'C';
+        } else {
+            return 'D';
+        }
+    }
+
+    public function getKategoriCount()
+{
+    $spks = SpkCmt::with('penjahit')->get();
+
+    $kategoriCount = [
+        'A' => 0,
+        'B' => 0,
+        'C' => 0,
+        'D' => 0,
+    ];
+
+    foreach ($spks as $spk) {
+        $namaPenjahit = $spk->penjahit ? trim($spk->penjahit->nama_penjahit) : 'Tidak diketahui';
+        $waktuPengerjaanTerakhir = $spk->waktu_pengerjaan_terakhir;
+
+        // Tentukan kinerja berdasarkan waktu pengerjaan
+        if ($waktuPengerjaanTerakhir <= 7) {
+            $kategori = 'A';
+        } elseif ($waktuPengerjaanTerakhir <= 14) {
+            $kategori = 'B';
+        } elseif ($waktuPengerjaanTerakhir <= 21) {
+            $kategori = 'C';
+        } else {
+            $kategori = 'D';
+        }
+
+        $kategoriCount[$kategori]++;
+    }
+
+    return response()->json($kategoriCount);
+}
+
+public function getKategoriCountByPenjahit()
+{
+    $spks = SpkCmt::with('penjahit')->get();
+
+    $penjahitKinerja = [];
+
+    foreach ($spks as $spk) {
+        $status = $spk->status;
+
+        // Abaikan status 'In Progress'
+        if ($status === 'In Progress') {
+            continue;
+        }
+
+        $namaPenjahit = $spk->penjahit ? trim($spk->penjahit->nama_penjahit) : 'Tidak diketahui';
+        $waktuPengerjaanTerakhir = $spk->waktu_pengerjaan_terakhir;
+
+        if (!isset($penjahitKinerja[$namaPenjahit])) {
+            $penjahitKinerja[$namaPenjahit] = [
+                'total_kinerja' => 0,
+                'total_spk' => 0,
+                'kategori' => '',
+            ];
+        }
+
+        // Tentukan kinerja berdasarkan waktu pengerjaan
+        if ($waktuPengerjaanTerakhir <= 7) {
+            $kinerja = 100;
+        } elseif ($waktuPengerjaanTerakhir <= 14) {
+            $kinerja = 80;
+        } elseif ($waktuPengerjaanTerakhir <= 21) {
+            $kinerja = 60;
+        } else {
+            $kinerja = 40;
+        }
+
+        $penjahitKinerja[$namaPenjahit]['total_kinerja'] += $kinerja;
+        $penjahitKinerja[$namaPenjahit]['total_spk']++;
+    }
+
+    $kategoriCount = [
+        'A' => 0,
+        'B' => 0,
+        'C' => 0,
+        'D' => 0,
+    ];
+
+    // Tentukan kategori untuk setiap penjahit
+    foreach ($penjahitKinerja as $namaPenjahit => $data) {
+        $rataRata = $data['total_spk'] > 0 ? $data['total_kinerja'] / $data['total_spk'] : 0;
+
+        if ($rataRata >= 90) {
+            $kategori = 'A';
+        } elseif ($rataRata >= 80) {
+            $kategori = 'B';
+        } elseif ($rataRata >= 70) {
+            $kategori = 'C';
+        } else {
+            $kategori = 'D';
+        }
+
+        $penjahitKinerja[$namaPenjahit]['kategori'] = $kategori;
+        $kategoriCount[$kategori]++;
+    }
+
+    // Hitung persentase
+    $totalPenjahit = array_sum($kategoriCount);
+    foreach ($kategoriCount as $key => $count) {
+        $kategoriCount[$key] = [
+            'count' => $count,
+            'percentage' => $totalPenjahit > 0 ? round(($count / $totalPenjahit) * 100, 2) : 0,
+        ];
+    }
+
+    return response()->json($kategoriCount);
+}
+
+    
+
 
     
 

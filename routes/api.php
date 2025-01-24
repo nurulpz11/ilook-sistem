@@ -28,11 +28,13 @@ use App\Http\Controllers\PendapatanController;
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::resource('spkcmt', SpkCmtController::class);
+Route::get('/kinerja-cmt/kategori-count', [SpkCmtController::class, 'getKategoriCount']);
+Route::get('/kinerja-cmt/kategori-count-by-penjahit', [SpkCmtController::class, 'getKategoriCountByPenjahit']);
 
 Route::resource('laporancmt', LaporanCmtController::class);
 Route::apiResource('penjahit', PenjahitController::class);
 Route::get('/debug-deadlines', [SpkCmtController::class, 'debugDeadlines']);
-
+Route::get('/kinerja-cmt', [SpkCmtController::class, 'getKinerjaCmt']);
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
 Route::get('/spk-cmt/{id}/download-staff-pdf', [SpkCmtController::class, 'downloadStaffPdf'])->name('spk.downloadStaffPdf');
 // Nested resource untuk warna (dalam SPK tertentu)
