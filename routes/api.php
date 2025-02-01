@@ -28,6 +28,8 @@ use App\Http\Controllers\PendapatanController;
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::resource('spkcmt', SpkCmtController::class);
+Route::get('spkcmt/all', [SpkCmtController::class, 'getAll']); // Tambahkan ini
+
 Route::get('/kinerja-cmt/kategori-count', [SpkCmtController::class, 'getKategoriCount']);
 Route::get('/kinerja-cmt/kategori-count-by-penjahit', [SpkCmtController::class, 'getKategoriCountByPenjahit']);
 
@@ -42,6 +44,9 @@ Route::resource('spkcmt.warna', WarnaController::class)->shallow();
 Route::put('/spk/{id}/deadline', [SpkCmtController::class, 'updateDeadline']);
 Route::get('/spk/{id}/log-deadline', [SpkCmtController::class, 'getLogDeadline']);
 Route::get('/log-deadlines', [SpkCmtController::class, 'getAllLogDeadlines']);
+
+Route::get('/spk/{id}/log-status', [SpkCmtController::class, 'getLogDeadline']);
+Route::get('/log-status', [SpkCmtController::class, 'getAllLogStatus']);
 
 Route::put('/spk/{id}/status', [SpkCmtController::class, 'updateStatus']);
 Route::get('/spk/{id}/log-status', [SpkCmtController::class, 'getLogStatus']);
@@ -67,6 +72,7 @@ Route::post('/pendapatan', [PendapatanController::class, 'store']);
 Route::get('pendapatan/{id}/pengiriman', [PendapatanController::class, 'showPengiriman']);
 Route::get('/penjahit-list', [PendapatanController::class, 'getPenjahitList']);
 
+Route::get('/pendapatan/{id}/download-nota', [PendapatanController::class, 'downloadNota']);
 
 
 

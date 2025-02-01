@@ -14,40 +14,47 @@ class PengirimanController extends Controller
 {
 
      // Menampilkan semua penjahit
-     public function index()
-     {
-         $pengiriman = Pengiriman::with(['warna', 'spk.penjahit'])
-             ->get()
-             ->map(function ($pengiriman) {
-                 // Hitung sisa barang per warna
-                 $sisaBarangPerWarna = [];
-                 foreach ($pengiriman->warna as $warna) {
-                     $warnaData = Warna::where('id_spk', $pengiriman->id_spk)
-                         ->where('nama_warna', $warna->warna)
-                         ->first();
-     
-                     if ($warnaData) {
-                         $totalSudahDikirim = PengirimanWarna::whereHas('pengiriman', function ($query) use ($pengiriman) {
-                             $query->where('id_spk', $pengiriman->id_spk);
-                         })
-                         ->where('warna', $warna->warna)
-                         ->sum('jumlah_dikirim');
-     
-                         $sisaBarang = $warnaData->qty - $totalSudahDikirim;
-                         $sisaBarangPerWarna[$warna->warna] = $sisaBarang;
-                     }
-                 }
-     
-                 // Tambahkan properti nama_penjahit
-                 $pengiriman->sisa_barang_per_warna = $sisaBarangPerWarna;
-                 $pengiriman->nama_penjahit = $pengiriman->spk->penjahit->nama_penjahit ?? null;
-     
-                 return $pengiriman;
-             });
-     
-         return response()->json(['data' => $pengiriman]);
-     }
-     
+    // Menampilkan semua pengiriman dengan pagination
+public function index()
+{
+    // Mengambil data pengiriman dengan relasi warna dan penjahit, dan pagination
+    $pengiriman = Pengiriman::with(['warna', 'spk.penjahit'])
+    ->orderBy('created_at', 'desc') // Sort dari terbaru ke terlama
+        ->paginate(13);  // Pagination langsung pada query
+
+ $sortedPengiriman = $pengiriman->getCollection()->sortByDesc('created_at')->values();
+    // Manipulasi data setelah pagination
+    $pengiriman->getCollection()->transform(function ($pengiriman) {
+        // Hitung sisa barang per warna
+        $sisaBarangPerWarna = [];
+        foreach ($pengiriman->warna as $warna) {
+            $warnaData = Warna::where('id_spk', $pengiriman->id_spk)
+                ->where('nama_warna', $warna->warna)
+                ->first();
+
+            if ($warnaData) {
+                $totalSudahDikirim = PengirimanWarna::whereHas('pengiriman', function ($query) use ($pengiriman) {
+                    $query->where('id_spk', $pengiriman->id_spk);
+                })
+                ->where('warna', $warna->warna)
+                ->sum('jumlah_dikirim');
+
+                $sisaBarang = $warnaData->qty - $totalSudahDikirim;
+                $sisaBarangPerWarna[$warna->warna] = $sisaBarang;
+            }
+        }
+
+        // Tambahkan properti nama_penjahit
+        $pengiriman->sisa_barang_per_warna = $sisaBarangPerWarna;
+        $pengiriman->nama_penjahit = $pengiriman->spk->penjahit->nama_penjahit ?? null;
+
+        return $pengiriman;
+    });
+
+    return response()->json($pengiriman);
+
+}
+
 
 public function store(Request $request)
 {

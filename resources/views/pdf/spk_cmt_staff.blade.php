@@ -6,9 +6,9 @@
     <title>SPK CMT PDF</title>
     <style>
         @page {
-    size: A4; /* Atur ukuran kertas A4, atau ganti sesuai kebutuhan */
-    margin: 8mm; /* Atur margin sesuai dengan kebutuhan */
-}
+        size: A4; /* Atur ukuran kertas A4, atau ganti sesuai kebutuhan */
+        margin: 8mm; /* Atur margin sesuai dengan kebutuhan */
+    }
         /* Global Styles */
         body {
             font-family: 'Roboto', sans-serif;
@@ -201,21 +201,24 @@
             font-size: 12px;
         }
         .cutting-table {
-            width: 90%;
+            width: 100%;
             border-collapse: collapse;
             margin-top: 220px;
+            font-size: 8px; 
             table-layout: auto;
         }
 
         .cutting-table th, .cutting-table td {
             border: 1px solid black;
             text-align: center;
-            padding: 5px;
+            padding: 2px;
+            
         }
 
         .cutting-table th {
             background-color: #ddd;
             font-size: 10px;
+            color: black;
         }
 
         .cutting-table .description {
@@ -224,8 +227,8 @@
             font-size: 9px;
         }
 
-        .cutting-table th[colspan="8"] {
-    width: calc(10px * 8);
+        .cutting-table th[colspan="12"] {
+    width: calc(10px * 12);
 }
 
 
@@ -242,10 +245,10 @@
             background-color: #a8d5f0;
         }
         .cutting-table .total-column {
-    background-color: #eaf0f7;
-    width: 20px; /* Lebar kolom total */
-    border: 1px solid black; /* Pastikan border diterapkan pada kolom total */
-}
+            background-color: #eaf0f7;
+            width: 20px; /* Lebar kolom total */
+            border: 1px solid black; /* Pastikan border diterapkan pada kolom total */
+        }
 
 
 
@@ -298,12 +301,6 @@
                 <td><strong>Keterangan</strong></td>
                 <td>{{ $spk->keterangan ?? 'N/A' }}</td>
             </tr>
-        
-            <tr>
-                <td><strong>Catatan</strong></td>
-                <td>{{ $spk->catatan ?? 'N/A' }}</td>
-            </tr>
-            
             <tr>
                 <td><strong>Markeran</strong></td>
                 <td>{{ $spk->markeran ?? 'N/A' }}</td>
@@ -335,113 +332,246 @@
                 <td><strong>Jumlah</strong></td>
                 <td>{{ $spk->jumlah_produk ?? 'N/A' }}</td>
             </tr>
+            <tr>
+                <td><strong>Catatan</strong></td>
+                <td>{{ $spk->catatan ?? 'N/A' }}</td>
+            </tr>
             
 
             
         </tbody>
     </table>
     <div class="card-container">
-    <div class="details">
-    <h3>Note Lainnya</h3>
-    <ol>
-            <li>Sampel asli tidak boleh hilang, jika hilang CMT wajib mengganti kerugian sebesar RP. 500.00,- (Lima Ratur Ribu). Untuk pengembalian sampel yaitu di hari pertama pengiriman dan diserahkan kepada penerima kerjaan CMT. Jika pengiriman sampel di hari pertama pengiriman tidak dilakukan, maka secara otomatis akan dipotong sebesar Rp. 500.000,- (Lima Ratus Rupiah). Menandatangani berarti CMT setuju dengan semua ketentuan yang berlaku!</li>
-            <li>Setelah ambil SPK batas laporan 2-3 hari, jika tidak ada maka kami anggap komplit (tidak ada masalah). Jika overtime (melebihi batas kirim) yang tidak jelas, maka langsung potong claim.</li>
-        </ol>
+        <div class="details">
+        <h3>Note Lainnya</h3>
+        <ol>
+                <li>Sampel asli tidak boleh hilang, jika hilang CMT wajib mengganti kerugian sebesar RP. 500.00,- (Lima Ratur Ribu). Untuk pengembalian sampel yaitu di hari pertama pengiriman dan diserahkan kepada penerima kerjaan CMT. Jika pengiriman sampel di hari pertama pengiriman tidak dilakukan, maka secara otomatis akan dipotong sebesar Rp. 500.000,- (Lima Ratus Rupiah). Menandatangani berarti CMT setuju dengan semua ketentuan yang berlaku!</li>
+                <li>Setelah ambil SPK batas laporan 2-3 hari, jika tidak ada maka kami anggap komplit (tidak ada masalah). Jika overtime (melebihi batas kirim) yang tidak jelas, maka langsung potong claim.</li>
+            </ol>
+        </div>
     </div>
-</div>
 
 <table class="cutting-table">
-<thead>
-    <tr>
-        <th rowspan="2" class="description">KETERANGAN</th>
-        <th colspan="7">CUTTING</th>
-        <th rowspan="2" class="total-column">TOTAL PCS</th>
-        <th colspan="6">PENYABLONAN</th>
-        <th rowspan="2" class="total-column">TOTAL PCS</th>
-        <th colspan="6">PENGECEKAN</th>
-        <th rowspan="2" class="total-column">TOTAL</th>
-    </tr>
-    <tr>
-        <!-- CUTTING -->
-        <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>H</th>
-        <!-- PENYABLONAN -->
-        <th class="header-blue">A</th><th class="header-blue">B</th><th class="header-blue">C</th>
-        <th class="header-blue">D</th><th class="header-blue">E</th><th class="header-blue">F</th>
-        <!-- PENGECEKAN -->
-        <th class="header-blue">A</th><th class="header-blue">B</th><th class="header-blue">C</th>
-        <th class="header-blue">D</th><th class="header-blue">E</th><th class="header-blue">F</th>
-    </tr>
-</thead>
-
+    <thead>
+        <tr>
+            <th rowspan="2" class="description">KETERANGAN</th>
+            <th colspan="10">CUTTING</th>
+            <th rowspan="2" class="total-column">TOTAL PCS</th>
+            <th colspan="10">PENYABLONAN</th>
+            <th rowspan="2" class="total-column">TOTAL PCS</th>
+            <th colspan="10">PENGECEKAN</th>
+            <th rowspan="2" class="total-column">TOTAL</th>
+        </tr>
+        <tr>
+            <!-- CUTTING -->
+            <th>A</th>
+            <th>B</th>
+            <th>C</th>
+            <th>D</th>
+            <th>E</th>
+            <th>F</th>
+            <th>G</th>
+            <th>H</th>
+            <th>I</th>
+            <th>J</th>
+            <!-- PENYABLONAN -->
+            <th class="header-blue">A</th>
+            <th class="header-blue">B</th>
+            <th class="header-blue">C</th>
+            <th class="header-blue">D</th>
+            <th class="header-blue">E</th>
+            <th class="header-blue">F</th>
+            <th class="header-blue">G</th>
+            <th class="header-blue">H</th>
+            <th class="header-blue">I</th>
+            <th class="header-blue">J</th>
+            <!-- PENGECEKAN -->
+            <th class="header-blue">A</th>
+            <th class="header-blue">B</th>
+            <th class="header-blue">C</th>
+            <th class="header-blue">D</th>
+            <th class="header-blue">E</th>
+            <th class="header-blue">F</th>
+            <th class="header-blue">G</th>
+            <th class="header-blue">H</th>
+            <th class="header-blue">I</th>
+            <th class="header-blue">J</th>
+        </tr>
+    </thead>
     <tbody>
         <tr>
             <td class="description">Baju badan depan</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
         </tr>
         <tr>
             <td class="description">Baju badan belakang</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
         </tr>
         <tr>
             <td class="description">Tangan kanan & kiri</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
         </tr>
         <tr>
             <td class="description">Bis (Rib Leher/ bis kerah)</td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="total-column"></td>
         </tr>
     </tbody>
     <tfoot>
         <tr>
-        <td colspan="9">SUB TOTAL</td>
-            <td colspan="7"></td>
-            <td colspan="7"></td>
-            <td colspan="7"></td>
+            <td colspan="12">SUB TOTAL</td>
+            <td colspan="11"></td>
+            <td colspan="12"></td>
         </tr>
     </tfoot>
 </table>
 
+<table class="signature-table">
+    <tr>
+        <td>
+            <p><strong>Dibuat Oleh:</strong></p>
+            <div class="signature-space"></div>
+            <p class="signature-name">(Nama)</p>
+        </td>
+        <td>
+            <p><strong>Mengetahui:</strong></p>
+            <div class="signature-space"></div>
+            <p class="signature-name">(Nama)</p>
+        </td>
+        <td>
+            <p><strong>Diterima Oleh:</strong></p>
+            <div class="signature-space"></div>
+            <p class="signature-name">(Nama)</p>
+        </td>
+    </tr>
+</table>
 
-    <table class="signature-table">
-        <tr>
-            <td>
-                <p><strong>Dibuat Oleh:</strong></p>
-                <div class="signature-space"></div>
-                <p class="signature-name">(Nama)</p>
-            </td>
-            <td>
-                <p><strong>Mengetahui:</strong></p>
-                <div class="signature-space"></div>
-                <p class="signature-name">(Nama)</p>
-            </td>
-            <td>
-                <p><strong>Diterima Oleh:</strong></p>
-                <div class="signature-space"></div>
-                <p class="signature-name">(Nama)</p>
-            </td>
-        </tr>
-    </table>
-
-    
 </body>
 </html>

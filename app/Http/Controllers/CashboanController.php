@@ -3,35 +3,45 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cashboan;
-use App\Models\SpkCmt;
+use App\Models\Penjahit;
 use Illuminate\Http\Request;
 
 class CashboanController extends Controller
 {
-    // Menampilkan semua data Cashboan
-    public function index()
+    public function index(Request $request)
     {
-        $cashboans = Cashboan::with('spk')->get(); // Mengambil semua cashboan beserta relasi SPK
-        return response()->json([
-            'success' => true,
-            'data' => $cashboans,
-        ]);
+        // Ambil parameter query dari request
+        $penjahitId = $request->query('penjahit');
+    
+      
+        $query = Cashboan::query();
+    
+        // Tambahkan kondisi filter jika ada parameter `penjahit`
+        if (!empty($penjahitId)) {
+            $query->where('id_penjahit', $penjahitId);
+        }
+    
+        // Eksekusi query dan dapatkan data
+        $cashboan = $query->orderBy('created_at', 'desc')->paginate(11); 
+    
+        return response()->json ($cashboan);
     }
+    
 
     // Menampilkan form untuk membuat Cashboan baru
     public function create()
     {
         // Ambil data SPK untuk memilih penjahit
-        $spks = SpkCmt::all();
-        return response()->json([
-            'success' => true,
-            'spks' =>  $spks
-        ]);
+        $penjahits = Penjahit::all();
+       return response()->json([
+           'success' => true,
+           'penjahits' => $penjahits // Menyesuaikan dengan nama Penjahit
+       ]);
     }
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_spk' => 'required|exists:spk_cmt,id_spk',
+            'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
             'jumlah_cashboan' => 'required|numeric|min:1',
             'status_pembayaran' => 'required|in:belum lunas,lunas,dibayar sebagian',
             'tanggal_jatuh_tempo' => 'required|date',
@@ -48,15 +58,26 @@ class CashboanController extends Controller
         ], 201);
 
     }
+
+    public function show($id)
+    {
+        $cashboan = Cashboan::with('penjahit')->findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'data' => $cahboan,
+        ]);
+    }
+
+
     // Menampilkan form untuk mengedit Cashboan
     public function edit($id)
     {
         $cashboan = Cashboan::findOrFail($id); // Mengambil data cashboan berdasarkan id
-        $spks = SpkCmt::all(); // Ambil data SPK untuk memilih penjahit
+        $penjahits = Penjahit::all(); // Mengambil semua Penjahit
         return response()->json([
             'success' => true,
-            'cashboan' => $cashboan, // Mengembalikan data cashboan
-            'spks' => $spks // Mengembalikan data SPK
+            'cashboan' => $cashboan,
+            'penjahits' => $penjahits // Menyertakan data Penjahit
         ]);
     }
 
@@ -65,7 +86,7 @@ class CashboanController extends Controller
     {
         // Validasi inputan
         $validated = $request->validate([
-            'id_spk' => 'required|exists:spk_cmt,id_spk',
+          'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
             'jumlah_cashboan' => 'required|numeric|min:1',
             'status_pembayaran' => 'required|in:belum lunas,lunas,dibayar sebagian',
             'tanggal_jatuh_tempo' => 'required|date',

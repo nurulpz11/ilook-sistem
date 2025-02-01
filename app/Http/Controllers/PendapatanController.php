@@ -8,14 +8,29 @@ use App\Models\Cashboan;
 use App\Models\Hutang;
 use App\Models\Penjahit;
 use Illuminate\Http\Request;
+use PDF; 
 
 class PendapatanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pendapatan = Pendapatan::all(); // Ambil data penjahit untuk dropdown
-        return response()->json(['data' => $pendapatan]);
+        // Ambil parameter query dari request
+        $penjahitId = $request->query('penjahit');
+    
+        // Query dasar untuk mengambil data pendapatan
+        $query = Pendapatan::query();
+    
+        // Tambahkan kondisi filter jika ada parameter `penjahit`
+        if (!empty($penjahitId)) {
+            $query->where('id_penjahit', $penjahitId);
+        }
+    
+        // Eksekusi query dan dapatkan data
+        $pendapatans = $query->orderBy('created_at', 'desc')->paginate(11); // Default pagination 10 data
+    
+        return response()->json($pendapatans);
     }
+    
 
     public function calculate(Request $request)
     {
@@ -44,7 +59,7 @@ class PendapatanController extends Controller
             ->pluck('pengiriman.id_spk'); // Berikan tabel eksplisit
 
             // Hitung total pembayaran cashbon berdasarkan tanggal bayar
-        $totalCashboan = Cashboan::whereIn('id_spk', $idSpkList)
+        $totalCashboan = Cashboan::whereIn('id_penjahit', $idSpkList)
         ->with(['logPembayaran' => function ($query) use ($periodeAwal, $periodeAkhir) {
             $query->whereBetween('tanggal_bayar', [$periodeAwal, $periodeAkhir]);
         }])
@@ -99,7 +114,7 @@ class PendapatanController extends Controller
             ->pluck('pengiriman.id_spk'); // Berikan tabel eksplisit
 
            // Hitung total pembayaran cashbon berdasarkan tanggal bayar
-        $totalCashboan = Cashboan::whereIn('id_spk', $idSpkList)
+        $totalCashboan = Cashboan::where('id_penjahit',  $idPenjahit)
             ->with(['logPembayaran' => function ($query) use ($periodeAwal, $periodeAkhir) {
                 $query->whereBetween('tanggal_bayar', [$periodeAwal, $periodeAkhir]);
             }])
@@ -162,32 +177,51 @@ class PendapatanController extends Controller
         
     }
 
-    public function showPengiriman($id)
-{
-    // Cari pendapatan berdasarkan ID
-    $pendapatan = Pendapatan::find($id);
+        public function showPengiriman($id)
+    {
+        // Cari pendapatan berdasarkan ID
+        $pendapatan = Pendapatan::find($id);
 
-    if (!$pendapatan) {
-        return response()->json(['message' => 'Pendapatan tidak ditemukan.'], 404);
+        if (!$pendapatan) {
+            return response()->json(['message' => 'Pendapatan tidak ditemukan.'], 404);
+        }
+
+        // Ambil data pengiriman terkait
+        $pengiriman = Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
+            ->where('spk_cmt.id_penjahit', $pendapatan->id_penjahit)
+            ->whereBetween('pengiriman.tanggal_pengiriman', [$pendapatan->periode_awal, $pendapatan->periode_akhir])
+            ->get();
+
+        return response()->json([
+            'pendapatan' => $pendapatan,
+            'pengiriman' => $pengiriman,
+        ]);
     }
 
-    // Ambil data pengiriman terkait
-    $pengiriman = Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
-        ->where('spk_cmt.id_penjahit', $pendapatan->id_penjahit)
-        ->whereBetween('pengiriman.tanggal_pengiriman', [$pendapatan->periode_awal, $pendapatan->periode_akhir])
-        ->get();
+    public function getPenjahitList()
+    {
+        $penjahit = Penjahit::select('id_penjahit', 'nama_penjahit')->get();
+        return response()->json(['data' => $penjahit]);
+    }
 
-    return response()->json([
-        'pendapatan' => $pendapatan,
-        'pengiriman' => $pengiriman,
-    ]);
-}
-
-public function getPenjahitList()
-{
-    $penjahit = Penjahit::select('id_penjahit', 'nama_penjahit')->get();
-    return response()->json(['data' => $penjahit]);
-}
+    public function downloadNota($id)
+    {
+        // Ambil data pendapatan berdasarkan ID
+        $pendapatan = Pendapatan::findOrFail($id);
+        
+        // Ambil data pengiriman terkait
+        $pengiriman = Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
+            ->where('spk_cmt.id_penjahit', $pendapatan->id_penjahit)
+            ->whereBetween('pengiriman.tanggal_pengiriman', [$pendapatan->periode_awal, $pendapatan->periode_akhir])
+            ->get();
+         $penjahit = $pendapatan->penjahit;
+     
+        $pdf = PDF::loadView('pdf.nota', compact('pendapatan', 'pengiriman', 'penjahit'))
+        ->setPaper('a4'); 
+        
+        // Kembalikan file PDF untuk diunduh
+        return $pdf->download('Nota'.$pendapatan->id_penjahit.'.pdf');
+    }
 
 
 }

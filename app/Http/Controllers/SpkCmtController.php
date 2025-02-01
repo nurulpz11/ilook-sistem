@@ -17,37 +17,36 @@ class SpkCmtController extends Controller
 {
     // Menampilkan semua SPK
     public function index(Request $request)
-{
-    // Ambil status filter dari request (jika ada)
-    $statusFilter = $request->query('status');
-
-    $query = SpkCmt::with(['warna', 'pengiriman']);
+    {
+        $statusFilter = $request->query('status');
+        $allData = $request->query('allData'); // Ambil parameter tambahan
     
-    // Jika ada filter status, tambahkan ke query
-    if ($statusFilter) {
-        $query->where('status', $statusFilter);
+        $query = SpkCmt::with(['warna', 'pengiriman']);
+    
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+    
+        // Jika request memiliki parameter 'allData=true', ambil semua data
+        if ($allData == 'true') {
+            $spk = $query->orderBy('created_at', 'desc')->get(); // Mengambil semua data tanpa pagination
+        } else {
+            $spk = $query->orderBy('created_at', 'desc')->paginate(10); // Default pagination 10 data
+        }
+        
+    
+        // Mapping data sebelum dikembalikan
+        $spk->transform(function ($item) {
+            $item->sisa_hari = $item->sisa_hari;
+            $item->status_with_color = $item->status_with_color;
+            $item->total_barang_dikirim = $item->pengiriman->sum('total_barang_dikirim');
+            return $item;
+        });
+    
+        return response()->json($spk);
     }
-
-    // Ambil data dari query dan lakukan mapping
-    $spk = $query->get()->map(function ($item) {
-        // Hitung sisa hari dari deadline
-        $deadline = \Carbon\Carbon::parse($item->deadline);
-        $item->sisa_hari = $item->sisa_hari;  // Memanggil accessor sisa_hari
-
-        // Ambil accessor untuk status_with_color
-        $item->status_with_color = $item->status_with_color;
-
-        // Hitung total barang dikirim
-        $item->total_barang_dikirim = $item->pengiriman->sum('total_barang_dikirim');
-
-        return $item;
-    });
-
-    return response()->json($spk);
-}
-
     
-
+   
     // Menampilkan form untuk membuat SPK baru (untuk React, ini bisa digantikan dengan form di frontend)
     public function create()
     {
@@ -285,6 +284,7 @@ class SpkCmtController extends Controller
         $logs = LogDeadline::where('id_spk', $id)
             ->orderBy('tanggal_aktivitas', 'desc')
             ->get();
+            
         return response()->json($logs);
     }
 
@@ -336,22 +336,22 @@ class SpkCmtController extends Controller
         ]);
     }
     
-    public function getLogStatus($id)
-    {
-        $logs = getLogStatus::where('id_spk', $id)
-            ->orderBy('tanggal_aktivitas', 'desc')
-            ->get();
-        return response()->json($logs);
-    }
     public function getAllLogDeadlines()
     {
         // Ambil semua log deadline
-        $logs = LogDeadline::orderBy('tanggal_aktivitas', 'desc')->get();
+        $logs = LogDeadline::orderBy('created_at', 'desc')->paginate(11);
 
-        // Kembalikan response dengan semua log deadline
+       
+        return response()->json($logs);
+      
+    }
+    
+    public function getAllLogStatus()
+    {
+      
+        $logs = LogStatus::orderBy('created_at', 'desc')->paginate(11);
         return response()->json($logs);
     }
-
 
     public function debugDeadlines()
     {

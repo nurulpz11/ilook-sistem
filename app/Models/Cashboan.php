@@ -13,17 +13,17 @@ class Cashboan extends Model
     protected $primaryKey = 'id_cashboan';
 
     protected $fillable = [
-        'id_spk',
+       'id_penjahit',
         'jumlah_cashboan',
         'status_pembayaran',
         'tanggal_jatuh_tempo',
         'tanggal_cashboan',
     ];
 
-    // Relasi dengan model SPK (SpkCmt)
-    public function spk()
+    // Relasi ke tabel SPK
+    public function penjahit()
     {
-        return $this->belongsTo(SpkCmt::class, 'id_spk');
+        return $this->belongsTo(Penjahit::class, 'id_penjahit', 'id_penjahit');
     }
 
     public function logPembayaran()

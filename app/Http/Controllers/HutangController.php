@@ -10,18 +10,26 @@ use Illuminate\Http\Request;
 class HutangController extends Controller
 {
     
-    public function index()
+    public function index(Request $request)
     {
-
-       
-        // Mengambil semua hutang beserta relasi Penjahit
-        $hutangs = Hutang::with('penjahit')->get();
-        return response()->json([
-            'success' => true,
-            'data' => $hutangs,
-        ]);
+        // Ambil parameter query dari request
+        $penjahitId = $request->query('penjahit');
+    
+      
+        $query = Hutang::query();
+    
+        // Tambahkan kondisi filter jika ada parameter `penjahit`
+        if (!empty($penjahitId)) {
+            $query->where('id_penjahit', $penjahitId);
+        }
+    
+        // Eksekusi query dan dapatkan data
+        $hutangs = $query->orderBy('created_at', 'desc')->paginate(11); // Default pagination 10 data
+   
+    
+        return response()->json($hutangs);
     }
-
+    
 
     public function create()
     {
