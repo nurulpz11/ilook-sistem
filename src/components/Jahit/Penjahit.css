@@ -1092,3 +1092,63 @@
   background-color: #4586a0; /* Efek hover */
 }
 
+/* Container Pagination */
+.pagination-container {
+  display: flex;
+  justify-content: left;
+  align-items:center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  gap: 10px;
+  padding-left: 10px;
+  font-family: Arial, sans-serif;
+}
+
+/* Tombol Pagination */
+.pagination-button {
+  background-color: rgb(141, 206, 226);/* Warna biru elegan */
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+}
+
+.pagination-button:hover {
+  background-color: #357abd;
+  transform: scale(1.05);
+}
+
+.pagination-button:disabled {
+  background-color: #d3d3d3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Teks Info Halaman */
+.pagination-info {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  padding: 5px 10px;
+  background: #f3f4f6;
+  border-radius: 6px;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .pagination-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .pagination-info {
+    font-size: 14px;
+  }
+}

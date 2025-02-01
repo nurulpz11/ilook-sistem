@@ -26,7 +26,7 @@ const Login = () => {
             <div className="login-card">
                 <div className="login-header">
                     <img src="/path/to/logo.png" alt="" className="logo" />
-                    <h1>ILOOK ADMIN </h1>
+                    <h2>ILOOK ADMIN </h2>
                     <p>Please input your email and password</p>
                 </div>
                 <form onSubmit={handleLogin} className="login-form">
@@ -51,12 +51,12 @@ const Login = () => {
                             <input type="checkbox" />
                             Remember this Device
                         </label>
-                        <a href="/forgot-password" className="forgot-password">Forgot Password?</a>
+                      
                     </div>
                     <button type="submit" className="login-button">Sign In</button>
                 </form>
                 <div className="login-footer">
-                    <p>New to Spike? <a href="/register">Create an account</a></p>
+                    
                 </div>
             </div>
         </div>

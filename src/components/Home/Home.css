@@ -86,7 +86,7 @@ width:100%;
 }
 .charts-wrapper {
   display: flex;
-  gap: 40px; /* Jarak antara donut chart dan pie chart */
+  gap: 35px; /* Jarak antara donut chart dan pie chart */
   justify-content: flex-start; /* Pusatkan elemen secara horizontal */
   align-items: flex-start; /* Pastikan elemen sejajar di bagian atas */
   margin-top: 20px; /* Tambahkan margin untuk jarak dari elemen lain */
@@ -96,17 +96,18 @@ width:100%;
  
   max-width: 500px; /* Atur ukuran maksimal chart */
   margin: 0; /* Pastikan tidak ada margin di sekitar chart-container */
-  padding: 0; 
+  padding: 10px 10px; 
 }
 
 .chart-card {
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 
@@ -122,7 +123,7 @@ width:100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 80%;
+  width: 100%;
 }
 
 .chart-wrapper {

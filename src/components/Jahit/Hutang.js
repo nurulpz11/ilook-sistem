@@ -5,7 +5,12 @@ import "./Penjahit.css";
 const Hutang = () => {
   const [hutangs, setHutangs] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [penjahitList, setPenjahitList] = useState([]); 
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState("");
   const [newHutang, setNewHutang] = useState({
     id_penjahit: "",
     jumlah_hutang: "",
@@ -20,19 +25,53 @@ const Hutang = () => {
     catatan: "",
   });
 
-  useEffect(() => {
-    fetch("http://localhost:8000/api/hutang")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Data fetched:", data); // Debugging
-        setHutangs(data.data || []);
-      })
-      .catch((error) => console.error("Error fetching data:", error));
-  }, []);
 
-  const [logHistory, setLogHistory] = useState([]); // Untuk menyimpan log pembayaran
+  useEffect(() => {
+    const fetchHutangs = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:8000/api/hutang?page=${currentPage}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const data = await response.json();
+        console.log("Data Hutang:", data); // Debugging
+
+        setHutangs(data.data); // Ambil data dari pagination Laravel
+        setLastPage(data.last_page); // Set total halaman
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHutangs();
+  }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
+
+
+
+
+const [logHistory, setLogHistory] = useState([]); // Untuk menyimpan log pembayaran
 const [selectedDetailHutang, setSelectedDetailHutang] = useState(null); // Untuk menyimpan detail cashbon yang dipilih
 
+useEffect(() => {
+  const fetchPenjahit = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/penjahit'); // URL API penjahit
+      if (!response.ok) {
+        throw new Error('Gagal mengambil data penjahit');
+      }
+      const data = await response.json();
+      setPenjahitList(data); // Asumsikan `data` berisi array penjahit
+    } catch (error) {
+      console.error('Error:', error.message);
+      setError(error.message);
+    }
+  };
+
+  fetchPenjahit();
+}, []);
 
     const handleFormSubmit = (e) => {
       e.preventDefault(); // Mencegah refresh halaman
@@ -114,37 +153,81 @@ const [selectedDetailHutang, setSelectedDetailHutang] = useState(null); // Untuk
       })
       .catch((error) => console.error("Error fetching payment logs:", error));
   };
+  const getFilteredPenjahit = async (selectedId, page = 1) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/hutang?penjahit=${selectedId}&page=${page}`);
+      const data = await response.json();
   
+      console.log("Filtered Data:", data); // Debugging
+  
+      setHutangs(Array.isArray(data.data) ? data.data : []);
+      setLastPage(data.last_page);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+  
+  
+  const formatTanggal = (tanggal) => {
+    const date = new Date(tanggal);
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+  };
+
+  const getStatusColor = (status_pembayaran) => {
+    switch (status_pembayaran) {
+      case "belum lunas":
+        return "#DCA5A0"; // Kategori A: hijau
+      case "dibayar sebagian":
+        return "#EAC98D";  // Kategori B: biru
+      case "lunas":
+        return "#A0DCDC"; // Kategori C: oranye
+      default:
+        return "black";  // Default: hitam jika kategori tidak dikenali
+    }
+    
+  };
 
   return (
     <div>
       <div className="penjahit-container">
         <h1>Daftar Hutang</h1>
-
-        {/* Search Bar */}
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Cari nama penjahit..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button className="add-button" onClick={() => setShowForm(true)}>
-            Tambah
-          </button>
-        </div>
+       
       </div>
 
       <div className="table-container">
+      <div className="filter-header">
+        <button className="add-button" onClick={() => setShowForm(true)}>
+              Tambah
+            </button>
+        <label htmlFor="penjahitFilter" className="filter-label"></label>
+        <select
+          id="penjahitFilter"
+          className="filter-select"
+          onChange={(e) => getFilteredPenjahit(e.target.value)}
+        >
+          <option value="">All</option>
+          {penjahitList.map((penjahit) => (
+            <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
+              {penjahit.nama_penjahit}
+            </option>
+          ))}
+        </select>
+
+      </div>
         <table className="penjahit-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>ID PENJAHIT</th>
-              <th>JUMLAH HUTANG</th>
-              <th>STATUS PEMBAYARAN</th>
-              <th>TANGGAL JATUH TEMPO</th>
+              <th>NAMA PENJAHIT</th>
               <th>TANGGAL HUTANG</th>
+              <th>TANGGAL JATUH TEMPO</th>
+             
+              <th>STATUS PEMBAYARAN</th>
+              <th>JUMLAH HUTANG</th>
               <th>AKSI</th>
             </tr>
           </thead>
@@ -156,22 +239,41 @@ const [selectedDetailHutang, setSelectedDetailHutang] = useState(null); // Untuk
               .map((hutang) => (
                 <tr key={hutang.id_hutang}>
                   <td>{hutang.id_hutang}</td>
-                  <td>{hutang.id_penjahit}</td>
+                  <td>
+                    {
+                      penjahitList.find(penjahit => penjahit.id_penjahit === hutang.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
+                    }
+                  </td>
+                  <td>{formatTanggal(hutang.tanggal_hutang)}</td>
+                  <td>{formatTanggal(hutang.tanggal_jatuh_tempo)}</td>
+                  
+                  <td>
+                    <span
+                      style={{
+                        backgroundColor: getStatusColor(hutang.status_pembayaran),
+                        color: "white",
+                        padding: "3px 5px",
+                        borderRadius: "5px",
+                      
+                    }}
+                    >
+                    {hutang.status_pembayaran}
+                    </span>
+                  </td>
+                      
                   <td>{hutang.jumlah_hutang}</td>
-                  <td>{hutang.status_pembayaran}</td>
-                  <td>{hutang.tanggal_jatuh_tempo}</td>
-                  <td>{hutang.tanggal_hutang}</td>
+                  
                   <td>
                   <div className="action-card">
                   <button 
-                    className="btn-icon"
+                    className="btn1-icon"
                     onClick={() => handleBayarClick(hutang)}
                     >
                         <FaMoneyBillWave className="icon" />
                         </button>
                   
                   <button 
-                    className="btn-icon" 
+                    className="btn1-icon" 
                      onClick={() => handleDetailClick(hutang)}
                      >
                      <FaInfoCircle className="icon" />
@@ -183,6 +285,26 @@ const [selectedDetailHutang, setSelectedDetailHutang] = useState(null); // Untuk
               ))}
           </tbody>
         </table>
+        {/* Pagination */}
+        <div className="pagination-container">
+          <button 
+            className="pagination-button" 
+            disabled={currentPage === 1} 
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            ◀ Prev
+          </button>
+
+          <span className="pagination-info">Halaman {currentPage} dari {lastPage}</span>
+
+          <button 
+            className="pagination-button" 
+            disabled={currentPage === lastPage} 
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next ▶
+          </button>
+        </div>
       </div>
 
       {/* Modal Form */}
@@ -192,16 +314,23 @@ const [selectedDetailHutang, setSelectedDetailHutang] = useState(null); // Untuk
             <h2>Tambah Data Hutang</h2>
             <form onSubmit={handleFormSubmit} className="modern-form">
               <div className="form-group">
-                <label>ID Penjahit</label>
-                <input
-                  type="text"
-                  value={newHutang.id_penjahit}
-                  onChange={(e) =>
-                    setNewHutang({ ...newHutang, id_penjahit: e.target.value })
-                  }
-                  placeholder="Masukkan ID Penjahit"
-                  required
-                />
+              <label>ID Penjahit:</label>
+            <select
+              value={newHutang.id_penjahit}
+              onChange={(e) =>
+                setNewHutang({ ...newHutang, id_penjahit: e.target.value })
+              }
+              required
+            >
+              <option value="" disabled>
+                Pilih Penjahit
+              </option>
+              {penjahitList.map((penjahit) => (
+                <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
+                  {penjahit.nama_penjahit}
+                </option>
+              ))}
+            </select>
               </div>
 
               <div className="form-group">

@@ -6,6 +6,8 @@ import axios from "axios";
 const Pendapatan = () => {
   const [pendapatans, setPendapatans] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [selectedPendapatan, setSelectedPendapatan] = useState(null);
   const [detailPengiriman, setDetailPengiriman] = useState([]);
@@ -33,6 +35,31 @@ const Pendapatan = () => {
       .then((data) => setPendapatans(data.data || []))
       .catch((error) => console.error("Error fetching data:", error));
   }, []);
+
+  useEffect(() => {
+    const fetchPendapatans = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:8000/api/pendapatan?page=${currentPage}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const data = await response.json();
+        console.log("Data Hutang:", data); // Debugging
+
+        setPendapatans(data.data); // Ambil data dari pagination Laravel
+        setLastPage(data.last_page); // Set total halaman
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPendapatans();
+  }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
+
+
   
 useEffect(() => {
   const fetchPenjahit = async () => {
@@ -53,25 +80,27 @@ useEffect(() => {
 }, []);
 
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    fetch("http://localhost:8000/api/pendapatan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newPendapatan),
+const handleFormSubmit = (e) => {
+  e.preventDefault();
+  fetch("http://localhost:8000/api/pendapatan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newPendapatan),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.message === "Pendapatan berhasil disimpan.") {
+        // Tambahkan data baru di awal array
+        setPendapatans([data.data, ...pendapatans]); 
+        setShowForm(false);
+        resetForm();
+      } else {
+        console.error("Error adding data:", data);
+      }
     })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.message === "Pendapatan berhasil disimpan.") {
-          setPendapatans([...pendapatans, data.data]);
-          setShowForm(false);
-          resetForm();
-        } else {
-          console.error("Error adding data:", data);
-        }
-      })
-      .catch((error) => console.error("Error adding data:", error));
-  };
+    .catch((error) => console.error("Error adding data:", error));
+};
+
 
   const handleLoadData = () => {
     const { id_penjahit, periode_awal, periode_akhir } = newPendapatan;
@@ -157,39 +186,66 @@ useEffect(() => {
     setSelectedPendapatan(null);
     setDetailPengiriman([]);
   };
+
+  const getFilteredPenjahit = (selectedId) => {
+    if (selectedId === "") {
+      // Jika filter kosong, tampilkan semua pendapatan
+      fetch("http://localhost:8000/api/pendapatan")
+        .then((response) => response.json())
+        .then((data) =>  setPendapatans(data.data || []))
+        .catch((error) => console.error("Error fetching data:", error));
+    } else {
+      // Filter pendapatan berdasarkan ID penjahit
+      fetch(`http://localhost:8000/api/pendapatan?penjahit=${selectedId}`)
+        .then((response) => response.json())
+        .then((data) => setPendapatans(data.data || []))
+        .catch((error) => console.error("Error filtering data:", error));
+    }
+  };
+  const handleDownload = (idPendapatan) => {
+    const url = `http://localhost:8000/api/pendapatan/${idPendapatan}/download-nota`;
+    window.open(url, "_blank");
+  };
+  
+  
   return (
     <div>
       <div className="penjahit-container">
         <h1>Daftar Pendapatan</h1>
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Cari ID Penjahit..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button className="add-button" onClick={() => setShowForm(true)}>
-            Tambah
-          </button>
-        </div>
+        {error && <p className="error-message">{error}</p>}
       </div>
 
       <div className="table-container">
+      <div className="filter-header">
+        <button className="add-button" onClick={() => setShowForm(true)}>
+              Tambah
+            </button>
+        <label htmlFor="penjahitFilter" className="filter-label"></label>
+        <select
+          id="penjahitFilter"
+          className="filter-select"
+          onChange={(e) => getFilteredPenjahit(e.target.value)}
+        >
+          <option value="">All</option>
+          {penjahitList.map((penjahit) => (
+            <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
+              {penjahit.nama_penjahit}
+            </option>
+          ))}
+        </select>
+
+
+      </div>
         <table className="penjahit-table">
           <thead>
             <tr>
-              <th>ID Penjahit</th>
+              <th>Nama Penjahit</th>
               <th>Periode Awal</th>
               <th>Periode Akhir</th>
               <th>Total Pendapatan</th>
-              <th>Total Claim</th>
-              <th>Total Refund Claim</th>
-              <th>Cashbon</th>
-              <th>Hutang</th>
-              <th>Handtag</th>
-              <th>Transportasi</th>
               <th>Total Transfer</th>
               <th>Aksi</th>
+              <th>DOWNLOAD</th>
             </tr>
           </thead>
           <tbody>
@@ -210,29 +266,51 @@ useEffect(() => {
                   <td>{formatTanggal(pendapatan.periode_awal)}</td>
                   <td>{formatTanggal(pendapatan.periode_akhir)}</td>
                   <td>{pendapatan.total_pendapatan}</td>
-                  <td>{pendapatan.total_claim}</td>
-                  <td>{pendapatan.total_refund_claim}</td>
-                  <td>{pendapatan.total_cashbon}</td>
-                  <td>{pendapatan.total_hutang}</td>
-                  <td>{pendapatan.handtag}</td>
-                  <td>{pendapatan.transportasi}</td>
+                
                   <td>{pendapatan.total_transfer}</td>
                   <td>
-                    
-                  <div className="form-actions">
-                  <button 
-                    className="btn-icon" 
-                    onClick={() => handleDetailClick(pendapatan)}
-                     >
-                     <FaInfoCircle className="icon" />
-                     </button>
-                  
+                  <div className="action-card">
+                    <button 
+                      className="btn1-icon" 
+                      onClick={() => handleDetailClick(pendapatan)}
+                      >
+                      <FaInfoCircle className="icon" />
+                     </button>   
                   </div>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleDownload(pendapatan.id_pendapatan)}
+                      className="btn1-icon3" 
+                      >
+                            <FaSave className="icon" />
+
+                    </button>
                   </td>
                 </tr>
               ))}
           </tbody>
         </table>
+        {/* Pagination */}
+        <div className="pagination-container">
+          <button 
+            className="pagination-button" 
+            disabled={currentPage === 1} 
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            ◀ Prev
+          </button>
+
+          <span className="pagination-info">Halaman {currentPage} dari {lastPage}</span>
+
+          <button 
+            className="pagination-button" 
+            disabled={currentPage === lastPage} 
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next ▶
+          </button>
+        </div>
       </div>
 
 
@@ -259,7 +337,8 @@ useEffect(() => {
                <tr>
                  <th>ID Pengiriman</th>
                  <th>Tanggal Pengiriman</th>
-                 <th>Total Bayar</th>
+                 <th>Total Pengiriman</th>
+                 <th>Total Gaji </th>
                  <th>Claim</th>
                  <th>Refund Claim</th>
                </tr>
@@ -269,6 +348,7 @@ useEffect(() => {
                  <tr key={pengiriman.id_pengiriman}>
                    <td>{pengiriman.id_pengiriman}</td>
                    <td>{pengiriman.tanggal_pengiriman}</td>
+                   <td>{pengiriman.total_barang_dikirim}</td>
                    <td>{pengiriman.total_bayar}</td>
                    <td>{pengiriman.claim}</td>
                    <td>{pengiriman.refund_claim}</td>

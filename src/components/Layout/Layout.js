@@ -60,6 +60,15 @@ const Layout = () => {
                   </li>
                   <li>
                     <Link
+                      to="kinerja"
+                      className={`dropdown-link ${activeMenu === "kinerja" ? "active" : ""}`}
+                      onClick={() => handleMenuClick("kinerja")}
+                    >
+                      Kinerja
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
                       to="spkcmt"
                       className={`dropdown-link ${activeMenu === "spk" ? "active" : ""}`}
                       onClick={() => handleMenuClick("spk")}
@@ -104,6 +113,13 @@ const Layout = () => {
                       onClick={() => handleMenuClick("deadline")}
                     >
                      Log Deadline
+                    </Link>
+                    <Link
+                      to="status"
+                      className={`dropdown-link ${activeMenu === "status" ? "active" : ""}`}
+                      onClick={() => handleMenuClick("status")}
+                    >
+                     Log Status
                     </Link>
                   </li>         
                 </ul>

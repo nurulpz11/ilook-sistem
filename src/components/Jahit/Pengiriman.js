@@ -6,6 +6,10 @@ const Pengiriman = () => {
     const [pengirimans, setPengirimans] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [showForm, setShowForm] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+      const [lastPage, setLastPage] = useState(1);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedPengiriman, setSelectedPengiriman] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
@@ -18,25 +22,41 @@ const Pengiriman = () => {
     });
 
     useEffect(() => {
-        fetch("http://localhost:8000/api/pengiriman")
-            .then((response) => response.json())
-            .then((data) => {
-                console.log("Data pengiriman:", data);
-            const sortedData = data.data.sort((a, b) => a.id_spk - b.id_spk);
-            setPengirimans(sortedData); 
-            })
-            .catch((error) => console.error("Error fetching data:", error));
-    }, []);
+    const fetchPengirimans = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`http://localhost:8000/api/pengiriman?page=${currentPage}`);
+            if (!response.ok) {
+                throw new Error("Failed to fetch data");
+            }
+            const data = await response.json();
+
+            // Pastikan data tetap terurut sebelum disimpan ke state
+            const sortedData = data.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            setPengirimans(sortedData);
+            setLastPage(data.last_page);
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
     
+    fetchPengirimans();
+}, [currentPage]);
 
-  
       
       
-    // Filter data berdasarkan pencarian
-    const filteredPengirimans = pengirimans.filter((pengiriman) =>
-        pengiriman.nama_penjahit.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
+     // Filter data berdasarkan pencarian
+     const filteredPengirimans = Array.isArray(pengirimans) 
+     ? pengirimans
+         .filter((pengiriman) =>
+           pengiriman.id_spk.toString().includes(searchTerm.toLowerCase())
+         )
+         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // Tetap urut dari terbaru
+     : [];
+   
     
     // Handle submit form
     const handleFormSubmit = (e) => {
@@ -113,7 +133,7 @@ const Pengiriman = () => {
                 <div className="search-bar">
                 <input
                     type="text"
-                    placeholder="Cari nama penjahit..."
+                    placeholder="Cari id spk..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -144,7 +164,7 @@ const Pengiriman = () => {
                                 <td>{pengiriman.total_barang_dikirim}</td>
                                 <td style={{ color: pengiriman.sisa_barang > 0 ? 'red' : 'black'}}>
                                     {pengiriman.sisa_barang}
-                                    </td>
+                                </td>
 
                                 <td>{pengiriman.total_bayar}</td>
                               
@@ -163,6 +183,26 @@ const Pengiriman = () => {
                         ))}
                     </tbody>
                 </table>
+                 {/* Pagination */}
+                    <div className="pagination-container">
+                        <button 
+                        className="pagination-button" 
+                        disabled={currentPage === 1} 
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        >
+                        ◀ Prev
+                        </button>
+
+                        <span className="pagination-info">Halaman {currentPage} dari {lastPage}</span>
+
+                        <button 
+                        className="pagination-button" 
+                        disabled={currentPage === lastPage} 
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        >
+                        Next ▶
+                        </button>
+                    </div>
             </div>
 
 
@@ -222,9 +262,18 @@ const Pengiriman = () => {
                                         </div>
                                     ))}</td>
                             </tr>
-                           
+                            <tr>
+                                <td><span>Total Claim:</span></td>
+                                <td>{selectedPengiriman.claim}</td>
+                            </tr>
+                            <tr>
+                                <td><span>Total Refund Claim:</span></td>
+                                <td>{selectedPengiriman.refund_claim}</td>
+                            </tr>
                         </tbody>
                     </table>
+
+                    
                 </div>
             ) : (
                 <p>Loading...</p> // Menampilkan loading atau pesan saat data belum ada
@@ -272,7 +321,7 @@ const Pengiriman = () => {
                         </label>
                         <input
                             type="number"
-                            value={warnaItem.jumlah_dikirim || ""}
+                            value={warnaItem.jumlah_dikirim !== undefined ? warnaItem.jumlah_dikirim : ""} // Tampilkan kosong jika undefined
                             onChange={(e) => {
                                 const updatedWarna = [...newPengiriman.warna];
                                 updatedWarna[index].jumlah_dikirim = parseInt(e.target.value, 10) || 0;
@@ -282,7 +331,8 @@ const Pengiriman = () => {
                             required
                         />
                     </div>
-                ))}
+))}
+
 
                  
                     {/* Tombol untuk Memuat Data Warna Berdasarkan ID SPK */}

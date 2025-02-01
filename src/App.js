@@ -11,6 +11,8 @@ import Hutang from "./components/Jahit/Hutang";
 import Cashbon from "./components/Jahit/Cashbon";
 import Pendapatan from "./components/Jahit/Pendapatan";
 import Deadline from "./components/Jahit/Deadline";
+import Status from "./components/Jahit/Status";
+import Kinerja from "./components/Jahit/Kinerja";
 
 const App = () => {
   return (
@@ -30,6 +32,9 @@ const App = () => {
           <Route path="cashbon" element={<Cashbon />} />
           <Route path="pendapatan" element={<Pendapatan />} />
           <Route path="deadline" element={<Deadline />} />
+          <Route path="status" element={<Status/>} />
+          <Route path="kinerja" element={<Kinerja/>} />
+          <Route path="/kinerja/:kategori" element={<Kinerja />} />
        </Route>
         
       </Routes>

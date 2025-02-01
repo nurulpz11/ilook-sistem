@@ -5,10 +5,15 @@ import "./Penjahit.css";
 
 const Cashbon = () => {
   const [cashbons, setCashbons] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [penjahitList, setPenjahitList] = useState([]);
+  const [error, setError] = useState("");
   const [newCashbon, setNewCashbon] = useState({
-    id_spk: "",
+    id_penjahit: "",
     jumlah_cashboan: "",
     status_pembayaran: "",
     tanggal_jatuh_tempo: "",
@@ -24,15 +29,47 @@ const Cashbon = () => {
   
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/cashboan")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Data fetched:", data); // Debugging
-        setCashbons(data.data || []); // Pastikan respons adalah array
-      })
-      .catch((error) => console.error("Error fetching data:", error));
-  }, []);
+      const fetchCasbons = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(`http://localhost:8000/api/cashboan?page=${currentPage}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch data");
+          }
+          const data = await response.json();
+          console.log("Data Hutang:", data); // Debugging
+  
+          setCashbons(data.data); // Ambil data dari pagination Laravel
+          setLastPage(data.last_page); // Set total halaman
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchCasbons();
+    }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
+  
+  
 
+  useEffect(() => {
+    const fetchPenjahit = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/penjahit'); // URL API penjahit
+        if (!response.ok) {
+          throw new Error('Gagal mengambil data penjahit');
+        }
+        const data = await response.json();
+        setPenjahitList(data); // Asumsikan `data` berisi array penjahit
+      } catch (error) {
+        console.error('Error:', error.message);
+        setError(error.message);
+      }
+    };
+  
+    fetchPenjahit();
+  }, []);
   const [logHistory, setLogHistory] = useState([]); // Untuk menyimpan log pembayaran
   const [selectedDetailCashbon, setSelectedDetailCashbon] = useState(null); // Untuk menyimpan detail cashbon yang dipilih
 
@@ -62,7 +99,7 @@ const Cashbon = () => {
           setCashbons([...cashbons, data.data]); // Perbarui daftar cashbon
           setShowForm(false); // Tutup form modal
           setNewCashbon({
-            id_spk: "",
+            id_penjahit: "",
             jumlah_cashboan: "",
             status_pembayaran: "",
             tanggal_jatuh_tempo: "",
@@ -120,40 +157,86 @@ const Cashbon = () => {
   .catch((error) => console.error("Error fetching payment logs:", error));
 
   };
+  const getFilteredPenjahit = (selectedId) => {
+    if (selectedId === "") {
+      // Jika filter kosong, tampilkan semua cashboan
+      fetch("http://localhost:8000/api/cashboan")
+        .then((response) => response.json())
+        .then((data) =>  setCashbons(data.data || []))
+        .catch((error) => console.error("Error fetching data:", error));
+    } else {
+      // Filter pendapatan berdasarkan ID penjahit
+      fetch(`http://localhost:8000/api/cashboan?penjahit=${selectedId}`)
+        .then((response) => response.json())
+        .then((data) =>  setCashbons(data.data || []))
+        .catch((error) => console.error("Error filtering data:", error));
+    }
+  };
   
-  
-  
+  const formatTanggal = (tanggal) => {
+    const date = new Date(tanggal);
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+  };
+
+  const getStatusColor = (status_pembayaran) => {
+    switch (status_pembayaran) {
+      case "belum lunas":
+        return "#DCA5A0"; // Kategori A: hijau
+      case "dibayar sebagian":
+        return "#EAC98D";  // Kategori B: biru
+      case "lunas":
+        return "#A0DCDC"; // Kategori C: oranye
+      default:
+        return "black";  // Default: hitam jika kategori tidak dikenali
+    }
+    
+  };
+
 
 
   
   return (
     <div>
-   <div className="penjahit-container">
-    <h1>Daftar Cashbon</h1>
-     {/* Search Bar */}
-     <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Cari nama penjahit..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button className="add-button" onClick={() => setShowForm(true)}>
-              Tambah 
-            </button>
-          </div>
+      <div className="penjahit-container">
+        <h1>Daftar Cashbon</h1>
+       
       </div>
 
+      <div className="table-container">
+      <div className="filter-header">
+        <button className="add-button" onClick={() => setShowForm(true)}>
+              Tambah
+            </button>
+        <label htmlFor="penjahitFilter" className="filter-label"></label>
+        <select
+          id="penjahitFilter"
+          className="filter-select"
+          onChange={(e) => getFilteredPenjahit(e.target.value)}
+        >
+          <option value="">All</option>
+          {penjahitList.map((penjahit) => (
+            <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
+              {penjahit.nama_penjahit}
+            </option>
+          ))}
+        </select>
+
+      </div>
       <div className="table-container">
       <table className="penjahit-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>ID SPK</th>
-            <th>JUMLAH CASHBON</th>
-            <th>STATUS PEMBAYRAN</th>
-            <th>TANGGAL JATUH TEMPO</th>
+            <th>ID </th>
+            <th>Nama Penjahit</th>
             <th>TANGGAL CASHBON</th>
+            <th>TANGGAL JATUH TEMPO</th>
+           
+            <th>STATUS PEMBAYRAN</th>
+            <th>JUMLAH CASHBON</th>
             <th>AKSI</th>
           </tr>
         </thead>
@@ -165,21 +248,38 @@ const Cashbon = () => {
               .map((cashbon) => (
             <tr key={cashbon.id_cashboan}>
               <td>{cashbon.id_cashboan}</td>
-              <td>{cashbon.id_spk}</td>
+              <td>
+                    {
+                      penjahitList.find(penjahit => penjahit.id_penjahit === cashbon.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
+                    }
+                  </td>
+              <td>{formatTanggal(cashbon.tanggal_cashboan)}</td>
+              <td>{formatTanggal(cashbon.tanggal_jatuh_tempo)}</td>
+              <td>
+                    <span
+                      style={{
+                        backgroundColor: getStatusColor(cashbon.status_pembayaran),
+                        color: "white",
+                        padding: "3px 5px",
+                        borderRadius: "5px",
+                      
+                    }}
+                    >
+                    {cashbon.status_pembayaran}
+                    </span>
+                  </td>
               <td>{cashbon.jumlah_cashboan}</td>
-              <td>{cashbon.status_pembayaran}</td>
-              <td>{cashbon.tanggal_jatuh_tempo}</td>
-              <td>{cashbon.tanggal_cashboan}</td>
+             
               <td>
               <div className="action-card">
                   <button 
-                    className="btn-icon"
+                    className="btn1-icon"
                     onClick={() => handleBayarClick(cashbon)}
                     >
                          <FaMoneyBillWave className="icon" />
                    </button>
                     <button 
-                      className="btn-icon"
+                      className="btn1-icon"
                       onClick={() => handleDetailClick(cashbon)}
                      >
                       <FaInfoCircle className="icon" />
@@ -190,6 +290,26 @@ const Cashbon = () => {
           ))}
         </tbody>
       </table>
+      {/* Pagination */}
+      <div className="pagination-container">
+          <button 
+            className="pagination-button" 
+            disabled={currentPage === 1} 
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            ◀ Prev
+          </button>
+
+          <span className="pagination-info">Halaman {currentPage} dari {lastPage}</span>
+
+          <button 
+            className="pagination-button" 
+            disabled={currentPage === lastPage} 
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next ▶
+          </button>
+        </div>
       </div>
       
       {selectedDetailCashbon && (
@@ -206,7 +326,7 @@ const Cashbon = () => {
               </div>
               <div className="modal-body">
                 <h4>ID Cashbon: {selectedDetailCashbon.id_cashboan}</h4>
-                <p><strong>ID SPK:</strong> {selectedDetailCashbon.id_spk}</p>
+                <p><strong>ID Penjahit:</strong> {selectedDetailCashbon.id_penjahit}</p>
                 <p><strong>Jumlah Cashbon:</strong> Rp {selectedDetailCashbon.jumlah_cashboan}</p>
                 <p><strong>Status Pembayaran:</strong> {selectedDetailCashbon.status_pembayaran}</p>
                 <p><strong>Tanggal Jatuh Tempo:</strong> {selectedDetailCashbon.tanggal_jatuh_tempo}</p>
@@ -242,16 +362,23 @@ const Cashbon = () => {
             <h2>Tambah Data Casbon</h2>
             <form onSubmit={handleFormSubmit} className="modern-form">
               <div className="form-group">
-                <label>ID SPK</label>
-                <input
-                  type="text"
-                  value={newCashbon.id_spk}
+              <label>ID Penjahit:</label>
+                <select
+                  value={newCashbon.id_penjahit}
                   onChange={(e) =>
-                    setNewCashbon({ ...newCashbon, id_spk: e.target.value })
+                    setNewCashbon({ ...newCashbon, id_penjahit: e.target.value })
                   }
-                  placeholder="Masukkan ID SPK"
                   required
-                />
+                >
+                  <option value="" disabled>
+                    Pilih Penjahit
+                  </option>
+                  {penjahitList.map((penjahit) => (
+                    <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
+                      {penjahit.nama_penjahit}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
@@ -387,6 +514,7 @@ const Cashbon = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

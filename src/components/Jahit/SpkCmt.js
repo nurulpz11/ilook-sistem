@@ -5,6 +5,8 @@ import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaCog,
 
 const SpkCmt = () => {
   const [spkCmtData, setSpkCmtData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -47,6 +49,29 @@ const SpkCmt = () => {
     keterangan: '',
   });
   
+  useEffect(() => {
+    const fetchSpkCmtData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:8000/api/spkcmt?page=${currentPage}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const data = await response.json();
+        console.log("Data SPK:", data); // Debugging
+
+        setSpkCmtData(data.data); // Ambil data dari pagination Laravel
+        setLastPage(data.last_page); // Set total halaman
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpkCmtData();
+  }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
+
 
   //fungsi untuk input form
   const handleDeadlineChange = (e) => {
@@ -156,25 +181,7 @@ const SpkCmt = () => {
   
   
   
-  useEffect(() => {
-    const fetchSpkCmtData = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/spkcmt');
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const data = await response.json();
-        console.log('Data SPK:', data);  // Cek apakah data warna ada di sini
-        setSpkCmtData(data);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
   
-    fetchSpkCmtData();
-  }, []);
 
 
 useEffect(() => {
@@ -417,14 +424,14 @@ const handleEditClick = (spk) => {
 };
 const statusColors = {
   Pending: "orange",
-  Completed: "#74a474",
+  Completed: "#93D7A9",
 };
 
 const getStatusColor = (status, waktuPengerjaan) => {
   if (status === "In Progress" || status === "Pending") {
-    if (waktuPengerjaan <= 7) return "#d9af5e";
-    if (waktuPengerjaan <= 14) return "#d96a5e";
-    return "purple";
+    if (waktuPengerjaan <= 7) return "#EAC98D";
+    if (waktuPengerjaan <= 14) return "#A0DCDC";
+    return "#DCA5A0";
   }
   return statusColors[status] || "gray";
 };
@@ -434,10 +441,14 @@ const handlePengirimanDetailClick = (spk) => {
   setShowModal(true); // Tampilkan modal
 };
 
-const getFilteredSpk = async (status) => {
-  const response = await fetch(`http://localhost:8000/api/spkcmt?status=${status}`);
+const getFilteredSpk = async (status, page = 1) => {
+  const response = await fetch(`http://localhost:8000/api/spkcmt?status=${status}&page=${page}`);
   const data = await response.json();
-  setSpkCmtData(data);  // Update state dengan data yang difilter
+
+  console.log("Filtered Data:", data); // Debugging
+  
+  setSpkCmtData(Array.isArray(data.data) ? data.data : []);
+  setLastPage(data.last_page);
 };
 
 
@@ -445,29 +456,23 @@ return (
   <div>
     <div className="penjahit-container">
       <h1>Data SPK CMT</h1>
-      {/* Tampilkan pesan error jika terjadi error saat fetch */}
       {error && <p className="error-message">{error}</p>}
-
-      {/* Search Bar */}
-     
     </div>
 
     <div className="table-container">
-   
         <div className="filter-header">
         <button 
         onClick={() => setShowForm(true)}>
           Tambah
         </button>
         <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Cari nama produk..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        
-      </div>
+          <input
+            type="text"
+            placeholder="Cari nama produk..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          </div>
           <label htmlFor="statusFilter" className="filter-label"></label>
           <select 
             id="statusFilter" 
@@ -487,11 +492,11 @@ return (
           <tr>
             <th>ID</th>
             <th>NAMA PRODUK</th>
-            <th>JUMLAH PRODUK</th>
+            <th>NAMA PENJAHIT</th>
             <th>DEADLINE</th>
             <th>SISA HARI</th>
             <th>WAKTU PENGERJAAN</th>
-            <th>NAMA PENJAHIT</th>
+            <th>JUMLAH PRODUK</th>
             <th>JUMLAH DIKIRIM</th>
             <th>STATUS</th>
             <th>AKSI</th>
@@ -503,34 +508,34 @@ return (
             <tr key={spk.id_spk}>
               <td>{spk.id_spk}</td>
               <td>{spk.nama_produk}</td>
-              <td>{spk.jumlah_produk}</td>
-              <td>{formatTanggal(spk.deadline)}</td>
-              <td>{spk.sisa_hari}</td> 
-              <td>{spk.waktu_pengerjaan}</td> 
-             
               <td>
                 {
                   penjahitList.find(penjahit => penjahit.id_penjahit === spk.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                 }
               </td>
+              <td>{formatTanggal(spk.deadline)}</td>
+              <td style={{ color: spk.sisa_hari < 4 ? 'red' : 'black'}}>
+                                    {spk.sisa_hari}
+              </td>
+
+              <td>{spk.waktu_pengerjaan}</td> 
+              <td>{spk.jumlah_produk}</td>
               <td>
-            <button
-              onClick={() => handlePengirimanDetailClick(spk)}
-              className="btn-pengiriman-detail"
-            >
-              {spk.total_barang_dikirim || 0}
-            </button>
-        </td>
-
-
-
+                <button
+                  onClick={() => handlePengirimanDetailClick(spk)}
+                  className="btn-pengiriman-detail"
+                >
+                  {spk.total_barang_dikirim || 0}
+                </button>
+              </td>
               <td>
               <span
                 style={{
                   backgroundColor: getStatusColor(spk.status, spk.waktu_pengerjaan),
                   color: "white",
-                  padding: "5px 10px",
+                  padding: "3px 5px",
                   borderRadius: "5px",
+                  fontWeight: "510",
                 }}
               >
                 {spk.status}
@@ -540,7 +545,6 @@ return (
 
    
               <td>
-       
                 <div className="action-card">
                   <button 
                     className="btn1-icon" 
@@ -591,6 +595,27 @@ return (
           ))}
         </tbody>
       </table>
+      {/* Pagination */}
+      <div className="pagination-container">
+        <button 
+          className="pagination-button" 
+          disabled={currentPage === 1} 
+          onClick={() => setCurrentPage(currentPage - 1)}
+        >
+          ◀ Prev
+        </button>
+
+        <span className="pagination-info">Halaman {currentPage} dari {lastPage}</span>
+
+        <button 
+          className="pagination-button" 
+          disabled={currentPage === lastPage} 
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          Next ▶
+        </button>
+      </div>
+  
     </div>
 
 

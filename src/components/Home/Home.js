@@ -3,6 +3,7 @@ import { Doughnut, Pie } from "react-chartjs-2";
 import "chart.js/auto"; // Pastikan ini diimport agar chart bisa berfungsi
 import './Home.css';
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Tambahkan ini
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 
@@ -12,14 +13,19 @@ import {   } from 'react-icons/fa';
 const Home = () => {
   const [spkData, setSpkData] = useState([]);
   const [chartData, setChartData] = useState(null);
-    const [categoryInfo, setCategoryInfo] = useState([]);
+  const [categoryInfo, setCategoryInfo] = useState([]); 
+  const navigate = useNavigate(); // Inisialisasi useNavigate
 
   useEffect(() => {
-    // Simulasi fetch data dari API
-    fetch('http://localhost:8000/api/spkcmt')
-      .then(response => response.json())
-      .then(data => setSpkData(data));
-  }, []);
+    // Mengambil seluruh data SPK
+    axios.get('http://localhost:8000/api/spkcmt?allData=true')
+        .then(response => {
+            setSpkData(response.data);
+        })
+        .catch(error => {
+            console.error("There was an error fetching the data:", error);
+        });
+}, [])
 
   useEffect(() => {
     // Fetch data from API
@@ -72,12 +78,12 @@ const Home = () => {
             {
               label: "Jumlah Penjahit",
               data: values,
-              backgroundColor: ["#92CEE4", "#CD73DF", "#FFCE56", "#73C273"],
+              backgroundColor: ["#789DBC", "#FFB0B0", "#C9E9D2", "#FFF8DE"],
               hoverBackgroundColor: [
-                "#FF6384",
-                "#36A2EB",
-                "#FFCE56",
-                "#4BC0C0",
+                "#5B82A3",
+                "#ED9292",
+                "#9AE2AE",
+                "#ECE1BB",
               ],
             },
           ],
@@ -126,24 +132,31 @@ const Home = () => {
       {
         label: "In Progress Breakdown",
         data: [inProgressRed, inProgressBlue, inProgressGreen],
-        backgroundColor: ["#FF6384", "#36A2EB", "#4CAF50"],
-        hoverBackgroundColor: ["#FF6384", "#36A2EB", "#4CAF50"],
+        backgroundColor: ["#EAC98D", "#A0DCDC", "#DCA5A0"],
+        hoverBackgroundColor: ["#E4B255", "#53CCCC", "#E58D85"],
       },
     ],
   };
 
-  // Opsi untuk Chart
+  const handleChartClick = (event, elements) => {
+    if (elements.length > 0) {
+      const chartIndex = elements[0].index; // Index data yang diklik
+      const clickedLabel = chartData.labels[chartIndex]; // Label yang diklik
+      navigate(`/kinerja/${clickedLabel}`); // Navigasi ke halaman baru dengan parameter
+    }
+  };
+
   const chartOptions = {
     plugins: {
       legend: {
         labels: {
-          usePointStyle: true, // Gunakan lingkaran untuk label
-          pointStyle: "circle", // Bentuk lingkaran
+          usePointStyle: true,
+          pointStyle: "circle",
         },
       },
     },
+    onClick: handleChartClick, // Tambahkan event handler
   };
-   
 
   return (
     <div className="dashboard-container">
@@ -173,7 +186,7 @@ const Home = () => {
                 </div>
               </div>
               <div className="card card-animate">
-                <div className="card-icon" style={{ backgroundColor: '#74a474' }}>
+                <div className="card-icon" style={{ backgroundColor: '#88BC78' }}>
                   <i className="fas fa-check-circle"></i>
                 </div>
                 <div className="card-content">
@@ -188,7 +201,7 @@ const Home = () => {
               <div className="chart-container">
                 <div className="chart-card card">
                   <h2 className="chart-title">In Progress</h2>
-                  <Doughnut data={donutData} options={chartOptions} />
+                  <Doughnut data={donutData} />
                 </div>
               </div>
 
@@ -198,7 +211,7 @@ const Home = () => {
                   <div className="chart-card card">
                     <h2 className="chart-title">Kinerja Penjahit</h2>
                     <div className="chart-content">
-                      <Pie data={chartData} />
+                      <Pie data={chartData} options={chartOptions} />
                       <div className="chart-info">
                         {categoryInfo.map((item) => (
                           <div key={item.label} className="info-item">

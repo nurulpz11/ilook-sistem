@@ -2,26 +2,26 @@ import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaClock,FaInfoCircle,FaClipboard , FaList,FaMoneyBillWave  } from 'react-icons/fa';
 import "./Penjahit.css";
 
-const Deadline = () => {
-  const [logsDeadline, setLogsDeadline] = useState([]);
+const Status = () => {
+  const [logStatus, setLogStatus] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [error, setError] = useState("");
  
   useEffect(() => {
-    const fetchLogsDeadline = async () => {
+    const fetchLogStatus = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/log-deadlines?page=${currentPage}`);
+        const response = await fetch(`http://localhost:8000/api/log-status?page=${currentPage}`);
         if (!response.ok) {
           throw new Error("Failed to fetch data");
         }
         const data = await response.json();
-        console.log("Data Log Deadline:", data); // Debugging
+        console.log("Data Hutang:", data); // Debugging
 
-        setLogsDeadline(data.data); // Ambil data dari pagination Laravel
+        setLogStatus(data.data); // Ambil data dari pagination Laravel
         setLastPage(data.last_page); // Set total halaman
       } catch (error) {
         setError(error.message);
@@ -30,9 +30,8 @@ const Deadline = () => {
       }
     };
 
-    fetchLogsDeadline();
+    fetchLogStatus();
   }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
-
 
 
   const formatTanggal = (tanggal) => {
@@ -58,56 +57,56 @@ const Deadline = () => {
     return `${day} ${month} ${year} ${hours}:${minutes}`;
   };
   // Filter data berdasarkan pencarian
-  const filteredLog = logsDeadline.filter(
+  const filteredLog = logStatus.filter(
     (log) =>
       log.id_spk &&
       log.id_spk.toString().includes(searchTerm)
   );
   
-  
-  return ( 
+
+  return (
     <div>
-    <div className="penjahit-container">
-      <h1>Log Deadlines</h1>
-    </div>
-    <div className="table-container">
-      <div className="filter-header">
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Cari id spk..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-      
-    </div>
-  <table className="penjahit-table">
-    <thead>
-      <tr>
-        <th>ID Log</th>
-        <th>ID SPK</th>
-        <th>Deadline Lama</th>
-        <th>Deadline Baru</th>
-        <th>waktu perubahan</th>
-        <th>Keterangan</th>
-      </tr>
-    </thead>
-    <tbody>
-      {filteredLog.map((log) => (
-        <tr key={log.id_log}>
-          <td>{log.id_log}</td>
-          <td>{log.id_spk}</td>
-          <td>{formatTanggal(log.deadline_lama)}</td>
-          <td>{formatTanggal(log.deadline_baru)}</td>
-          <td>{formatTanggalLengkap(log.tanggal_aktivitas)}</td>
-          <td>{log.keterangan}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-  {/* Pagination */}
-  <div className="pagination-container">
+        <div className="penjahit-container">
+          <h1>Log Status</h1>
+        </div>
+        <div className="table-container">
+          <div className="filter-header">
+          <div className="search-bar">
+            <input
+              type="text"
+              placeholder="Cari id spk..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+        </div>
+      <table className="penjahit-table">
+        <thead>
+          <tr>
+            <th>ID Log</th>
+            <th>ID SPK</th>
+            <th>Status Lama</th>
+            <th>Status Baru</th>
+            <th>waktu perubahan</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredLog.map((log) => (
+            <tr key={log.id_status}>
+              <td>{log.id_status}</td>
+              <td>{log.id_spk}</td>
+              <td>{log.status_lama}</td>
+              <td>{log.status_baru}</td>
+              <td>{formatTanggalLengkap(log.tanggal_aktivitas)}</td>
+              <td>{log.keterangan}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {/* Pagination */}
+      <div className="pagination-container">
           <button 
             className="pagination-button" 
             disabled={currentPage === 1} 
@@ -126,10 +125,11 @@ const Deadline = () => {
             Next ▶
           </button>
         </div>
-</div>
-</div>
+    </div>
+    </div>
 
-  )
-}
+      )
+    }
 
-export default Deadline
+
+export default Status
