@@ -42,6 +42,7 @@ class SpkCmt extends Model
         return $this->harga_per_barang * $this->jumlah_produk;
     }
     
+    
     // Relasi ke tabel penjahit
     public function penjahit()
     {
@@ -155,7 +156,7 @@ class SpkCmt extends Model
     {
         if (in_array($this->status, ['Pending', 'Completed'])) {
             \Log::info('Status Pending atau Completed - Mengembalikan sisa_hari_terakhir', [
-                'status' => $this->status,
+                'statusX' => $this->status,
                 'sisa_hari_terakhir' => $this->sisa_hari_terakhir,
             ]);
             return $this->sisa_hari_terakhir; // Gunakan nilai terakhir

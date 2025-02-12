@@ -18,11 +18,16 @@ class SpkCmtController extends Controller
     // Menampilkan semua SPK
     public function index(Request $request)
     {
+        $user = auth()->user();
         $statusFilter = $request->query('status');
         $allData = $request->query('allData'); // Ambil parameter tambahan
     
         $query = SpkCmt::with(['warna', 'pengiriman']);
     
+        if ($user->hasRole('penjahit')) {
+            $query->where('id_penjahit', $user->id_penjahit);
+        }
+        
         if ($statusFilter) {
             $query->where('status', $statusFilter);
         }

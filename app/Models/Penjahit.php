@@ -22,5 +22,9 @@ class Penjahit extends Model
     {
         return $this->hasMany(SpkCmt::class, 'id_penjahit');
     }
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id_penjahit', 'id_penjahit');
+    }
 
 }

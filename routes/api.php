@@ -13,67 +13,84 @@ use App\Http\Controllers\LogPembayaranCashbonController;
 use App\Http\Controllers\HutangController;
 use App\Http\Controllers\LogPembayaranHutangController;
 use App\Http\Controllers\PendapatanController;
+use App\Http\Controllers\SpkChatController;
+use App\Http\Controllers\SpkChatInvite;
+use App\Http\Controllers\StaffController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
 
-Route::post('register', [AuthController::class, 'register']);
+
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
-Route::resource('spkcmt', SpkCmtController::class);
-Route::get('spkcmt/all', [SpkCmtController::class, 'getAll']); // Tambahkan ini
-
-Route::get('/kinerja-cmt/kategori-count', [SpkCmtController::class, 'getKategoriCount']);
-Route::get('/kinerja-cmt/kategori-count-by-penjahit', [SpkCmtController::class, 'getKategoriCountByPenjahit']);
-
-Route::resource('laporancmt', LaporanCmtController::class);
-Route::apiResource('penjahit', PenjahitController::class);
-Route::get('/debug-deadlines', [SpkCmtController::class, 'debugDeadlines']);
-Route::get('/kinerja-cmt', [SpkCmtController::class, 'getKinerjaCmt']);
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
 Route::get('/spk-cmt/{id}/download-staff-pdf', [SpkCmtController::class, 'downloadStaffPdf'])->name('spk.downloadStaffPdf');
-// Nested resource untuk warna (dalam SPK tertentu)
-Route::resource('spkcmt.warna', WarnaController::class)->shallow();
-Route::put('/spk/{id}/deadline', [SpkCmtController::class, 'updateDeadline']);
-Route::get('/spk/{id}/log-deadline', [SpkCmtController::class, 'getLogDeadline']);
-Route::get('/log-deadlines', [SpkCmtController::class, 'getAllLogDeadlines']);
-
-Route::get('/spk/{id}/log-status', [SpkCmtController::class, 'getLogDeadline']);
-Route::get('/log-status', [SpkCmtController::class, 'getAllLogStatus']);
-
-Route::put('/spk/{id}/status', [SpkCmtController::class, 'updateStatus']);
-Route::get('/spk/{id}/log-status', [SpkCmtController::class, 'getLogStatus']);
-Route::post('/pengiriman', [PengirimanController::class, 'store']);
-Route::get('/pengiriman', [PengirimanController::class, 'index']);
-// Tambahkan route untuk mengambil warna berdasarkan ID SPK
-Route::get('/spk-cmt/{id}/warna', [SpkCmtController::class, 'getWarna']);
-// routes/api.php
-Route::get('/pengiriman/{id}', [PengirimanController::class, 'show']);
-Route::resource('cashboan', CashboanController::class);
-Route::resource('log-pembayaran-cashboan', LogPembayaranCashbonController::class);
-Route::post('/log-pembayaran-cashboan/{id_cashboan}', [LogPembayaranCashbonController::class, 'createLogPembayaran']);
-Route::get('/log-pembayaran-cashboan/{id_cashboan}', [LogPembayaranCashbonController::class, 'show']);
-
-Route::resource('hutang', HutangController::class);
-Route::resource('log-pembayaran-hutang', LogPembayaranHutangController::class);
-Route::post('/log-pembayaran-hutang/{id_hutang}', [LogPembayaranHutangController::class, 'createLogPembayaran']);
-Route::get('/log-pembayaran-hutang/{id_hutang}', [LogPembayaranHutangController::class, 'show']);
-
-Route::get('/pendapatan', [PendapatanController::class, 'index']); // Untuk melihat daftar pendapatan atau form
-Route::post('pendapatan/calculate', [PendapatanController::class, 'calculate']);
-Route::post('/pendapatan', [PendapatanController::class, 'store']);
-Route::get('pendapatan/{id}/pengiriman', [PendapatanController::class, 'showPengiriman']);
-Route::get('/penjahit-list', [PendapatanController::class, 'getPenjahitList']);
-
-Route::get('/pendapatan/{id}/download-nota', [PendapatanController::class, 'downloadNota']);
+Route::middleware('auth:api')->group(function () {
+   
+Route::apiResource('penjahit', PenjahitController::class);
+Route::get('/spkcmt', [SpkCmtController::class, 'index']); 
+Route::get('/spkcmt/{spkcmt}', [SpkCmtController::class, 'show']); 
 
 
+Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function () {
+    Route::post('/spk/{spkId}/invite-staff/{staffId}', [StaffController::class, 'inviteStaff']);
+
+    Route::get('/spk/{spkId}/check-invitation', [SpkChatController::class, 'checkInvitation']);
+    Route::get('/spk/{spkId}/check-invite', [SpkChatController::class, 'checkInvite']);
+    Route::get('/spk/{spkId}/staff-list', [StaffController::class, 'getStaffList']);
+
+});
 
 
+    Route::middleware('role:super-admin|supervisor|staff|owner|penjahit')->group(function () {
+        Route::post('/spkcmt', [SpkCmtController::class, 'store']);
+        Route::put('/spkcmt/{spkcmt}', [SpkCmtController::class, 'update']);
+        Route::patch('/spkcmt/{spkcmt}', [SpkCmtController::class, 'update']);
+        Route::delete('/spkcmt/{spkcmt}', [SpkCmtController::class, 'destroy']);
+        Route::get('/spk-chats/{spkId}', [SpkChatController::class, 'index']);   
+        Route::post('/send-message', [SpkChatController::class, 'sendMessage']);
+        Route::post('/invite-staff/{staffId}', [StaffController::class, 'inviteStaff']);
+       
+        Route::get('/kinerja-cmt/kategori-count', [SpkCmtController::class, 'getKategoriCount']);
+        Route::get('/kinerja-cmt/kategori-count-by-penjahit', [SpkCmtController::class, 'getKategoriCountByPenjahit']);
+        Route::get('/debug-deadlines', [SpkCmtController::class, 'debugDeadlines']);
+        Route::get('/kinerja-cmt', [SpkCmtController::class, 'getKinerjaCmt']);
+        Route::resource('spkcmt.warna', WarnaController::class)->shallow();
+        Route::put('/spk/{id}/deadline', [SpkCmtController::class, 'updateDeadline']);
+        Route::get('/log-deadlines', [SpkCmtController::class, 'getAllLogDeadlines']);
+        Route::get('/spk/{id}/log-deadline', [SpkCmtController::class, 'getLogDeadline']);
+        Route::get('/log-status', [SpkCmtController::class, 'getAllLogStatus']);
+        Route::put('/spk/{id}/status', [SpkCmtController::class, 'updateStatus']);
+        Route::get('/spk/{id}/log-status', [SpkCmtController::class, 'getLogStatus']);
+        Route::get('/spk-cmt/{id}/warna', [SpkCmtController::class, 'getWarna']);
+
+
+        Route::post('/pengiriman', [PengirimanController::class, 'store']);
+        Route::get('/pengiriman', [PengirimanController::class, 'index']);
+        Route::get('/pengiriman/{id}', [PengirimanController::class, 'show']);
+
+
+        Route::resource('cashboan', CashboanController::class);
+        Route::resource('log-pembayaran-cashboan', LogPembayaranCashbonController::class);
+        Route::post('/log-pembayaran-cashboan/{id_cashboan}', [LogPembayaranCashbonController::class, 'createLogPembayaran']);
+        Route::get('/log-pembayaran-cashboan/{id_cashboan}', [LogPembayaranCashbonController::class, 'show']);
+
+
+        Route::resource('hutang', HutangController::class);
+        Route::resource('log-pembayaran-hutang', LogPembayaranHutangController::class);
+        Route::post('/log-pembayaran-hutang/{id_hutang}', [LogPembayaranHutangController::class, 'createLogPembayaran']);
+        Route::get('/log-pembayaran-hutang/{id_hutang}', [LogPembayaranHutangController::class, 'show']);
+
+
+        Route::get('/pendapatan', [PendapatanController::class, 'index']); // Untuk melihat daftar pendapatan atau form
+        Route::post('pendapatan/calculate', [PendapatanController::class, 'calculate']);
+        Route::post('/pendapatan', [PendapatanController::class, 'store']);
+        Route::get('pendapatan/{id}/pengiriman', [PendapatanController::class, 'showPengiriman']);
+        Route::get('/pendapatan/{id}/download-nota', [PendapatanController::class, 'downloadNota']);
+        Route::get('/penjahit-list', [PendapatanController::class, 'getPenjahitList']);
+        
+        Route::resource('laporancmt', LaporanCmtController::class);
+      
+     
+    });
+
+   
+});
