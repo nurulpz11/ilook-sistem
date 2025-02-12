@@ -11,13 +11,33 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8000/api/login', { email, password });
-            console.log(response.data.token); // Simpan token sesuai kebutuhan (localStorage, state management)
+            const response = await fetch("http://localhost:8000/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            });
+    
+            if (!response.ok) {
+                throw new Error("Login gagal");
+            }
+           
+            const data = await response.json();
+            console.log("Data dari API:", data);
+            console.log("Role yang akan disimpan:", data.user.role); 
+            
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userId', data.user.id);
+            localStorage.setItem('role', data.user.role);
+            
+            console.log("Role dari LocalStorage setelah disimpan:", localStorage.getItem("role"));
+            
 
             // Arahkan ke halaman Home setelah login berhasil
             navigate('/home');
         } catch (error) {
-            console.error(error.response.data);
+            console.error("Error login:", error.message);
         }
     };
 

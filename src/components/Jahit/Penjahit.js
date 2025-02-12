@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "./Penjahit.css";
+import API from "../../api"; 
 
 const Penjahit = () => {
   const [penjahits, setPenjahits] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showForm, setShowForm] = useState(false); // State untuk modal form
+  const [showForm, setShowForm] = useState(false); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); 
   const [newPenjahit, setNewPenjahit] = useState({
     nama_penjahit: "",
     kontak: "",
@@ -12,12 +15,24 @@ const Penjahit = () => {
   }); // State untuk form data penjahit baru
   const [successMessage, setSuccessMessage] = useState("");
   // Fetch data penjahit
+
   useEffect(() => {
-    fetch("http://localhost:8000/api/penjahit") // Ganti dengan endpoint API Anda
-      .then((response) => response.json())
-      .then((data) => setPenjahits(data))
-      .catch((error) => console.error("Error fetching data:", error));
+    const fetchPenjahits = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get("/penjahit"); 
+        setPenjahits(response.data);
+      } catch (error) {
+        setError("Gagal mengambil data penjahit.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPenjahits();
   }, []);
+
+
 
   // Filter data berdasarkan pencarian
   const filteredPenjahits = penjahits.filter((penjahit) =>
@@ -25,24 +40,19 @@ const Penjahit = () => {
   );
 
   // Handle submit form
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    // Simpan data penjahit baru ke server
-    fetch("http://localhost:8000/api/penjahit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newPenjahit),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setPenjahits([...penjahits, data]); // Tambahkan data baru ke list
-        setShowForm(false); // Tutup modal
-        setNewPenjahit({ nama_penjahit: "", kontak: "", alamat: "" }); // Reset form
-        setSuccessMessage("Penjahit berhasil ditambahkan!"); // Set pesan sukses
-        setTimeout(() => setSuccessMessage(""), 3000); 
-      })
-      .catch((error) => console.error("Error adding data:", error));
-  };
+ const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await API.post("/penjahit", newPenjahit); 
+    setPenjahits([...penjahits, response.data]);
+    setShowForm(false);
+    setNewPenjahit({ nama_penjahit: "", kontak: "", alamat: "" });
+    setSuccessMessage("Penjahit berhasil ditambahkan!");
+  } catch (error) {
+    setError("Gagal menambahkan penjahit.");
+  }
+};
+
 
   return (
     <div>

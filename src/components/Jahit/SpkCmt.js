@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './Penjahit.css';
-import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaCog,
-  FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList, FaCheckCircle ,FaTimesCircle, FaExclamationCircle  } from 'react-icons/fa';
+import axios from "axios";
+import Pusher from 'pusher-js';
+import { toast } from 'react-toastify';
+import API from "../../api"; 
+import { FaPlus, FaTrash, FaSave, FaTimes,FaPaperPlane,FaBell, FaRegEye, FaCog,
+  FaEdit, FaClock,FaInfoCircle,FaComments,FaCommentDots,FaComment  } from 'react-icons/fa';
 
 const SpkCmt = () => {
   const [spkCmtData, setSpkCmtData] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -16,9 +23,14 @@ const SpkCmt = () => {
   const [showModal, setShowModal] = useState(false);
   const [pengirimanDetails, setPengirimanDetails] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
-  const [showDeadlineForm, setShowDeadlineForm] = useState(false);  // Form Update Deadline
+  const [showDeadlineForm, setShowDeadlineForm] = useState(false);  
   const [showStatusForm, setShowStatusForm] = useState(false); 
-  const [penjahitList, setPenjahitList] = useState([]); // State untuk menyimpan data penjahit
+  const [penjahitList, setPenjahitList] = useState([]); 
+  const [message, setMessage] = useState("");
+  const [showChatPopup, setShowChatPopup] = useState(false);
+  const [showInviteStaffModal, setShowInviteStaffModal] = useState(false);
+  const [staffList, setStaffList] = useState([]);
+  const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [newSpk, setNewSpk] = useState({
     nama_produk: '',
     jumlah_produk: 0, // Akan dihitung secara otomatis
@@ -48,29 +60,181 @@ const SpkCmt = () => {
     status: '',
     keterangan: '',
   });
+  const userId = localStorage.getItem('userId'); // or from the token if stored there
+  const userRole = localStorage.getItem("role");
+  console.log("User Role dari localStorage:", userRole);
+  const chatContainerRef = useRef(null);
   
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]); // Akan berjalan setiap kali messages berubah
+  
+
   useEffect(() => {
     const fetchSpkCmtData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/spkcmt?page=${currentPage}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-        const data = await response.json();
-        console.log("Data SPK:", data); // Debugging
 
-        setSpkCmtData(data.data); // Ambil data dari pagination Laravel
-        setLastPage(data.last_page); // Set total halaman
+        const response = await API.get(`/spkcmt?page=${currentPage}`);
+
+        console.log("Data SPK:", response.data); // Debugging
+
+        setSpkCmtData(response.data.data);
+        setLastPage(response.data.last_page);
       } catch (error) {
-        setError(error.message);
+        setError(error.response?.data?.message || "Failed to fetch data");
+        console.error("Error fetching SPK:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchSpkCmtData();
-  }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
+  }, [currentPage]); 
+
+  // Ambil chat saat komponen pertama kali dirender
+  useEffect(() => {
+    if (selectedSpkId) {
+      console.log("Fetching chat for SPK ID:", selectedSpkId);
+      
+      axios.get(`http://localhost:8000/api/spk-chats/${selectedSpkId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      .then(response => {
+        console.log("Chat API Response:", response.data); // Debugging
+        setMessages(response.data); // API langsung mengembalikan array
+      })
+      .catch(error => {
+        console.error("Error fetching messages:", error);
+      });
+    }
+  }, [selectedSpkId]);
+  
+//
+  useEffect(() => {
+    const storedNotifications = localStorage.getItem("notifications");
+    if (storedNotifications) {
+      setNotifications(JSON.parse(storedNotifications));
+    }
+  }, []);
+
+useEffect(() => {
+    if (!selectedSpkId) return;
+
+    // Inisialisasi satu koneksi Pusher saja
+    const pusher = new Pusher("b646c54d20b146c476dc", {
+      cluster: "ap1",
+      encrypted: true,
+    });
+
+    // Subscribe ke channel untuk chat dan notifikasi
+    const chatChannel = pusher.subscribe(`spk-chat.${selectedSpkId}`);
+    const notifChannel = pusher.subscribe(`spk-chat-notification.${selectedSpkId}`);
+
+    // Event listener untuk pesan baru
+    chatChannel.bind("chat.sent", (data) => {
+      console.log("Pesan baru diterima dari Pusher:", data);
+      setMessages((prevMessages) => [...prevMessages, data.chat]);
+    });
+
+    // Event listener untuk notifikasi
+    notifChannel.bind("chat.notification", (data) => {
+      console.log("Pesan diterima dari Pusher (notif):", data);
+      setNotifications((prevNotifications) => {
+        const newNotification = {
+          id: data.chat.id,
+          text: data.chat.message,
+          time: new Date().toLocaleTimeString(),
+        };
+        const updatedNotifications = [...prevNotifications, newNotification];
+
+        localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
+        return updatedNotifications;
+      });
+    });
+
+    return () => {
+      chatChannel.unbind_all();
+      chatChannel.unsubscribe();
+      notifChannel.unbind_all();
+      notifChannel.unsubscribe();
+      pusher.disconnect(); // Tutup koneksi Pusher dengan benar
+    };
+  }, [selectedSpkId]); // Hanya tergantung pada selectedSpkId
+
+  // Fungsi untuk mengirim pesan
+  const sendMessage = async () => {
+    if (!message.trim()) return;
+  
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/send-message",
+        { message, id_spk: selectedSpkId }, 
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+  
+      console.log("Response dari API:", response.data); // Debugging
+      setMessages([...messages, response.data]); // Pastikan formatnya benar
+      setMessage(""); // Kosongkan input setelah terkirim
+    } catch (error) {
+      console.error("Error sending message:", error.response ? error.response.data : error);
+    }
+  };
+
+  const fetchStaffList = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/spk/${selectedSpkId}/staff-list', {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setStaffList(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil daftar staff:", error);
+    }
+  };
+  
+  useEffect(() => {
+    if (showInviteStaffModal) {
+      fetchStaffList();
+    }
+  }, [showInviteStaffModal]);
+  
+  // Fungsi untuk mengundang staff
+  const inviteStaff = async () => {
+    if (!selectedStaffId || !selectedSpkId) return;
+  
+    try {
+      const response = await axios.post(
+        `http://localhost:8000/api/spk/${selectedSpkId}/invite-staff/${selectedStaffId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+      console.log(response.data);
+      alert("Staff berhasil diundang ke chat!");
+      setShowInviteStaffModal(false); // Tutup modal setelah mengundang
+    } catch (error) {
+      console.error("Gagal mengundang staff:", error);
+      alert("Gagal mengundang staff.");
+    }
+  };
+
+
+  useEffect(() => {
+    if (showInviteStaffModal) {
+      fetchStaffList();
+    }
+  }, [showInviteStaffModal]);
+  
+  
+const handleChatClick = (spk) => {
+  console.log("SPK yang diklik:", spk); // Debugging
+  setSelectedSpkId(spk.id_spk); // Pastikan ID diambil dari spk.id
+  setShowChatPopup(true);
+};
+
 
 
   //fungsi untuk input form
@@ -93,27 +257,14 @@ const SpkCmt = () => {
   //fungsi untuk kirim update dadline ke API
   const updateDeadline = async (spkId) => {
     const { deadline, keterangan } = newDeadline;
+    
     try {
-      const response = await fetch(`http://localhost:8000/api/spk/${spkId}/deadline`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ deadline, keterangan }),
-      });
+      const response = await API.put(`/spk/${spkId}/deadline`, { deadline, keterangan });
   
-      if (!response.ok) {
-        throw new Error('Failed to update deadline');
-      }
-  
-      const data = await response.json();
-  
-      // Update state lokal dengan status baru
+      // Update state lokal dengan data baru
       setSpkCmtData((prevSpkCmtData) =>
         prevSpkCmtData.map((spk) =>
-          spk.id_spk === spkId
-            ? { ...spk, deadline: deadline, keterangan: keterangan }
-            : spk
+          spk.id_spk === spkId ? { ...spk, deadline, keterangan } : spk
         )
       );
   
@@ -122,9 +273,9 @@ const SpkCmt = () => {
       setShowForm(false);
       setShowDeadlineForm(false);
   
-      alert(data.message);
+      alert(response.data.message); // Menampilkan pesan sukses
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Error: ' + (error.response?.data?.message || error.message)); // Menampilkan error yang lebih jelas
     }
   };
   
@@ -132,35 +283,23 @@ const SpkCmt = () => {
    // Fungsi untuk kirim update status ke API
    const updateStatus = async (spkId) => {
     const { status, keterangan } = newStatus;
+    
     try {
-      const response = await fetch(`http://localhost:8000/api/spk/${spkId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status, keterangan }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update status');
-      }
-
-      const data = await response.json();
+      const response = await API.put(`/spk/${spkId}/status`, { status, keterangan });
+  
       // Update state lokal dengan status baru
       setSpkCmtData((prevSpkCmtData) =>
-      prevSpkCmtData.map((spk) =>
-        spk.id_spk === spkId
-          ? { ...spk, status: status, keterangan: keterangan }
-          : spk
-      )
-    );
-
-      alert(data.message); // Menampilkan pesan sukses
+        prevSpkCmtData.map((spk) =>
+          spk.id_spk === spkId ? { ...spk, status, keterangan } : spk
+        )
+      );
+  
+      alert(response.data.message); // Menampilkan pesan sukses
       setShowPopup(false); // Menutup popup setelah status berhasil diperbarui
       setShowForm(false); // Menyembunyikan form update setelah berhasil
       setShowStatusForm(false); // Menutup form update status
     } catch (error) {
-      alert('Error: ' + error.message); // Menampilkan pesan error
+      alert('Error: ' + (error.response?.data?.message || error.message)); // Menampilkan pesan error yang lebih spesifik
     }
   };
   
@@ -179,28 +318,23 @@ const SpkCmt = () => {
     setShowForm(false);  // Pastikan form SPK tidak tampil
   };
   
-  
-  
-  
-
 
 useEffect(() => {
-  const fetchPenjahit = async () => {
+  const fetchPenjahits = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/penjahit'); // URL API penjahit
-      if (!response.ok) {
-        throw new Error('Gagal mengambil data penjahit');
-      }
-      const data = await response.json();
-      setPenjahitList(data); // Asumsikan `data` berisi array penjahit
+      setLoading(true);
+      const response = await API.get("/penjahit"); 
+      setPenjahitList(response.data);
     } catch (error) {
-      console.error('Error:', error.message);
-      setError(error.message);
+      setError("Gagal mengambil data penjahit.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  fetchPenjahit();
+  fetchPenjahits();
 }, []);
+
   
 
 const handleInputChange = (e) => {
@@ -263,8 +397,6 @@ const handleUpdateSubmit = async (e, spkId) => {
     alert("Error: " + error.message);
   }
 };
-
-
 
 // Filter data berdasarkan pencarian
 const filteredSpk = spkCmtData.filter((spk) =>
@@ -392,8 +524,6 @@ const handleRemoveWarna = (index) => {
   });
 };
 
-
-
 const handleDetailClick = (spk) => {
   setSelectedSpk(spk); // Simpan detail SPK yang dipilih
   setShowPopup(true);  // Tampilkan pop-up
@@ -442,23 +572,59 @@ const handlePengirimanDetailClick = (spk) => {
 };
 
 const getFilteredSpk = async (status, page = 1) => {
-  const response = await fetch(`http://localhost:8000/api/spkcmt?status=${status}&page=${page}`);
-  const data = await response.json();
+  try {
+    const response = await API.get(`/spkcmt`, {
+      params: { status, page }, // Menggunakan params agar lebih rapi
+    });
 
-  console.log("Filtered Data:", data); // Debugging
-  
-  setSpkCmtData(Array.isArray(data.data) ? data.data : []);
-  setLastPage(data.last_page);
+    console.log("Filtered Data:", response.data); // Debugging
+
+    setSpkCmtData(Array.isArray(response.data.data) ? response.data.data : []);
+    setLastPage(response.data.last_page);
+  } catch (error) {
+    console.error("Error fetching filtered SPK:", error.response?.data?.message || error);
+    setSpkCmtData([]); // Reset data jika terjadi error
+  }
 };
 
 
+const togglePopup = () => {
+  setShowPopup(!showPopup);
+};
 return (
   <div>
-    <div className="penjahit-container">
+      <div className="penjahit-container">
       <h1>Data SPK CMT</h1>
-      {error && <p className="error-message">{error}</p>}
-    </div>
+      <div className="notif-wrapper" onClick={() => setShowPopup(!showPopup)}>
+        <FaBell className="notif-icon" />
+        {notifications.length > 0 && <span className="notif-badge">{notifications.length}</span>}
+      </div>
 
+      {showPopup && (
+        <div className="popup-overlay" onClick={() => setShowPopup(false)}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Notifikasi</h3>
+            {notifications.length > 0 ? (
+              <ul className="notif-list">
+                {notifications.map((notif) => (
+                  <li key={notif.id}>
+                    {notif.text} <span className="notif-time">{notif.time}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Belum ada notifikasi baru.</p>
+            )}
+           <button onClick={() => {
+            setNotifications([]);
+            localStorage.removeItem("notifications"); // Hapus dari localStorage juga
+          }}>Hapus Notifikasi</button>
+
+                    </div>
+        </div>
+      )}
+    </div>
+    
     <div className="table-container">
         <div className="filter-header">
         <button 
@@ -572,6 +738,9 @@ return (
                      > 
                      <FaEdit className="icon" />
                    </button>
+                   <button className="btn1-icon" onClick={() => handleChatClick(spk)}> 
+                    <FaCommentDots className="icon" />
+                  </button>
                 </div>      
               </td>
               <td>
@@ -617,6 +786,85 @@ return (
       </div>
   
     </div>
+
+    {showChatPopup && (
+      <div className="chat-overlay">
+        <div className="chat-popup">
+          <div className="chat-popup-content">
+            <button className="close-btn" onClick={() => setShowChatPopup(false)}>
+              <FaTimes />
+            </button>
+
+            <div className="chat-header">
+              <h3>Chat SPK #{selectedSpkId}</h3>
+              {(userRole === "supervisor" || userRole === "super-admin") && (
+              <button className="invite-btn" onClick={() => setShowInviteStaffModal(true)}>
+                + Undang Staff
+              </button>
+            )}
+      </div>
+        
+      <div ref={chatContainerRef} className="chat-messages">
+        {messages.length > 0 ? (
+          messages.map((msg, index) => (
+            <div
+            key={index}
+            className={`chat-message ${msg.user_id === userId ? 'user-message' : 'partner-message'}`}
+          >
+            <div className="message-header">
+          <strong>{msg.user ? msg.user.name : 'Unknown User'}:</strong> {/* Cek apakah msg.user ada */}
+        </div>
+            <div className="message-text">
+              {msg.message}
+            </div>
+            <small>{new Date(msg.created_at).toLocaleString()}</small>
+          </div>
+          
+          ))
+        ) : (
+          <p>Belum ada chat</p>
+        )}
+      </div>
+
+
+      {showInviteStaffModal && (
+        <div className="modal-invite-overlay">
+      <div className="modal-invite">
+        <div className="modal-invite-content">
+          <h3>Pilih Staff untuk Diundang</h3>
+          <select onChange={(e) => setSelectedStaffId(e.target.value)}>
+            <option value="">Pilih Staff</option>
+            {staffList.map((staff) => (
+              <option key={staff.id} value={staff.id}>
+                {staff.name}
+              </option>
+            ))}
+          </select>
+          <button onClick={inviteStaff}>Undang</button>
+          <button onClick={() => setShowInviteStaffModal(false)}>Batal</button>
+        </div>
+        </div>
+      </div>
+    )}
+
+      <div className="chat-input">
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Ketik pesan..."
+        />
+        <button onClick={sendMessage}>
+          <FaPaperPlane />
+        </button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  
+)}
+
 
 
     {showModal && (
@@ -707,9 +955,6 @@ return (
 
 
 
-
-
-
 {showDeadlineForm && selectedSpk && (
   <div className="modal">
  <div className="modal-content">
@@ -751,7 +996,6 @@ return (
     </div>
   </div>
 )}
-
 
 
 {showStatusForm && selectedSpk && (

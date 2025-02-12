@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaClock,FaInfoCircle,FaClipboard , FaList,FaMoneyBillWave  } from 'react-icons/fa';
 import "./Penjahit";
 import axios from "axios";
+import API from "../../api"; 
 
 const Pendapatan = () => {
   const [pendapatans, setPendapatans] = useState([]);
@@ -13,7 +14,7 @@ const Pendapatan = () => {
   const [detailPengiriman, setDetailPengiriman] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [penjahitList, setPenjahitList] = useState([]); // State untuk menyimpan data penjahit
+  const [penjahitList, setPenjahitList] = useState([]);
   const [newPendapatan, setNewPendapatan] = useState({
     id_pendapatan:"",
     id_penjahit: "",
@@ -30,99 +31,99 @@ const Pendapatan = () => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/pendapatan")
-      .then((response) => response.json())
-      .then((data) => setPendapatans(data.data || []))
-      .catch((error) => console.error("Error fetching data:", error));
-  }, []);
-
-  useEffect(() => {
     const fetchPendapatans = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/pendapatan?page=${currentPage}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Token tidak ditemukan. Silakan login kembali.");
+          setLoading(false);
+          return;
         }
-        const data = await response.json();
-        console.log("Data Hutang:", data); // Debugging
-
-        setPendapatans(data.data); // Ambil data dari pagination Laravel
-        setLastPage(data.last_page); // Set total halaman
+  
+        const response = await API.get(`/pendapatan?page=${currentPage}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        console.log("Data Pendapatan:", response.data); // Debugging
+  
+        setPendapatans(response.data.data || []); // Set data pendapatan
+        setLastPage(response.data.last_page); // Set total halaman
       } catch (error) {
-        setError(error.message);
+        setError(error.response?.data?.message || "Gagal mengambil data pendapatan.");
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchPendapatans();
   }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
-
+  
 
   
-useEffect(() => {
-  const fetchPenjahit = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/penjahit'); // URL API penjahit
-      if (!response.ok) {
-        throw new Error('Gagal mengambil data penjahit');
+  useEffect(() => {
+    const fetchPenjahits = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get("/penjahit"); 
+        setPenjahitList(response.data);
+      } catch (error) {
+        setError("Gagal mengambil data penjahit.");
+      } finally {
+        setLoading(false);
       }
-      const data = await response.json();
-      setPenjahitList(data); // Asumsikan `data` berisi array penjahit
-    } catch (error) {
-      console.error('Error:', error.message);
-      setError(error.message);
-    }
-  };
+    };
+  
+    fetchPenjahits();
+  }, []);
+  
+  
 
-  fetchPenjahit();
-}, []);
-
-
-const handleFormSubmit = (e) => {
+const handleFormSubmit = async (e) => {
   e.preventDefault();
-  fetch("http://localhost:8000/api/pendapatan", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newPendapatan),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.message === "Pendapatan berhasil disimpan.") {
-        // Tambahkan data baru di awal array
-        setPendapatans([data.data, ...pendapatans]); 
-        setShowForm(false);
-        resetForm();
-      } else {
-        console.error("Error adding data:", data);
-      }
-    })
-    .catch((error) => console.error("Error adding data:", error));
+
+  try {
+    const response = await API.post("/pendapatan", newPendapatan);
+
+    if (response.data.message === "Pendapatan berhasil disimpan.") {
+      // Tambahkan data baru di awal array
+      setPendapatans([response.data.data, ...pendapatans]);
+      setShowForm(false);
+      resetForm();
+    } else {
+      console.error("Error adding data:", response.data);
+    }
+  } catch (error) {
+    console.error("Error adding data:", error);
+  }
 };
 
 
-  const handleLoadData = () => {
+
+const handleLoadData = async () => {
+  try {
     const { id_penjahit, periode_awal, periode_akhir } = newPendapatan;
-    fetch("http://localhost:8000/api/pendapatan/calculate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_penjahit, periode_awal, periode_akhir }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setNewPendapatan((prev) => ({
-          ...prev,
-          total_pendapatan: data.total_pendapatan || 0,
-          total_claim: data.total_claim || 0,
-          total_refund_claim: data.total_refund_claim || 0,
-          total_cashbon: data.total_cashbon || 0,
-          total_hutang: data.total_hutang || 0,
-          total_transfer: calculateTotalTransfer(data),
-        }));
-      })
-      .catch((error) => console.error("Error loading data:", error));
-  };
+
+    const response = await API.post("/pendapatan/calculate", {
+      id_penjahit,
+      periode_awal,
+      periode_akhir,
+    });
+
+    setNewPendapatan((prev) => ({
+      ...prev,
+      total_pendapatan: response.data.total_pendapatan || 0,
+      total_claim: response.data.total_claim || 0,
+      total_refund_claim: response.data.total_refund_claim || 0,
+      total_cashbon: response.data.total_cashbon || 0,
+      total_hutang: response.data.total_hutang || 0,
+      total_transfer: calculateTotalTransfer(response.data),
+    }));
+  } catch (error) {
+    console.error("Error loading data:", error);
+  }
+};
+
 
   const calculateTotalTransfer = (data) => {
     const { total_pendapatan, total_claim, total_refund_claim, total_cashbon, total_hutang } = data;
@@ -167,19 +168,19 @@ const handleFormSubmit = (e) => {
     setSelectedPendapatan(pendapatan);
     setLoading(true);
     setError("");
-
+  
     try {
       // Panggil API untuk mendapatkan detail pengiriman
-      const response = await axios.get(
-        `http://localhost:8000/api/pendapatan/${pendapatan.id_pendapatan}/pengiriman`
-      );
-      setDetailPengiriman(response.data.pengiriman); // Simpan detail pengiriman ke state
-    } catch (err) {
-      setError("Gagal memuat detail pengiriman.");
+      const response = await API.get(`/pendapatan/${pendapatan.id_pendapatan}/pengiriman`);
+      setDetailPengiriman(response.data.pengiriman || []); // Simpan detail pengiriman ke state
+    } catch (error) {
+      console.error("Error fetching detail pengiriman:", error);
+      setError(error.response?.data?.message || "Gagal memuat detail pengiriman.");
     } finally {
       setLoading(false);
     }
   };
+  
 
   
   const closeModal = () => {
@@ -187,32 +188,50 @@ const handleFormSubmit = (e) => {
     setDetailPengiriman([]);
   };
 
-  const getFilteredPenjahit = (selectedId) => {
-    if (selectedId === "") {
-      // Jika filter kosong, tampilkan semua pendapatan
-      fetch("http://localhost:8000/api/pendapatan")
-        .then((response) => response.json())
-        .then((data) =>  setPendapatans(data.data || []))
-        .catch((error) => console.error("Error fetching data:", error));
-    } else {
-      // Filter pendapatan berdasarkan ID penjahit
-      fetch(`http://localhost:8000/api/pendapatan?penjahit=${selectedId}`)
-        .then((response) => response.json())
-        .then((data) => setPendapatans(data.data || []))
-        .catch((error) => console.error("Error filtering data:", error));
+  const getFilteredPenjahit = async (selectedId) => {
+    try {
+      let endpoint = "/pendapatan";
+      if (selectedId !== "") {
+        endpoint += `?penjahit=${selectedId}`;
+      }
+  
+      const response = await API.get(endpoint);
+      setPendapatans(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
   };
-  const handleDownload = (idPendapatan) => {
-    const url = `http://localhost:8000/api/pendapatan/${idPendapatan}/download-nota`;
-    window.open(url, "_blank");
+  
+  const handleDownload = async (idPendapatan) => {
+    try {
+      const response = await API.get(`/pendapatan/${idPendapatan}/download-nota`, {
+        responseType: "blob", // Pastikan menerima file sebagai blob
+      });
+  
+      // Buat URL blob dari response data
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.setAttribute("download", `nota_pendapatan_${idPendapatan}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      // Hapus URL blob setelah selesai
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert(error.response?.data?.message || "Gagal mengunduh nota.");
+    }
   };
+  
   
   
   return (
     <div>
       <div className="penjahit-container">
         <h1>Daftar Pendapatan</h1>
-        {error && <p className="error-message">{error}</p>}
+       
       </div>
 
       <div className="table-container">

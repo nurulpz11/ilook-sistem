@@ -5,6 +5,7 @@ import './Home.css';
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Tambahkan ini
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import API from "../../api"; 
 
 
 import {   } from 'react-icons/fa';
@@ -17,21 +18,26 @@ const Home = () => {
   const navigate = useNavigate(); // Inisialisasi useNavigate
 
   useEffect(() => {
-    // Mengambil seluruh data SPK
-    axios.get('http://localhost:8000/api/spkcmt?allData=true')
-        .then(response => {
-            setSpkData(response.data);
-        })
-        .catch(error => {
-            console.error("There was an error fetching the data:", error);
+    const fetchSpkData = async () => {
+      try {
+        const response = await API.get("/spkcmt", {
+          params: { allData: true },
         });
-}, [])
+        setSpkData(response.data);
+      } catch (error) {
+        console.error("Error fetching SPK data:", error);
+      }
+    };
+  
+    fetchSpkData();
+  }, []);
+  
 
   useEffect(() => {
     // Fetch data from API
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/kinerja-cmt");
+        const response = await API.get("/kinerja-cmt");
         const apiData = response.data;
 
         // Prepare data for pie chart
@@ -60,8 +66,7 @@ const Home = () => {
   useEffect(() => {
     const fetchCategoryCount = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8000/api/kinerja-cmt/kategori-count-by-penjahit"
+        const response = await API.get("/kinerja-cmt/kategori-count-by-penjahit"
         );
         const categoryData = response.data;
 

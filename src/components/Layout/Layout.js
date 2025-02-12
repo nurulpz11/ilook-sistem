@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Layout.css';
 import { Link, Outlet } from 'react-router-dom';
 import { FaChevronDown, FaChevronUp, FaHome, FaFolder, FaCogs, FaScissors } from 'react-icons/fa';
@@ -6,6 +6,12 @@ import { FaChevronDown, FaChevronUp, FaHome, FaFolder, FaCogs, FaScissors } from
 const Layout = () => {
   const [isCmtOpen, setIsCmtOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("home"); // Tambahkan state untuk menu aktif
+  const [role, setRole] = useState(""); // State untuk menyimpan role user
+
+  useEffect(() => {
+    const userRole = localStorage.getItem("role"); // Ambil role dari localStorage
+    setRole(userRole);
+  }, []);
 
   const toggleCmtMenu = () => {
     setIsCmtOpen(!isCmtOpen);
@@ -25,6 +31,7 @@ const Layout = () => {
         </div>
         <nav className="sidebar-menu">
           <ul>
+          {role !== "penjahit" && ( 
             <li>
               <Link
                 to="/home"
@@ -34,6 +41,8 @@ const Layout = () => {
                 <FaHome className="icon" /> Dashboard
               </Link>
             </li>
+            )}
+
             <li>
               <div
                 onClick={() => {
@@ -47,8 +56,10 @@ const Layout = () => {
                   {isCmtOpen ? <FaChevronUp /> : <FaChevronDown />}
                 </span>
               </div>
+
               {isCmtOpen && (
                 <ul className="dropdown-menu">
+                  {/* Hanya tampil jika role = "penjahit" */}
                   <li>
                     <Link
                       to="penjahit"
@@ -60,80 +71,106 @@ const Layout = () => {
                   </li>
                   <li>
                     <Link
-                      to="kinerja"
-                      className={`dropdown-link ${activeMenu === "kinerja" ? "active" : ""}`}
-                      onClick={() => handleMenuClick("kinerja")}
-                    >
-                      Kinerja
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
                       to="spkcmt"
                       className={`dropdown-link ${activeMenu === "spk" ? "active" : ""}`}
                       onClick={() => handleMenuClick("spk")}
                     >
                       SPK
                     </Link>
-                  </li>   
-                  <li>
-                    <Link
-                      to="pengiriman"
-                      className={`dropdown-link ${activeMenu === "pengiriman" ? "active" : ""}`}
-                      onClick={() => handleMenuClick("pengiriman")}
-                    >
-                      Pengiriman
-                    </Link>
-                  </li>                    
-                  <li>
-                    <Link
-                      to="hutang"
-                      className={`dropdown-link ${activeMenu === "hutang" ? "active" : ""}`}
-                      onClick={() => handleMenuClick("hutang")}
-                    >
-                      Hutang
-                    </Link>
-                    <Link
-                      to="cashbon"
-                      className={`dropdown-link ${activeMenu === "cashbon" ? "active" : ""}`}
-                      onClick={() => handleMenuClick("casbon")}
-                    >
-                      Casbon
-                    </Link>
-                    <Link
-                      to="pendapatan"
-                      className={`dropdown-link ${activeMenu === "pendapatan" ? "active" : ""}`}
-                      onClick={() => handleMenuClick("pendapatan")}
-                    >
-                      Pendapatan
-                    </Link>
-                    <Link
-                      to="deadline"
-                      className={`dropdown-link ${activeMenu === "deadline" ? "active" : ""}`}
-                      onClick={() => handleMenuClick("deadline")}
-                    >
-                     Log Deadline
-                    </Link>
-                    <Link
-                      to="status"
-                      className={`dropdown-link ${activeMenu === "status" ? "active" : ""}`}
-                      onClick={() => handleMenuClick("status")}
-                    >
-                     Log Status
-                    </Link>
-                  </li>         
+                  </li>
+
+                  {/* Menu lain hanya tampil jika BUKAN role "penjahit" */}
+                  {role !== "penjahit" && (
+                    <>
+                      <li>
+                        <Link
+                          to="kinerja"
+                          className={`dropdown-link ${activeMenu === "kinerja" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("kinerja")}
+                        >
+                          Kinerja
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="pengiriman"
+                          className={`dropdown-link ${activeMenu === "pengiriman" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("pengiriman")}
+                        >
+                          Pengiriman
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="hutang"
+                          className={`dropdown-link ${activeMenu === "hutang" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("hutang")}
+                        >
+                          Hutang
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="cashbon"
+                          className={`dropdown-link ${activeMenu === "cashbon" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("casbon")}
+                        >
+                          Casbon
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="pendapatan"
+                          className={`dropdown-link ${activeMenu === "pendapatan" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("pendapatan")}
+                        >
+                          Pendapatan
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="deadline"
+                          className={`dropdown-link ${activeMenu === "deadline" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("deadline")}
+                        >
+                          Log Deadline
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="status"
+                          className={`dropdown-link ${activeMenu === "status" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("status")}
+                        >
+                          Log Status
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="ChatPage"
+                          className={`dropdown-link ${activeMenu === "ChatPage" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("ChatPage")}
+                        >
+                          ChatComponent
+                        </Link>
+                      </li>
+                    </>
+                  )}
                 </ul>
               )}
             </li>
-            <li>
-              <Link
-                to="/gudang"
-                className={`sidebar-link ${activeMenu === "gudang" ? "active" : ""}`}
-                onClick={() => handleMenuClick("gudang")}
-              >
-               <FaFolder className="icon" /> Gudang
-              </Link>
-            </li>
+
+            {role !== "penjahit" && ( // "Gudang" tidak bisa diakses oleh "penjahit"
+              <li>
+                <Link
+                  to="/gudang"
+                  className={`sidebar-link ${activeMenu === "gudang" ? "active" : ""}`}
+                  onClick={() => handleMenuClick("gudang")}
+                >
+                  <FaFolder className="icon" /> Gudang
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </aside>

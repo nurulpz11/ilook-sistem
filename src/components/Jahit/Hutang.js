@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaClock,FaInfoCircle,FaClipboard , FaList,FaMoneyBillWave  } from 'react-icons/fa';
 import "./Penjahit.css";
+import API from "../../api"; 
 
 const Hutang = () => {
   const [hutangs, setHutangs] = useState([]);
@@ -30,25 +31,32 @@ const Hutang = () => {
     const fetchHutangs = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/hutang?page=${currentPage}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
+        
+        const token = localStorage.getItem("token"); 
+        if (!token) {
+          setError("Token tidak ditemukan. Silakan login kembali.");
+          setLoading(false);
+          return;
         }
-        const data = await response.json();
-        console.log("Data Hutang:", data); // Debugging
-
-        setHutangs(data.data); // Ambil data dari pagination Laravel
-        setLastPage(data.last_page); // Set total halaman
+  
+        const response = await API.get(`/hutang?page=${currentPage}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        console.log("Data Hutang:", response.data); // Debugging
+  
+        setHutangs(response.data.data); // Ambil data dari pagination Laravel
+        setLastPage(response.data.last_page); // Set total halaman
       } catch (error) {
-        setError(error.message);
+        setError(error.response?.data?.message || "Gagal mengambil data hutang.");
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchHutangs();
   }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
-
+  
 
 
 
@@ -56,117 +64,113 @@ const [logHistory, setLogHistory] = useState([]); // Untuk menyimpan log pembaya
 const [selectedDetailHutang, setSelectedDetailHutang] = useState(null); // Untuk menyimpan detail cashbon yang dipilih
 
 useEffect(() => {
-  const fetchPenjahit = async () => {
+  const fetchPenjahits = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/penjahit'); // URL API penjahit
-      if (!response.ok) {
-        throw new Error('Gagal mengambil data penjahit');
-      }
-      const data = await response.json();
-      setPenjahitList(data); // Asumsikan `data` berisi array penjahit
+      setLoading(true);
+      const response = await API.get("/penjahit"); 
+      setPenjahitList(response.data);
     } catch (error) {
-      console.error('Error:', error.message);
-      setError(error.message);
+      setError("Gagal mengambil data penjahit.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  fetchPenjahit();
+  fetchPenjahits();
 }, []);
 
-    const handleFormSubmit = (e) => {
-      e.preventDefault(); // Mencegah refresh halaman
-    
-      // Melakukan POST ke endpoint API
-      fetch("http://localhost:8000/api/hutang", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newHutang), // Data yang dikirim ke API
-      })
-        .then(async (response) => {
-          // Periksa jika respons tidak berhasil
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Gagal menyimpan data hutang.");
-          }
-          return response.json(); // Parsing respons JSON
-        })
-        .then((data) => {
-          // Jika berhasil, tambahkan data baru ke state
-          if (data.success) {
-            alert(data.message); // Tampilkan pesan sukses
-    
-            setHutangs([...hutangs, data.data]); // Perbarui daftar hutang
-            setShowForm(false); // Tutup form modal
-            setNewHutang({
-              id_penjahit: "",
-              jumlah_hutang: "",
-              status_pembayaran: "",
-              tanggal_jatuh_tempo: "",
-              tanggal_hutang: "",
-            }); // Reset form input
-          } else {
-            alert(data.message || "Gagal menambahkan data.");
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error.message);
-          alert(`Terjadi kesalahan: ${error.message}`); // Tampilkan pesan kesalahan
-        });
-    };
+
+const handleFormSubmit = async (e) => {
+  e.preventDefault(); // Mencegah refresh halaman
+
+  try {
+      const response = await API.post("/hutang", JSON.stringify(newHutang), {
+          headers: {
+              "Content-Type": "application/json",
+          },
+      });
+
+      alert(response.data.message); // Tampilkan pesan sukses
+
+      // Perbarui daftar hutang dengan data baru
+      setHutangs([...hutangs, response.data.data]);
+      setShowForm(false); // Tutup form modal
+
+      // Reset form input
+      setNewHutang({
+          id_penjahit: "",
+          jumlah_hutang: "",
+          status_pembayaran: "",
+          tanggal_jatuh_tempo: "",
+          tanggal_hutang: "",
+      });
+  } catch (error) {
+      console.error("Error:", error.response?.data?.message || error.message);
+
+      // Tampilkan pesan error dari backend jika ada
+      alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data hutang.");
+  }
+};
+
      // Handle klik bayar
   const handleBayarClick = (hutang) => {
     setSelectedHutang(hutang); // Set hutang yang dipilih untuk pembayaran
   };
 
   // Handle submit untuk form pembayaran
-  const handlePaymentSubmit = (e) => {
+  const handlePaymentSubmit = async (e) => {
     e.preventDefault();
-    fetch(`http://localhost:8000/api/log-pembayaran-hutang/${selectedHutang.id_hutang}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(logPembayaran),
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal mencatat pembayaran.");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        alert(data.message || "Pembayaran berhasil dicatat!");
-        setSelectedHutang(null); // Tutup form pembayaran
-        setLogPembayaran({
-          jumlah_dibayar: "",
-          tanggal_bayar: "",
-          catatan: "",
-        }); // Reset form pembayaran
-      })
-      .catch((error) => alert(`Terjadi kesalahan: ${error.message}`));
-  };
-  const handleDetailClick = (hutang) => {
-    fetch(`http://localhost:8000/api/log-pembayaran-hutang/${hutang.id_hutang}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setLogHistory(data.data || []); // Simpan data log pembayaran
-        setSelectedDetailHutang(hutang); // Tampilkan detail hutang yang dipilih
-      })
-      .catch((error) => console.error("Error fetching payment logs:", error));
-  };
-  const getFilteredPenjahit = async (selectedId, page = 1) => {
+  
     try {
-      const response = await fetch(`http://localhost:8000/api/hutang?penjahit=${selectedId}&page=${page}`);
-      const data = await response.json();
+      const response = await API.post(
+        `/log-pembayaran-hutang/${selectedHutang.id_hutang}`,
+        JSON.stringify(logPembayaran)
+      );
   
-      console.log("Filtered Data:", data); // Debugging
-  
-      setHutangs(Array.isArray(data.data) ? data.data : []);
-      setLastPage(data.last_page);
+      alert(response.data.message || "Pembayaran berhasil dicatat!");
+      
+      setSelectedHutang(null); // Tutup form pembayaran
+      setLogPembayaran({
+        jumlah_dibayar: "",
+        tanggal_bayar: "",
+        catatan: "",
+      }); // Reset form pembayaran
     } catch (error) {
-      console.error("Error fetching data:", error);
+      alert(error.response?.data?.message || "Terjadi kesalahan saat mencatat pembayaran.");
     }
   };
   
+  const handleDetailClick = async (hutang) => {
+    try {
+      const response = await API.get(`/log-pembayaran-hutang/${hutang.id_hutang}`);
+  
+      setLogHistory(response.data.data || []); // Simpan data log pembayaran
+      setSelectedDetailHutang(hutang); // Tampilkan detail hutang yang dipilih
+    } catch (error) {
+      console.error("Error fetching payment logs:", error);
+    }
+  };
+  
+
+  const getFilteredPenjahit = async (selectedId, page = 1) => {
+    try {
+        const response = await API.get(`/hutang`, {
+            params: { penjahit: selectedId, page: page }
+        });
+
+        console.log("Filtered Data:", response.data); // Debugging
+
+        setHutangs(Array.isArray(response.data.data) ? response.data.data : []);
+        setLastPage(response.data.last_page);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+
+        // Tampilkan pesan error jika ada respons dari backend
+        const errorMessage = error.response?.data?.message || "Terjadi kesalahan saat mengambil data hutang.";
+        alert(errorMessage);
+    }
+};
+
   
   const formatTanggal = (tanggal) => {
     const date = new Date(tanggal);

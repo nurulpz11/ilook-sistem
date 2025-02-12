@@ -9,9 +9,51 @@ const Kinerja = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedKinerja, setSelectedKinerja] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [kinerjaDetails, setKinerjaDetails] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null); 
     const { kategori } = useParams(); // Ambil parameter dari URL
 
 
+
+
+
+    useEffect(() => {
+      const fetchkinerjaCmt = async () => {
+          try {
+              setLoading(true);
+  
+              const token = localStorage.getItem("token"); 
+              if (!token) {
+                  setError("Token tidak ditemukan. Silakan login kembali.");
+                  setLoading(false);
+                  return;
+              }
+  
+              const response = await fetch("http://localhost:8000/api/kinerja-cmt",
+                {
+                  method: "GET",
+                  headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${token}` 
+                  }
+              });
+  
+              if (!response.ok) {
+                  throw new Error("Failed to fetch data");
+              }
+              const data = await response.json();
+              setKinerjaCmt(data);
+          } catch (error) {
+              setError(error.message);
+          } finally {
+              setLoading(false);
+          }
+      };
+  
+      fetchkinerjaCmt();
+  }, []);
+  
     useEffect(() => {
         fetch("http://localhost:8000/api/kinerja-cmt")
           .then((response) => response.json())
@@ -27,8 +69,9 @@ const Kinerja = () => {
         nama.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
-      const handleDetailClick = (data) => {
-        setSelectedKinerja(data); // Simpan detail SPK yang dipilih
+      const handleDetailClick = (nama, data) => {
+        setSelectedKinerja(nama); // Simpan detail SPK yang dipilih
+        setKinerjaDetails(data.spks);
         setShowModal(true); // Tampilkan modal
       };
     
@@ -107,11 +150,12 @@ const Kinerja = () => {
 
                   <td>
                 <div className="action-card">
-                  <button 
-                    className="btn1-icon" 
-                    onClick={() => handleDetailClick(data)}
-                  >
-                    <FaInfoCircle className="icon" />
+                <button 
+                  key={namaPenjahit} 
+                  className="btn1-icon" 
+                  onClick={() => handleDetailClick(namaPenjahit , kinerjaCmt[namaPenjahit])} // Kirim nama & data dengan benar
+                >
+                  <FaInfoCircle className="icon" />
                   </button>
                   </div>
                   </td>
@@ -121,6 +165,38 @@ const Kinerja = () => {
           </tbody>
         </table>
       </div>
+
+
+      {showModal && (
+      <div className="modal-pengiriman">
+        <div className="modal-content-pengiriman">
+          <h3>Detail SPK: {selectedKinerja}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID Spk</th>
+                <th>Total barang dikirim</th>
+                <th>Waktu pengerjaan</th>
+                <th>Kinerja</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {kinerjaDetails.map((detail) => (
+                <tr key={detail.id_spk}>
+                  <td>{detail.id_spk}</td>
+                  <td>{detail.total_barang_dikirim}</td>
+                  <td>{detail.waktu_pengerjaan_terakhir}</td>
+                  <td>{detail.kinerja}</td>
+                  <td>{detail.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button onClick={closeModal}>Tutup</button>
+        </div>
+      </div>
+    )}
 
 
       

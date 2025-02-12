@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Pengiriman.css";
+import API from "../../api"; 
 import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList,  } from 'react-icons/fa';
 
 const Pengiriman = () => {
@@ -25,7 +26,22 @@ const Pengiriman = () => {
     const fetchPengirimans = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:8000/api/pengiriman?page=${currentPage}`);
+
+            const token = localStorage.getItem("token"); 
+            if (!token) {
+                setError("Token tidak ditemukan. Silakan login kembali.");
+                setLoading(false);
+                return;
+            }
+
+            const response = await fetch(`http://localhost:8000/api/pengiriman?page=${currentPage}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                }
+            });
+            
             if (!response.ok) {
                 throw new Error("Failed to fetch data");
             }
@@ -59,42 +75,35 @@ const Pengiriman = () => {
    
     
     // Handle submit form
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-    
+      
         // Validasi frontend
         if (!newPengiriman.tanggal_pengiriman || !newPengiriman.warna.length) {
-            alert("Tanggal pengiriman dan warna tidak boleh kosong.");
-            return;
+          alert("Tanggal pengiriman dan warna tidak boleh kosong.");
+          return;
         }
-    
-        // Kirim data ke backend
-        fetch("http://localhost:8000/api/pengiriman", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newPengiriman),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.error) {
-                    alert(data.error); // Tampilkan error dari backend
-                } else {
-                    setPengirimans([...pengirimans, data.data]); // Tambahkan data baru
-                    setShowForm(false); // Tutup modal
-                    setNewPengiriman({
-                        tanggal_pengiriman: "",
-                        warna: [], // Reset array warna
-                        total_barang_dikirim: "",
-                        sisa_barang: "",
-                        total_bayar: "",
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error("Error adding data:", error);
-                alert("Terjadi kesalahan saat menambahkan pengiriman.");
-            });
-    };
+      
+        try {
+          const response = await API.post("/pengiriman", newPengiriman);
+      
+          setPengirimans([...pengirimans, response.data.data]); // Tambahkan data baru
+          setShowForm(false); // Tutup modal
+      
+          // Reset form
+          setNewPengiriman({
+            tanggal_pengiriman: "",
+            warna: [],
+            total_barang_dikirim: "",
+            sisa_barang: "",
+            total_bayar: "",
+          });
+        } catch (error) {
+          console.error("Error adding data:", error);
+          alert(error.response?.data?.message || "Terjadi kesalahan saat menambahkan pengiriman.");
+        }
+      };
+      
     
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -341,24 +350,25 @@ const Pengiriman = () => {
                         className="btn btn-load-warna"
                         onClick={async () => {
                             try {
-                                const response = await fetch(`http://localhost:8000/api/spk-cmt/${newPengiriman.id_spk}/warna`);
-                                const spkData = await response.json();
-                                console.log(spkData); // Periksa apakah warna ada di sini
-
-                                // Pastikan data warna ada dalam spkData.warna
-                                if (spkData?.warna && Array.isArray(spkData.warna)) {
-                                    const warnaDetails = spkData.warna.map((item) => ({
+                                const response = await API.get(`/spk-cmt/${newPengiriman.id_spk}/warna`);
+                                console.log("Response API:", response); // Debugging API Response
+                        
+                                if (response.data?.warna && Array.isArray(response.data.warna)) {
+                                    const warnaDetails = response.data.warna.map((item) => ({
                                         warna: item.nama_warna,
                                         jumlah_dikirim: 0,
                                     }));
                                     setNewPengiriman({ ...newPengiriman, warna: warnaDetails });
+                                    console.log("Warna Loaded:", warnaDetails); // Debugging hasil mapping warna
                                 } else {
                                     alert("Tidak ada warna ditemukan untuk ID SPK ini.");
                                 }
                             } catch (error) {
                                 console.error("Error fetching warna:", error);
+                                alert("Gagal memuat warna. Periksa koneksi dan coba lagi.");
                             }
                         }}
+                        
                     >
                         Load Warna
                     </button>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaClock,FaInfoCircle,FaClipboard , FaList,FaMoneyBillWave  } from 'react-icons/fa';
 import "./Penjahit.css";
+import API from "../../api"; 
 
 const Deadline = () => {
   const [logsDeadline, setLogsDeadline] = useState([]);
@@ -14,26 +15,33 @@ const Deadline = () => {
     const fetchLogsDeadline = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/log-deadlines?page=${currentPage}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
+        setError(""); // Reset error sebelum memulai request
+  
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Token tidak ditemukan. Silakan login kembali.");
+          setLoading(false);
+          return;
         }
-        const data = await response.json();
-        console.log("Data Log Deadline:", data); // Debugging
-
-        setLogsDeadline(data.data); // Ambil data dari pagination Laravel
-        setLastPage(data.last_page); // Set total halaman
+  
+        const response = await API.get(`/log-deadlines?page=${currentPage}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        console.log("Data Log Deadline:", response.data); // Debugging
+  
+        setLogsDeadline(response.data.data); // Simpan data dari response
+        setLastPage(response.data.last_page); // Set total halaman
       } catch (error) {
-        setError(error.message);
+        setError(error.response?.data?.message || "Gagal mengambil data.");
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchLogsDeadline();
-  }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
-
-
+  }, [currentPage]);
+  
 
   const formatTanggal = (tanggal) => {
     const date = new Date(tanggal);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaClock,FaInfoCircle,FaClipboard , FaList,FaMoneyBillWave  } from 'react-icons/fa';
 import "./Penjahit.css";
+import API from "../../api"; 
 
 
 const Cashbon = () => {
@@ -32,11 +33,27 @@ const Cashbon = () => {
       const fetchCasbons = async () => {
         try {
           setLoading(true);
-          const response = await fetch(`http://localhost:8000/api/cashboan?page=${currentPage}`);
+
+          const token = localStorage.getItem("token"); 
+          if (!token) {
+              setError("Token tidak ditemukan. Silakan login kembali.");
+              setLoading(false);
+              return;
+          }
+
+          const response = await fetch(`http://localhost:8000/api/cashboan?page=${currentPage}`,{
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` 
+            }
+        });
+
           if (!response.ok) {
             throw new Error("Failed to fetch data");
           }
           const data = await response.json();
+          
           console.log("Data Hutang:", data); // Debugging
   
           setCashbons(data.data); // Ambil data dari pagination Laravel
@@ -52,69 +69,58 @@ const Cashbon = () => {
     }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
   
   
-
-  useEffect(() => {
-    const fetchPenjahit = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/penjahit'); // URL API penjahit
-        if (!response.ok) {
-          throw new Error('Gagal mengambil data penjahit');
+    useEffect(() => {
+      const fetchPenjahits = async () => {
+        try {
+          setLoading(true);
+          const response = await API.get("/penjahit"); 
+          setPenjahitList(response.data);
+        } catch (error) {
+          setError("Gagal mengambil data penjahit.");
+        } finally {
+          setLoading(false);
         }
-        const data = await response.json();
-        setPenjahitList(data); // Asumsikan `data` berisi array penjahit
-      } catch (error) {
-        console.error('Error:', error.message);
-        setError(error.message);
-      }
-    };
-  
-    fetchPenjahit();
-  }, []);
+      };
+    
+      fetchPenjahits();
+    }, []);
+    
   const [logHistory, setLogHistory] = useState([]); // Untuk menyimpan log pembayaran
   const [selectedDetailCashbon, setSelectedDetailCashbon] = useState(null); // Untuk menyimpan detail cashbon yang dipilih
-
-   // Handle submit form
-   const handleFormSubmit= (e) => {
+   
+  // Handle submit form
+  const handleFormSubmit= async (e) => {
     e.preventDefault(); // Mencegah refresh halaman
+
+    try {
+        const response = await API.post("/cashboan", JSON.stringify(newCashbon), {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
   
-    // Melakukan POST ke endpoint API
-    fetch("http://localhost:8000/api/cashboan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newCashbon), // Data yang dikirim ke API
-    })
-      .then(async (response) => {
-        // Periksa jika respons tidak berhasil
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal menyimpan data cashbon.");
-        }
-        return response.json(); // Parsing respons JSON
-      })
-      .then((data) => {
-        // Jika berhasil, tambahkan data baru ke state
-        if (data.success) {
-          alert(data.message); // Tampilkan pesan sukses
+        alert(response.data.message); // Tampilkan pesan sukses
   
-          setCashbons([...cashbons, data.data]); // Perbarui daftar cashbon
-          setShowForm(false); // Tutup form modal
-          setNewCashbon({
+        // Perbarui daftar hutang dengan data baru
+        setCashbons([...cashbons, response.data.data]);
+        setShowForm(false); // Tutup form modal
+  
+        // Reset form input
+        setNewCashbon({
             id_penjahit: "",
             jumlah_cashboan: "",
             status_pembayaran: "",
             tanggal_jatuh_tempo: "",
             tanggal_cashboan: "",
-          }); // Reset form input
-        } else {
-          alert(data.message || "Gagal menambahkan data.");
+          });
+        } catch (error) {
+            console.error("Error:", error.response?.data?.message || error.message);
+      
+            // Tampilkan pesan error dari backend jika ada
+            alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data hutang.");
         }
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-        alert(`Terjadi kesalahan: ${error.message}`); // Tampilkan pesan kesalahan
-      });
-  };
-
+      };
+      
   const handleBayarClick = (cashbon) => {
     setSelectedCashbon(cashbon); // Set hutang yang dipilih untuk pembayaran
   };
@@ -145,33 +151,35 @@ const Cashbon = () => {
       })
       .catch((error) => alert(`Terjadi kesalahan: ${error.message}`));
   };
-  const handleDetailClick = (cashbon) => {
-    console.log("Detail click triggered for cashbon:", cashbon); // Debug input
-    fetch(`http://localhost:8000/api/log-pembayaran-cashboan/${cashbon.id_cashboan}`)
-  .then((response) => response.json())
-  .then((data) => {
-    console.log("Fetched payment logs:", data); // Debug output dari API
-    setLogHistory(data.data || []); // Simpan data log pembayaran
-    setSelectedDetailCashbon(cashbon); // Tampilkan detail hutang yang dipilih
-  })
-  .catch((error) => console.error("Error fetching payment logs:", error));
-
-  };
-  const getFilteredPenjahit = (selectedId) => {
-    if (selectedId === "") {
-      // Jika filter kosong, tampilkan semua cashboan
-      fetch("http://localhost:8000/api/cashboan")
-        .then((response) => response.json())
-        .then((data) =>  setCashbons(data.data || []))
-        .catch((error) => console.error("Error fetching data:", error));
-    } else {
-      // Filter pendapatan berdasarkan ID penjahit
-      fetch(`http://localhost:8000/api/cashboan?penjahit=${selectedId}`)
-        .then((response) => response.json())
-        .then((data) =>  setCashbons(data.data || []))
-        .catch((error) => console.error("Error filtering data:", error));
+  const handleDetailClick = async (cashbon) => {
+    try {
+      const response = await API.get(`/log-pembayaran-cashboan/${cashbon.id_cashboan}`);
+  
+      setLogHistory(response.data.data || []); // Simpan data log pembayaran
+      setSelectedDetailCashbon(cashbon); // Tampilkan detail hutang yang dipilih
+    } catch (error) {
+      console.error("Error fetching payment logs:", error);
     }
   };
+  
+  const getFilteredPenjahit = async (selectedId, page = 1) => {
+    try {
+        const response = await API.get(`/cashboan`, {
+            params: { penjahit: selectedId, page: page }
+        });
+
+        console.log("Filtered Data:", response.data); // Debugging
+
+        setCashbons(Array.isArray(response.data.data) ? response.data.data : []);
+        setLastPage(response.data.last_page);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+
+        // Tampilkan pesan error jika ada respons dari backend
+        const errorMessage = error.response?.data?.message || "Terjadi kesalahan saat mengambil data hutang.";
+        alert(errorMessage);
+    }
+};
   
   const formatTanggal = (tanggal) => {
     const date = new Date(tanggal);
