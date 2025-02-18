@@ -9,7 +9,7 @@ class SpkChat extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['id_spk', 'user_id', 'message'];
+    protected $fillable = ['id_spk','image_url','video_url','vn_url', 'user_id', 'message'];
 
     public function user()
     {
