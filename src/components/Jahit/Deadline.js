@@ -104,12 +104,12 @@ const Deadline = () => {
     <tbody>
       {filteredLog.map((log) => (
         <tr key={log.id_log}>
-          <td>{log.id_log}</td>
-          <td>{log.id_spk}</td>
-          <td>{formatTanggal(log.deadline_lama)}</td>
-          <td>{formatTanggal(log.deadline_baru)}</td>
-          <td>{formatTanggalLengkap(log.tanggal_aktivitas)}</td>
-          <td>{log.keterangan}</td>
+          <td data-label="Id Log : ">{log.id_log}</td>
+          <td data-label="Id SPK : ">{log.id_spk}</td>
+          <td data-label="Deadline Sebelumnya : ">{formatTanggal(log.deadline_lama)}</td>
+          <td data-label="Deadline Setelahnya : ">{formatTanggal(log.deadline_baru)}</td>
+          <td Data-label= "Tanggal Aktivitas : ">{formatTanggalLengkap(log.tanggal_aktivitas)}</td>
+          <td data-label="Keterangan : ">{log.keterangan}</td>
         </tr>
       ))}
     </tbody>

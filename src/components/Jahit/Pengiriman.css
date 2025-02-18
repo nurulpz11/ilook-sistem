@@ -9,16 +9,12 @@
     margin-top: 10px;
   }
   
-  .penjahit-container h1 {
-    font-size: 30px;
-    font-weight: 600; /* Sesuaikan berat font */
-    color: #3d546b;
-    margin: 0; /* Hilangkan margin bawaan */
-  }
-  
+
   .search-bar {
     display: flex;
-    width: 20%;
+    width: 100%; 
+    max-width: 210px; 
+    min-width: 102px;
     justify-content: flex-end; /* Letakkan konten di kanan */
     align-items: center; /* Ratakan elemen secara vertikal */
     gap: 10px; /* Tambahkan jarak antar elemen di dalam search-bar */
@@ -27,10 +23,11 @@
   .search-bar input {
     width: 100%; /* Pastikan lebar mengikuti max-width */
     max-width: 1000px; /* Sesuaikan lebar maksimum */
+    height: 35px;
     padding: 10px;
     font-size: 14px;
     border: 1px solid #e9e9eb;
-    border-radius: 17px;
+    border-radius: 10px;
     outline: none;
     transition: border-color 0.3s ease;
   }
@@ -49,72 +46,12 @@
     overflow-x: auto;
   }
   
-  .penjahit-table {
-    justify-content: center;
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin: 10px 0;
-    font-size: 14px;
-    text-align: left;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Tambahkan bayangan */
-    overflow: hidden; /* Agar radius berfungsi */
-    background-color: #ffffff; /* Warna dasar tabel */
-  }
   
-  .penjahit-table th,
-  .penjahit-table td {
-    justify-content: center;
-    padding: 14px 16px;
-    border-bottom: 1px solid #ececec; /* Garis pembatas yang lembut */
-    text-align: center;
-  }
   
-  .penjahit-table th {
-    
-    background-color: #3d546b; /* Warna header */
-    color: #ffffff; /* Warna teks header */
-    font-weight: 600;
-    text-transform: uppercase; /* Teks kapital di header */
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Bayangan untuk header */
-  }
   
-  .penjahit-table tr:first-child th:first-child {
-    border-top-left-radius: 12px;
-  }
   
-  .penjahit-table tr:first-child th:last-child {
-    border-top-right-radius: 12px;
-  }
   
-  .penjahit-table tr:last-child td:first-child {
-    border-bottom-left-radius: 12px;
-  }
   
-  .penjahit-table tr:last-child td:last-child {
-    border-bottom-right-radius: 12px;
-  }
-  
-  .penjahit-table tr {
-    transition: background-color 0.3s ease; /* Efek transisi untuk hover */
-  }
-  
-  .penjahit-table tr:hover {
-    background-color: #f9fafb; /* Warna hover baris */
-  }
-  
-  .gambar-produk {
-    width: 60px; /* Sedikit lebih besar untuk estetika */
-    height: 60px;
-    border-radius: 10px;
-    object-fit: cover;
-    display: block;
-    justify-content: center;
-  }
   
   
   /* Styling untuk tombol dengan ikon */
@@ -564,7 +501,6 @@ table {
   }
   
   
-
 
 
 

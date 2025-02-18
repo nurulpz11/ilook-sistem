@@ -210,19 +210,18 @@ const Cashbon = () => {
   return (
     <div>
       <div className="penjahit-container">
-        <h1>Daftar Cashbon</h1>
-       
+        <h1>Daftar Cashbon</h1>   
       </div>
-
       <div className="table-container">
-      <div className="filter-header">
-        <button className="add-button" onClick={() => setShowForm(true)}>
-              Tambah
-            </button>
+      <div className="filter-header1">
+      <button 
+        onClick={() => setShowForm(true)}>
+          Tambah
+        </button>
         <label htmlFor="penjahitFilter" className="filter-label"></label>
         <select
           id="penjahitFilter"
-          className="filter-select"
+          className="filter-select1"
           onChange={(e) => getFilteredPenjahit(e.target.value)}
         >
           <option value="">All</option>
@@ -242,7 +241,6 @@ const Cashbon = () => {
             <th>Nama Penjahit</th>
             <th>TANGGAL CASHBON</th>
             <th>TANGGAL JATUH TEMPO</th>
-           
             <th>STATUS PEMBAYRAN</th>
             <th>JUMLAH CASHBON</th>
             <th>AKSI</th>
@@ -255,14 +253,15 @@ const Cashbon = () => {
               )
               .map((cashbon) => (
             <tr key={cashbon.id_cashboan}>
-              <td>{cashbon.id_cashboan}</td>
-              <td>
+              <td data-label="Id Cashbon : ">{cashbon.id_cashboan}</td>
+              <td data-label="Penjahit : ">
                     {
                       penjahitList.find(penjahit => penjahit.id_penjahit === cashbon.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                     }
                   </td>
-              <td>{formatTanggal(cashbon.tanggal_cashboan)}</td>
-              <td>{formatTanggal(cashbon.tanggal_jatuh_tempo)}</td>
+              <td data-label="Tanggal Cashbon : ">{formatTanggal(cashbon.tanggal_cashboan)}</td>
+              <td data-label="Tanggal Jatuh Tempo : ">{formatTanggal(cashbon.tanggal_jatuh_tempo)}</td>
+              <td data-label="Jumlah Cashbon : ">{cashbon.jumlah_cashboan}</td>
               <td>
                     <span
                       style={{
@@ -276,7 +275,7 @@ const Cashbon = () => {
                     {cashbon.status_pembayaran}
                     </span>
                   </td>
-              <td>{cashbon.jumlah_cashboan}</td>
+             
              
               <td>
               <div className="action-card">

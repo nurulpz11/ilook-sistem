@@ -105,7 +105,7 @@ const Kinerja = () => {
           <div className="search-bar">
             <input
               type="text"
-              placeholder="Cari nama penjahit"
+              placeholder="Cari nama penjahit..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -128,11 +128,10 @@ const Kinerja = () => {
               const data = kinerjaCmt[namaPenjahit];
               return (
                 <tr key={namaPenjahit}>
-                  <td>{namaPenjahit}</td>
-                  <td>{data.rata_rata}%</td>
-                  <td>{data.total_spk}</td>
-                  
-                  <td>
+                  <td data-label="Nama Penjahit : ">{namaPenjahit}</td>
+                  <td data-label="Nilai Kinerja">{data.rata_rata}%</td>
+                  <td data-label="Total Spk : ">{data.total_spk}</td>
+                  <td data-label="Kategori Kinerja : ">
                   <span
                     style={{
                         backgroundColor: getKategoriColor(data.kategori),

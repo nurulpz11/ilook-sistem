@@ -134,12 +134,12 @@ const Pengiriman = () => {
         <h1>Daftar Pengiriman</h1>
       </div>
             <div className="table-container">
-                <div className="filter-header">
+                <div className="filter-header1">
                 <button 
                 onClick={() => setShowForm(true)}>
                     Tambah 
                 </button>
-                <div className="search-bar">
+                <div className="search-bar1">
                 <input
                     type="text"
                     placeholder="Cari id spk..."
@@ -166,16 +166,16 @@ const Pengiriman = () => {
                         {filteredPengirimans.map((pengiriman) => (
                             <tr key={pengiriman.id_pengiriman}>
                                 
-                                <td>{pengiriman.id_spk}</td>
-                                <td>{pengiriman.nama_penjahit}</td>
-                                <td>{formatTanggal(pengiriman.tanggal_pengiriman)}</td>
+                                <td data-label="ID SPK : ">{pengiriman.id_spk}</td>
+                                <td data-label="Penjahit : ">{pengiriman.nama_penjahit}</td>
+                                <td data-label="Tanggal Kirim : ">{formatTanggal(pengiriman.tanggal_pengiriman)}</td>
                                 
-                                <td>{pengiriman.total_barang_dikirim}</td>
-                                <td style={{ color: pengiriman.sisa_barang > 0 ? 'red' : 'black'}}>
+                                <td data-label="Total Kirim : ">{pengiriman.total_barang_dikirim}</td>
+                                <td data-label="Sisa Barang" style={{ color: pengiriman.sisa_barang > 0 ? 'red' : 'black'}}>
                                     {pengiriman.sisa_barang}
                                 </td>
 
-                                <td>{pengiriman.total_bayar}</td>
+                                <td data-label="Total Bayar : ">{pengiriman.total_bayar}</td>
                               
                                 
                                 <td>

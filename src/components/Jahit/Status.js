@@ -103,12 +103,12 @@ const Status = () => {
         <tbody>
           {filteredLog.map((log) => (
             <tr key={log.id_status}>
-              <td>{log.id_status}</td>
-              <td>{log.id_spk}</td>
-              <td>{log.status_lama}</td>
-              <td>{log.status_baru}</td>
-              <td>{formatTanggalLengkap(log.tanggal_aktivitas)}</td>
-              <td>{log.keterangan}</td>
+              <td data-label="Id Log : ">{log.id_status}</td>
+              <td data-label="Id Spk : ">{log.id_spk}</td>
+              <td data-label="Status Sebelumnya : ">{log.status_lama}</td>
+              <td data-label="Status Setelahnya : ">{log.status_baru}</td>
+              <td data-label="Waktu Perubahan : ">{formatTanggalLengkap(log.tanggal_aktivitas)}</td>
+              <td data-label="Keterangan : ">{log.keterangan}</td>
             </tr>
           ))}
         </tbody>

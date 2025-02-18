@@ -20,29 +20,115 @@
   cursor: pointer;
   color: #b5b7b8;
 }
-.search-bar {
+
+
+/* Filter wrapper */
+
+
+.filter-header1 {
   display: flex;
-  width: 20%;
-  justify-content: flex-end; /* Letakkan konten di kanan */
-  align-items: center; /* Ratakan elemen secara vertikal */
-  gap: 10px; /* Tambahkan jarak antar elemen di dalam search-bar */
+  justify-content: flex-start; 
+  margin-bottom: 15px;
+  margin-top: 10px;
+  padding-left: 10px;  
+  gap: 6px;  
 }
 
-.search-bar input {
-  width: 100%; /* Pastikan lebar mengikuti max-width */
-  max-width: 1000px; /* Sesuaikan lebar maksimum */
-  padding: 10px;
-  font-size: 14px;
-  border: 1px solid #e9e9eb;
-  border-radius: 17px;
+.search-bar1 {
+  display: flex;
+  width: 100%; 
+  max-width: 210px; 
+  min-width: 102px;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-bar1 input {
+width: 100%; 
+max-width: 200px; 
+min-width: 110px;
+height: 35px; /* Atur tinggi tombol */
+padding: 2px 5px; /* Hapus padding default */
+font-size: 13px;
+border: 1px solid #e9e9eb;
+border-radius: 8px;
+outline: none;
+transition: border-color 0.3s ease;
+}
+
+.search-bar1 input:focus {
+border-color: #356191;
+}
+
+/* Filter dropdown (select) */
+.filter-select1 {
+  padding: 9px 8px 8px 8px;
+  height: 35px; /* Atur tinggi tombol */
+
+  font-size: 13px;
+  border: 1px solid #dcdcdc;
+  border-radius: 5px;
+  background-color: #d1d4d6;
+  font-weight: 500;
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 125px;
+  max-width: 125px;
+  min-width: 90px;
+}
+.filter-select1 option {
+  font-size: 13px;
+  padding: 10px; /* Atur padding agar lebih luas */
+  background-color: #f8f9fa; /* Warna background default */
+  color: #333; /* Warna teks */
+  font-weight: 500;
+  transition: background 0.3s ease;
 }
 
-.search-bar input:focus {
-  border-color: #356191;
+/* Hover effect */
+.filter-select1 option:hover {
+  background-color: #73c6df; /* Warna saat di-hover */
+  color: #fff;
 }
 
+/* Hover and focus states for select */
+.filter-select1:hover, .filter-select1:focus {
+  background-color: #f1f1f1;
+  box-shadow: 0 0 5px rgba(217, 217, 224, 0.3);
+}
+
+/* Button "Tambah" */
+.filter-header1 button {
+  width: 100%; /* Full width untuk mobile */
+  max-width: 80px;
+  min-width: 60px;
+  height: 100%px;
+  padding: 2px; /* Hapus padding default */
+  font-size: 13px;
+  font-weight: 510;
+  text-align: center;
+  background-color: rgb(141, 206, 226);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.filter-header button:hover {
+  background-color: #243a42; /* Efek hover */
+}
+@media (max-width: 600px) {
+  .filter-header1 button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
 
 .table-container {
   padding: 7px;
@@ -51,32 +137,33 @@
   border: 1px solid #e9ecef;
   margin-top: 4px;
   overflow-x: auto;
+  width: 100%;
+  min-width: 200px;
 }
 
 .penjahit-table {
-  justify-content: center;
+  margin: 0 auto; /* Pusatkan tabel secara horizontal */
+  table-layout: fixed;
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin: 10px 0;
-  font-size: 14px;
-  text-align: left;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Tambahkan bayangan */
-  overflow: hidden; /* Agar radius berfungsi */
-  background-color: #ffffff; /* Warna dasar tabel */
+  border-collapse: collapse;
+  margin: 0px 0;
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .penjahit-table th,
 .penjahit-table td {
+  font-size: 14px;
   justify-content: center;
-  padding: 14px 16px;
+  padding: 15px 12px;
   border-bottom: 1px solid #ececec; /* Garis pembatas yang lembut */
   text-align: center;
 }
 
 .penjahit-table th {
-  
+  font-size: 13px;
   background-color: #3d546b; /* Warna header */
   color: #ffffff; /* Warna teks header */
   font-weight: 600;
@@ -110,7 +197,6 @@
 .penjahit-table tr:hover {
   background-color: #f9fafb; /* Warna hover baris */
 }
-
 .gambar-produk {
   width: 60px; /* Sedikit lebih besar untuk estetika */
   height: 60px;
@@ -121,97 +207,138 @@
 }
 
 
-/* Styling untuk tombol dengan ikon */
+
+@media (max-width: 768px) {
+  .table-container {
+    padding: 7px;
+    margin-top: 4px;
+    overflow-x: auto;
+  }
+  .penjahit-table {
+    justify-content: center;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 10px 0;
+    font-weight: 300px;
+    border-radius: 12px;
+   
+  }
+  
+  .penjahit-table td {
+    justify-content: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid #ececec; /* Garis pembatas yang lembut */
+    text-align: center;
+    font-weight: 300px;
+    color: #5f5f5f;
+    font-size: 11px;
+    
+  }
+  
+  .penjahit-table th {
+    font-size: 11px;
+    background-color: #3d546b; /* Warna header */
+    color: #ffffff; /* Warna teks header */
+    font-weight: 600; 
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Bayangan untuk header */
+  }
+  
+  
+  .penjahit-container h1 {
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .penjahit-table1 {
+    width: 100%;
+    font-size: 12px;
+    overflow-x: auto;
+    display: block; /* Agar tabel bisa di-scroll di layar kecil */
+  }
+
+  .penjahit-table thead {
+    display: none; /* Sembunyikan header tabel di layar kecil */
+  }
+
+  .penjahit-table tbody,
+  .penjahit-table tr,
+  .penjahit-table td {
+    display: block;
+    width: 95%;
+   margin:0 auto;
+
+  }
+
+  .penjahit-table tr {
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 0px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+   
+    
+  }
+
+  .penjahit-table td {
+    text-align: center;
+    padding: 8px 5px;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  .penjahit-table td::before {
+    content: attr(data-label); /* Gunakan atribut data-label untuk label di mobile */
+    font-weight: bold;
+    
+    color: #3d546b;
+    
+  }
+}
 
 
 
-/* Card untuk tombol aksi */
+
 /* Card untuk tombol aksi */
 .action-card {
   display: flex;
+  flex-wrap: wrap; /* Supaya tombol turun ke baris berikutnya jika layar kecil */
   gap: 5px; /* Jarak antar tombol */
   justify-content: center; /* Pusatkan tombol secara horizontal */
   align-items: center; /* Pusatkan tombol secara vertikal */
+  max-width: 100%; /* Biar tidak melebihi container */
+  overflow-x: auto; /* Jika banyak tombol, bisa di-scroll */
+  padding: 2px;
 }
 
-.btn1-icon,
-.btn1-icon2 {
-  display: flex; /* Gunakan flexbox untuk tombol */
-  align-items: center; /* Vertikal tengah */
-  justify-content: center; /* Horizontal tengah */
-  background-color: green; /* Warna hijau untuk contoh */
-  border: none; /* Hilangkan border */
-  border-radius: 5px; /* Membulatkan sudut */
-  padding: 10; /* Hilangkan padding tambahan */
-  width: 30px; /* Lebar tombol */
-  height: 20px; /* Tinggi tombol */
-  cursor: pointer; /* Cursor pointer */
-  color: rgb(235, 230, 230); /* Warna teks atau ikon */
-}
 
-.btn1-icon:hover,
-.btn1-icon2:hover {
-  opacity: 0.8; /* Efek hover */
-}
-
-/* Gaya spesifik untuk tombol */
 .btn1-icon {
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
   background-color: rgb(66, 130, 173);
-  
+  border: none; 
+  border-radius: 6px; 
+  padding: 3px;
+  max-width: 23px;
+  min-width: 16px; /* Supaya tidak mengecil saat layar diperkecil */
+  min-height: 20px;
+  cursor: pointer; 
+  font-size: 12px;
+  color: white; /* Warna ikon */
+  transition: background 0.3s ease; /* Animasi hover */
 }
 
-.btn1-icon2 {
-  background-color: rgb(66, 130, 173); /* Warna merah untuk tombol "Detail" */
-}
-
-/* Gaya ikon di dalam tombol */
-.icon {
-  font-size: 15x; /* Ukuran ikon */
-  line-height: 1;
-  align-items: center;
-
-  margin: 0; 
-  padding: 0;  
-}
 
 
 /* Untuk tombol dengan hover efek */
 .btn1-icon:hover .icon {
   color: #7cb7f7; /* Ganti warna ikon saat hover */
 }
-
-
-.btn1-icon2:hover {
-  background-color: #e0e0e0;
-}
-
-.icon2 {
-  width: 30px;
-  color: #fcfdff;
-
-}
-
-/* Untuk tombol dengan hover efek */
-.btn1-icon3:hover .icon {
-  color: #7cb7f7; /* Ganti warna ikon saat hover */
-}
-
-
-.btn1-icon3:hover {
-  background-color: #e0e0e0;
-}
-
-.icon3 {
-  width: 30px;
-  color: #fcfdff;
-
-}
-
-/* Untuk tombol dengan hover efek */
-.btn1-icon3:hover .icon {
-  color: #7cb7f7; /* Ganti warna ikon saat hover */
-}
-
 
 
 
@@ -834,6 +961,7 @@
 }
 
 /* Responsiveness */
+
 @media (max-width: 768px) {
   .modal-bayar .modal-content {
     padding: 20px;
@@ -1074,26 +1202,26 @@
 .modal-content-pengiriman table td {
   color: #555;
 }
-.btn-pengiriman-detail {
-  background-color: #e2e2e2; /* Warna biru */
-  color: rgb(31, 29, 29); /* Teks putih */
-  border: none; /* Hilangkan border */
-  padding: 5px 8px; /* Padding agar tombol terlihat proporsional */
-  font-size: 14px; /* Ukuran font */
+.btn-pengiriman-detail1 {
+  background-color: #e2e2e2; 
+  color: rgb(31, 29, 29); 
+  border: none; 
+  padding: 3px 8px; 
+  font-size: 12px; 
   font-weight: 520;
-  border-radius: 8px; /* Sudut tombol melengkung */
-  cursor: pointer; /* Pointer untuk menunjukkan tombol dapat diklik */
-  transition: background-color 0.3s ease, transform 0.2s ease; /* Animasi halus */
+  border-radius: 5px; 
+  cursor: pointer; 
+  transition: background-color 0.3s ease, transform 0.2s ease; 
 }
 
 .btn-pengiriman-detail:hover {
-  background-color: #0056b3; /* Warna lebih gelap saat dihover */
-  transform: scale(1.05); /* Efek zoom saat hover */
+  background-color: #0056b3; 
+  transform: scale(1.05);
 }
 
 .btn-pengiriman-detail:active {
-  background-color: #003d80; /* Warna lebih gelap saat ditekan */
-  transform: scale(0.95); /* Efek klik */
+  background-color: #003d80; 
+  transform: scale(0.95); 
 }
 
 .btn-pengiriman-detail:focus {
@@ -1102,71 +1230,7 @@
 }
 
 
-/* Filter wrapper */
-.filter-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-bottom: 30px;
-  padding: 15px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
 
-/* Filter header (top section) */
-/* Filter header */
-.filter-header {
-  display: flex;
-  justify-content: flex-start;  /* Posisi elemen ke kiri */
-  align-items: center;
-  margin-bottom: 15px;
-  margin-top: 10px;
-  padding-left: 15px;  /* Memberikan padding kiri */
-  gap: 8px;  /* Memberikan jarak antar elemen */
-}
-
-/* Filter label */
-
-
-/* Filter dropdown (select) */
-.filter-select {
-  padding: 10px 20px;
-  font-size: 15px;
-  border: 1px solid #dcdcdc;
-  border-radius: 5px;
-  background-color: #394653;
-  font-weight: 500;
-  outline: none;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  width: 125px;
-
-}
-
-/* Hover and focus states for select */
-.filter-select:hover, .filter-select:focus {
-  background-color: #f1f1f1;
-  box-shadow: 0 0 5px rgba(217, 217, 224, 0.3);
-}
-
-/* Button "Tambah" */
-.filter-header button {
-  padding: 10px 20px;
-  background-color: rgb(141, 206, 226);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  display: inline-block;
-  margin-right: 5px;  /* Jarak ke elemen lainnya */
-  transition: background-color 0.3s ease;
-}
-
-.filter-header button:hover {
-  background-color: #4586a0; /* Efek hover */
-}
 
 /* Container Pagination */
 .pagination-container {
@@ -1246,13 +1310,22 @@
 /* Chat Popup Box */
 .chat-popup {
   background: #ffffff;
-  width: 400px;
-  max-width: 90%;
+  width: 90%;  /* Ubah ke persentase agar fleksibel */
+  max-width: 440px; /* Batasi maksimal 440px */
+  min-width: 130px; /* Biarkan mengecil hingga 200px */
+  height: 650px;
+  max-height: 80vh;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+@media (max-width: 768px) {
+  .chat-popup {
+    width: 90%;
+    min-width: unset; /* Hapus batas min-width */
+  }
 }
 
 /* Chat Header */
@@ -1276,22 +1349,24 @@
 }
 
 .invite-btn {
-  background: rgb(180, 184, 185);
-  padding: 5px 10px;
+  background:#5c8ece;
+  padding: 3px 8px;
   border-radius: 5px;
   color: white;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 12px;
 }
 
 /* Chat Messages */
 .chat-messages {
-  height: 300px;
+  flex-grow: 1;
   overflow-y: auto;
   padding: 10px;
   background: #f8f9fa;
   display: flex;
   flex-direction: column;
+  height: 505px;
+  max-height: 60vh;
 }
 
 .chat-message {
@@ -1299,9 +1374,26 @@
   padding: 10px;
   margin: 5px 0;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   display: inline-block;
 }
+.chat-image {
+  max-width: 230px;
+  max-height: 330px;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+.chat-audio-wrapper {
+  max-width: 430px; /* Atur ukuran pembungkus */
+  width: 100%; /* Atur lebar pembungkus untuk responsif */
+  margin: 0 auto; /* Center-kan pembungkus */
+}
+
+.chat-audio {
+  width: 210px; /* Pastikan audio mengisi seluruh lebar pembungkus */
+  height: 40px;
+}
+
 
 .user-message {
   background: #007bff;
@@ -1315,34 +1407,119 @@
   align-self: flex-start;
 }
 
-/* Chat Input */
 .chat-input {
+  font-size: 12px;
   display: flex;
+  align-items: center;
   padding: 10px;
   background: white;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid #99a5ca;
+  position: sticky;
+  gap: 5px;
 }
 
 .chat-input input {
   flex: 1;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 10px;
+  width: 100%;
 }
 
-.chat-input button {
-  background:rgb(141, 206, 226);
+.image-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 3px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #ffffff;
+  transition: 0.3s;
+  font-size: 14px;
+  color: #555;
+}
+
+.image-upload-label:hover {
+  background: #e0e0e0;
+}
+
+.upload-icon {
+  font-size: 18px;
+  color: #4a90e2;
+}
+
+.send-button {
+  background: rgb(141, 206, 226);
   color: white;
   border: none;
-  padding: 10px 15px;
-  margin-left: 5px;
+  padding: 8px 15px;
   border-radius: 5px;
   cursor: pointer;
 }
 
-.chat-input button:hover {
+.send-button:hover {
   background: rgb(75, 177, 207);
 }
+
+/* VN Container */
+.vn-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* VN Preview */
+.vn-preview {
+  display: flex;
+  align-items: center;
+  background: #f8f8f8;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.vn-preview audio {
+  max-width: 190px;
+  min-width: 120px;
+  height: 30px;
+}
+@media (max-width: 768px) {
+  .vn-preview audio {
+    width: 140px;
+    height: 25px;
+  }
+}
+
+/* Tombol Hapus VN */
+.delete-vn {
+  background-color: #ffffff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Tombol Rekam */
+.record-button,
+.stop-button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.record-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.stop-button {
+  background-color: #f44336;
+  color: white;
+}
+
+
+
 .modal-invite-overlay {
   position: fixed;
   top: 0;
@@ -1390,12 +1567,34 @@
 }
 
 .modal-invite-content button {
-  background: #007bff;
+  background: rgb(141, 206, 226);
   color: white;
   border: none;
   cursor: pointer;
 }
 
 .modal-invite-content button:hover {
-  background: #0056b3;
+  background: rgb(81, 162, 187);
+}
+.media-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.media-preview-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+}
+.media-preview-content img, .media-preview-content video {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
 }

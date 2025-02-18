@@ -61,12 +61,12 @@ const Penjahit = () => {
     </div>
 
     <div className="table-container">
-        <div className="filter-header">
+        <div className="filter-header1">
         <button 
         onClick={() => setShowForm(true)}>
           Tambah
         </button>
-        <div className="search-bar">
+        <div className="search-bar1">
           <input
             type="text"
             placeholder="Cari nama penjahit..."
@@ -90,10 +90,10 @@ const Penjahit = () => {
           <tbody>
             {filteredPenjahits.map((penjahit) => (
               <tr key={penjahit.id_penjahit}>
-                <td>{penjahit.id_penjahit}</td>
-                <td>{penjahit.nama_penjahit}</td>
-                <td>{penjahit.kontak}</td>
-                <td>{penjahit.alamat}</td>
+                <td data-label="Id Penjahit : ">{penjahit.id_penjahit}</td>
+                <td data-label="Nama Penjahit : ">{penjahit.nama_penjahit}</td>
+                <td data-label="Kontak : ">{penjahit.kontak}</td>
+                <td data-label="Alamat : ">{penjahit.alamat}</td>
               </tr>
             ))}
           </tbody>

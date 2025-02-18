@@ -4,7 +4,7 @@ import axios from "axios";
 import Pusher from 'pusher-js';
 import { toast } from 'react-toastify';
 import API from "../../api"; 
-import { FaPlus, FaTrash, FaSave, FaTimes,FaPaperPlane,FaBell, FaRegEye, FaCog,
+import {FaMicrophone,FaPause, FaStop, FaMicrophoneSlash, FaImage,FaPhotoVideo,  FaVideo, FaVideoSlash, FaPlus, FaTrash, FaSave, FaTimes,FaPaperPlane,FaBell, FaRegEye, FaCog,
   FaEdit, FaClock,FaInfoCircle,FaComments,FaCommentDots,FaComment  } from 'react-icons/fa';
 
 const SpkCmt = () => {
@@ -31,6 +31,14 @@ const SpkCmt = () => {
   const [showInviteStaffModal, setShowInviteStaffModal] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
+  const [vnFile, setVnFile] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState({ url: '', type: '' });
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
+  const [audioURL, setAudioURL] = useState(null);
   const [newSpk, setNewSpk] = useState({
     nama_produk: '',
     jumlah_produk: 0, // Akan dihitung secara otomatis
@@ -60,11 +68,73 @@ const SpkCmt = () => {
     status: '',
     keterangan: '',
   });
-  const userId = localStorage.getItem('userId'); // or from the token if stored there
+  const userId = localStorage.getItem('userId'); 
+
   const userRole = localStorage.getItem("role");
+
   console.log("User Role dari localStorage:", userRole);
+
   const chatContainerRef = useRef(null);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      let chunks = []; // Menyimpan data audio
   
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data); // Simpan data audio ke array
+        }
+      };
+  
+      recorder.onstop = () => {
+        if (chunks.length === 0) {
+          console.error("Tidak ada data yang direkam.");
+          return;
+        }
+  
+        const audioBlob = new Blob(chunks, { type: "audio/webm" });
+        const audioFile = new File([audioBlob], "voice_note.webm", { type: "audio/webm" });
+  
+        setVnFile(audioFile);
+        setAudioURL(URL.createObjectURL(audioBlob)); // Buat URL untuk diputar
+        setIsRecording(false);
+
+       // Hentikan akses mikrofon
+       stream.getTracks().forEach(track => track.stop());
+      };
+
+      setMediaRecorder(recorder);
+      recorder.start(); // Mulai rekaman
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error saat merekam:", error);
+    }
+  };
+  const stopRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop(); // Hentikan rekaman
+      setMediaRecorder(null); // Reset media recorder
+    }
+  };
+  
+  const deleteVN = () => {
+    setAudioURL(null);
+    setVnFile(null);
+  };
+
+  
+   // Fungsi untuk membuka modal
+   const openMediaPreview = (url, type) => {
+    setMediaPreview({ url, type });
+  };
+
+  // Fungsi untuk menutup modal
+  const closeMediaPreview = () => {
+    setMediaPreview({ url: '', type: '' });
+  };
+
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -166,26 +236,49 @@ useEffect(() => {
 
   // Fungsi untuk mengirim pesan
   const sendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() && !imageFile  && !videoFile  && !vnFile) return; // Jangan kirim kalau kosong
   
+    const formData = new FormData();
+    formData.append("id_spk", selectedSpkId);
+    formData.append("message", message);
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+    if (videoFile) {
+      formData.append("video", videoFile);
+    }
+    if (vnFile) {
+      formData.append("vn", vnFile); // Tambahkan VN
+    }
     try {
       const response = await axios.post(
         "http://localhost:8000/api/send-message",
-        { message, id_spk: selectedSpkId }, 
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        formData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "multipart/form-data"
+          } 
+        }
       );
   
-      console.log("Response dari API:", response.data); // Debugging
-      setMessages([...messages, response.data]); // Pastikan formatnya benar
-      setMessage(""); // Kosongkan input setelah terkirim
+      console.log("Response dari API:", response.data);
+      setMessages([...messages, response.data.data]); // Update pesan
+      setMessage(""); // Kosongkan input teks
+      setImageFile(null); // Reset gambar
+      setVideoFile(null);
+      setVnFile(null);
+      setAudioURL(null);
     } catch (error) {
       console.error("Error sending message:", error.response ? error.response.data : error);
     }
   };
+  
 
   const fetchStaffList = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/spk/${selectedSpkId}/staff-list', {
+      const response = await axios.get(`http://localhost:8000/api/spk/${selectedSpkId}/staff-list`, {
+
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setStaffList(response.data);
@@ -626,12 +719,12 @@ return (
     </div>
     
     <div className="table-container">
-        <div className="filter-header">
+        <div className="filter-header1">
         <button 
         onClick={() => setShowForm(true)}>
           Tambah
         </button>
-        <div className="search-bar">
+        <div className="search-bar1">
           <input
             type="text"
             placeholder="Cari nama produk..."
@@ -642,10 +735,10 @@ return (
           <label htmlFor="statusFilter" className="filter-label"></label>
           <select 
             id="statusFilter" 
-            className="filter-select" 
+            className="filter-select1" 
             onChange={(e) => getFilteredSpk(e.target.value)}
           >
-            <option value="">All</option>
+            <option value="" >All</option>
             <option value="Pending">Pending</option>
             <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
@@ -657,39 +750,39 @@ return (
         <thead>
           <tr>
             <th>ID</th>
-            <th>NAMA PRODUK</th>
-            <th>NAMA PENJAHIT</th>
-            <th>DEADLINE</th>
-            <th>SISA HARI</th>
-            <th>WAKTU PENGERJAAN</th>
-            <th>JUMLAH PRODUK</th>
-            <th>JUMLAH DIKIRIM</th>
-            <th>STATUS</th>
-            <th>AKSI</th>
-            <th>DOWNLOAD</th>
+            <th>Nama Baju  </th>
+            <th>Penjahit</th>
+           
+            <th>Sisa Hari</th>
+            <th>Waktu Pengerjaan</th>
+            <th>Jumlah Produk</th>
+            <th>Jumlah DIkirim</th>
+            <th>Status</th>
+            <th>Aksi</th>
+            <th>Download</th>
           </tr>
         </thead>
         <tbody>
           {filteredSpk.map((spk) => (
             <tr key={spk.id_spk}>
-              <td>{spk.id_spk}</td>
-              <td>{spk.nama_produk}</td>
-              <td>
+              <td data-label="ID SPK : " >{spk.id_spk}</td>
+              <td data-label="Nama baju : ">{spk.nama_produk}</td>
+              <td data-label="Penjahit: ">
                 {
                   penjahitList.find(penjahit => penjahit.id_penjahit === spk.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                 }
               </td>
-              <td>{formatTanggal(spk.deadline)}</td>
-              <td style={{ color: spk.sisa_hari < 4 ? 'red' : 'black'}}>
+            
+              <td data-label="Sisa Hari : "style={{ color: spk.sisa_hari < 4 ? 'red' : 'black'}}>
                                     {spk.sisa_hari}
               </td>
 
-              <td>{spk.waktu_pengerjaan}</td> 
-              <td>{spk.jumlah_produk}</td>
-              <td>
+              <td data-label="Waktu Pengerjaan : ">{spk.waktu_pengerjaan}</td> 
+              <td data-label= "Jumlah Produk : ">{spk.jumlah_produk}</td>
+              <td data-label= "Jumlah Kirim: ">
                 <button
                   onClick={() => handlePengirimanDetailClick(spk)}
-                  className="btn-pengiriman-detail"
+                  className="btn-pengiriman-detail1"
                 >
                   {spk.total_barang_dikirim || 0}
                 </button>
@@ -699,17 +792,16 @@ return (
                 style={{
                   backgroundColor: getStatusColor(spk.status, spk.waktu_pengerjaan),
                   color: "white",
-                  padding: "3px 5px",
+                  padding: "1px 1px", // Padding seragam
                   borderRadius: "5px",
-                  fontWeight: "510",
+                  display: "inline-block", // Pastikan ukuran bisa menyesuaikan
+                  minWidth: "85px", // Tentukan ukuran minimum agar semua sama
+                  textAlign: "center", // Biar teks selalu di tengah
                 }}
               >
                 {spk.status}
               </span>
             </td>
-
-
-   
               <td>
                 <div className="action-card">
                   <button 
@@ -719,7 +811,7 @@ return (
                     <FaInfoCircle className="icon" />
                   </button>
                   <button 
-                    className="btn1-icon2" 
+                    className="btn1-icon" 
                     onClick={() => handleUpdateDeadlineClick(spk)}
                   >
                     <FaClock className="icon" />
@@ -744,12 +836,12 @@ return (
                 </div>      
               </td>
               <td>
+              <div className="action-card">
                 <button
                   onClick={() => downloadPdf(spk.id_spk)}
                   className="btn1-icon3" 
                   >
                         <FaSave className="icon" />
-
                 </button>
               
                 <button
@@ -759,6 +851,7 @@ return (
                         <FaSave className="icon" />
 
                 </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -812,20 +905,132 @@ return (
             className={`chat-message ${msg.user_id === userId ? 'user-message' : 'partner-message'}`}
           >
             <div className="message-header">
-          <strong>{msg.user ? msg.user.name : 'Unknown User'}:</strong> {/* Cek apakah msg.user ada */}
+          <strong>{msg.user ? msg.user.name : 'Unknown User'}</strong> {/* Cek apakah msg.user ada */}
         </div>
-            <div className="message-text">
-              {msg.message}
-            </div>
-            <small>{new Date(msg.created_at).toLocaleString()}</small>
+        
+          <div className="message-text">
+            {msg.message && <p>{msg.message}</p>} {/* Hanya tampilkan jika ada teks */}
+            {msg.image_url && (
+            <img
+              src={msg.image_url}
+              alt="Chat Image"
+              className="chat-image"
+              onClick={() => openMediaPreview(msg.image_url, 'image')}
+            />
+          )}
+          {msg.video_url && (
+            <video
+              controls
+              className="chat-image"
+              onClick={() => openMediaPreview(msg.video_url, 'video')}
+            >
+              <source src={msg.video_url} type="video/mp4" />
+              <source src={msg.video_url} type="video/webm" />
+              <source src={msg.video_url} type="video/ogg" />
+              Your browser does not support the video tag.
+            </video>
+          )}
+          {msg.vn_url && (
+          <div className="chat-audio-wrapper"> {/* Pembungkus untuk kontrol audio */}
+            <audio controls className="chat-audio">
+              <source src={msg.vn_url} type="audio/webm" />
+              <source src={msg.vn_url.replace('.webm', '.mp3')} type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
           </div>
-          
+        )}
+
+          </div>
+          <small>{new Date(msg.created_at).toLocaleString()}</small>
+        </div>
           ))
         ) : (
           <p>Belum ada chat</p>
         )}
       </div>
 
+
+      {/* Modal untuk preview media */}
+      {mediaPreview.url && (
+              <div className="media-preview-modal" onClick={closeMediaPreview}>
+                <div className="media-preview-content" onClick={(e) => e.stopPropagation()}>
+                  {mediaPreview.type === 'image' ? (
+                    <img src={mediaPreview.url} alt="Preview" />
+                  ) : (
+                    <video controls autoPlay>
+                      <source src={mediaPreview.url} type="video/mp4" />
+                    </video>
+                  )}
+                  <button className="close-button" onClick={closeMediaPreview}>Close</button>
+                </div>
+              </div>
+      )}
+
+      <div className="chat-input">
+      {audioURL ? (
+        <div className="vn-container">
+          <div className="vn-preview">
+            <audio controls>
+              <source src={audioURL} type="audio/webm" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          <button className="delete-vn" onClick={deleteVN}>❌</button>
+        </div>
+      ) : (
+        // Jika tidak ada VN, tampilkan input teks
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Ketik pesan..."
+        />
+      )}
+
+        {/* Tombol Upload Gambar/Video */}
+        <label htmlFor="media-upload" className="image-upload-label">
+        <FaImage className="upload-icon" />
+        <span>
+          {imageFile?.name
+            ? imageFile.name.length > 7
+              ? imageFile.name.slice(0, 7) + "..."
+              : imageFile.name
+            : videoFile?.name
+            ? videoFile.name.length > 7
+              ? videoFile.name.slice(0, 7) + "..."
+              : videoFile.name
+            : ""}
+        </span>
+      </label>
+      <input
+        id="media-upload"
+        type="file"
+        accept="image/*,video/*"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            if (file.type.startsWith("image/")) {
+              setImageFile(file);
+              setVideoFile(null);
+            } else if (file.type.startsWith("video/")) {
+              setVideoFile(file);
+              setImageFile(null);
+            }
+          }
+        }}
+        style={{ display: "none" }}
+      />
+
+      {/* Tombol Rekam VN */}
+      <label className="image-upload-label" onClick={isRecording ? stopRecording : startRecording}>
+        {isRecording ? <FaStop /> : <FaMicrophone />}
+      </label>
+
+      {/* Tombol Kirim */}
+      <button className="send-button" onClick={sendMessage}>
+        <FaPaperPlane />
+      </button>
+    </div>
 
       {showInviteStaffModal && (
         <div className="modal-invite-overlay">
@@ -846,23 +1051,9 @@ return (
         </div>
       </div>
     )}
-
-      <div className="chat-input">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Ketik pesan..."
-        />
-        <button onClick={sendMessage}>
-          <FaPaperPlane />
-        </button>
-      </div>
     </div>
   </div>
-  </div>
-
-  
+  </div>  
 )}
 
 

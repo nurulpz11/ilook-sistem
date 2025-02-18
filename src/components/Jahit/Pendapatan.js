@@ -277,16 +277,16 @@ const handleLoadData = async () => {
               )
               .map((pendapatan) => (
                 <tr key={pendapatan.id_penjahit}>
-                  <td>
+                  <td data-label="Penjahit : ">
                     {
                       penjahitList.find(penjahit => penjahit.id_penjahit === pendapatan.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                     }
                   </td>
-                  <td>{formatTanggal(pendapatan.periode_awal)}</td>
-                  <td>{formatTanggal(pendapatan.periode_akhir)}</td>
-                  <td>{pendapatan.total_pendapatan}</td>
+                  <td data-label="Periode Awal : ">{formatTanggal(pendapatan.periode_awal)}</td>
+                  <td data-label="Periode Akhir : ">{formatTanggal(pendapatan.periode_akhir)}</td>
+                  <td data-label="Total Pendapatan : ">{pendapatan.total_pendapatan}</td>
                 
-                  <td>{pendapatan.total_transfer}</td>
+                  <td data-label="Total Transfer : ">{pendapatan.total_transfer}</td>
                   <td>
                   <div className="action-card">
                     <button 
@@ -295,16 +295,17 @@ const handleLoadData = async () => {
                       >
                       <FaInfoCircle className="icon" />
                      </button>   
-                  </div>
-                  </td>
-                  <td>
-                    <button
+                     <button
                       onClick={() => handleDownload(pendapatan.id_pendapatan)}
                       className="btn1-icon3" 
                       >
                             <FaSave className="icon" />
 
                     </button>
+                  </div>
+                  </td>
+                  <td>
+                   
                   </td>
                 </tr>
               ))}

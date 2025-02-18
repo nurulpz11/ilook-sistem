@@ -1,10 +1,4 @@
-/* Global reset */
-body, html {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  box-sizing: border-box;
-}
+
 
 .layout-container {
   display: flex;
@@ -13,10 +7,10 @@ body, html {
 }
 /* Sidebar Styles */
 .sidebar {
-  width: 250px;
+  width: 16%;
+  max-width: 210px;
   background-color: #2c3e50;
   color: #ecf0f1;
-  
   transition: transform 0.3s ease-in-out;
   transform: translateX(0);
 }
@@ -39,11 +33,13 @@ body, html {
   display: flex;
   align-items: center;
   padding: 15px;
-  color: #ecf0f1;
+  color:#ecf0f1;
+  gap: 10px;
   text-decoration: none;
-  font-size: 16px;
+  font-size: 14px;
   border-bottom: 1px solid #34495e;
   transition: background-color 0.3s;
+  
 }
 
 .sidebar-link:hover, .sidebar-link.active {
@@ -51,7 +47,7 @@ body, html {
 }
 
 .icon {
-  margin-right: 10px;
+  flex-shrink: 0;
 }
 
 .dropdown-menu {
@@ -65,8 +61,11 @@ body, html {
   padding: 10px;
   color: #ecf0f1;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
+
   transition: background-color 0.3s;
+
+
 }
 
 .dropdown-link:hover, .dropdown-link.active {
@@ -88,31 +87,64 @@ body, html {
   background-color: #ecf0f1;
   overflow: auto;
   transition: margin-left 0.3s ease-in-out;
-  padding: 15px;
+  padding: 5px 10px;
 
 }
 
-/* Responsive styles */
+.menu-button {
+  display: none; /* Default: tidak terlihat di desktop */
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  background: none;
+  border: none;
+  color: rgb(180, 181, 182);
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1000;
+}
+.menu-button:hover {
+  color: rgb(108, 110, 112);
+}
+
+/* Sidebar Responsif */
 @media (max-width: 768px) {
   .sidebar {
-    transform: translateX(-100%);
-    position: absolute;
-    z-index: 1000;
-    height: 100%;
+    position: fixed;
+    left: -260px; /* Sidebar disembunyikan */
+    width: 250px;
+    height: 100vh;
+    background-color: #2c3e50;
+    transition: left 0.3s ease-in-out;
+    z-index: 999;
   }
 
   .sidebar.open {
-    transform: translateX(0);
+    left: 0; /* Sidebar muncul saat tombol diklik */
+  }
+
+  .menu-button {
+    display: block; /* Muncul di mobile */
   }
 
   .main-content {
-    margin-left: 0;
+    margin-left: 0; /* Pastikan tidak terpengaruh sidebar */
+    width: 100%;
+    padding: 20px 10px;
   }
-
-  .main-content.open {
-    margin-left: 250px;
+  .sidebar-header {
+    font-size: 18px;
   }
 }
+@media (max-width: 1280px) {
+  .sidebar-header {
+    font-size: 16px;
+  }
+  .sidebar-link {
+    font-size: 13px;
+  }
+}
+
 
 /* Sidebar toggle button */
 .sidebar-toggle {

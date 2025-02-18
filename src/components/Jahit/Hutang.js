@@ -199,18 +199,17 @@ const handleFormSubmit = async (e) => {
     <div>
       <div className="penjahit-container">
         <h1>Daftar Hutang</h1>
-       
       </div>
-
       <div className="table-container">
-      <div className="filter-header">
-        <button className="add-button" onClick={() => setShowForm(true)}>
-              Tambah
-            </button>
+      <div className="filter-header1">
+      <button 
+        onClick={() => setShowForm(true)}>
+          Tambah
+        </button>
         <label htmlFor="penjahitFilter" className="filter-label"></label>
         <select
           id="penjahitFilter"
-          className="filter-select"
+          className="filter-select1"
           onChange={(e) => getFilteredPenjahit(e.target.value)}
         >
           <option value="">All</option>
@@ -229,9 +228,9 @@ const handleFormSubmit = async (e) => {
               <th>NAMA PENJAHIT</th>
               <th>TANGGAL HUTANG</th>
               <th>TANGGAL JATUH TEMPO</th>
-             
-              <th>STATUS PEMBAYARAN</th>
               <th>JUMLAH HUTANG</th>
+              <th>STATUS PEMBAYARAN</th>
+              
               <th>AKSI</th>
             </tr>
           </thead>
@@ -242,14 +241,15 @@ const handleFormSubmit = async (e) => {
               )
               .map((hutang) => (
                 <tr key={hutang.id_hutang}>
-                  <td>{hutang.id_hutang}</td>
-                  <td>
+                  <td data-label="Id Hutang : ">{hutang.id_hutang}</td>
+                  <td data-label="Penjahit : ">
                     {
                       penjahitList.find(penjahit => penjahit.id_penjahit === hutang.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                     }
                   </td>
-                  <td>{formatTanggal(hutang.tanggal_hutang)}</td>
-                  <td>{formatTanggal(hutang.tanggal_jatuh_tempo)}</td>
+                  <td data-label=" Tanggal Hutang : ">{formatTanggal(hutang.tanggal_hutang)}</td>
+                  <td data-label = "Tanggal Jatuh Tempo : ">{formatTanggal(hutang.tanggal_jatuh_tempo)}</td>
+                  <td data-label= "Jumlah Hutang : ">{hutang.jumlah_hutang}</td>
                   
                   <td>
                     <span
@@ -265,8 +265,7 @@ const handleFormSubmit = async (e) => {
                     </span>
                   </td>
                       
-                  <td>{hutang.jumlah_hutang}</td>
-                  
+                 
                   <td>
                   <div className="action-card">
                   <button 
