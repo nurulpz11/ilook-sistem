@@ -85,6 +85,7 @@ width:100%;
   margin: 10px 0 0;
 }
 .charts-wrapper {
+  flex-wrap: wrap;
   display: flex;
   gap: 35px; /* Jarak antara donut chart dan pie chart */
   justify-content: flex-start; /* Pusatkan elemen secara horizontal */
@@ -93,8 +94,8 @@ width:100%;
 }
 
 .chart-container {
- 
-  max-width: 500px; /* Atur ukuran maksimal chart */
+  max-width: 500px; 
+  min-width: 280px;
   margin: 0; /* Pastikan tidak ada margin di sekitar chart-container */
   padding: 10px 10px; 
 }
@@ -107,7 +108,8 @@ width:100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  max-width: 100%;
+
 }
 
 
@@ -115,15 +117,21 @@ width:100%;
   font-size: 1.5rem;
   font-weight: bold;
   color: #426372;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  margin-top: 10px;
   text-align: center;
 }
 
 .chart-content {
   display: flex;
+  padding-right:  10px 20px;
   justify-content: center;
   align-items: center;
   width: 100%;
+  max-width: 500px;
+  min-width: 300px;
+  max-height: 500px;
+  min-height: 300px;
 }
 
 .chart-wrapper {
@@ -135,7 +143,8 @@ width:100%;
 .chart-info {
   display: flex;
   flex-direction: column;
-  margin-left: 20px;
+  margin-right: 20px;
+
 }
 
 .info-item {
@@ -155,6 +164,7 @@ width:100%;
   flex: 1;
   font-size: 14px;
   font-weight: 500;
+  padding-right: 7px;
 }
 
 .info-percentage {
@@ -165,4 +175,11 @@ width:100%;
 .info-percentage {
   font-size: 14px;
   color: #666;
+}
+
+@media (max-width: 768px) {
+  .chart-content {
+    width: 200px;
+    height: 160px;
+  }
 }

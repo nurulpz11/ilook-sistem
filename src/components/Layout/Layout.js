@@ -54,23 +54,27 @@ const Layout = () => {
               </div>
               {isCmtOpen && (
                 <ul className="dropdown-menu">
-                  <li>
-                    <Link to="penjahit" className={`dropdown-link ${activeMenu === "penjahit" ? "active" : ""}`} onClick={() => handleMenuClick("penjahit")}>
-                      Penjahit
-                    </Link>
-                  </li>
+                 
                   <li>
                     <Link to="spkcmt" className={`dropdown-link ${activeMenu === "spk" ? "active" : ""}`} onClick={() => handleMenuClick("spk")}>
                       SPK
                     </Link>
                   </li>
+                  <li>
+                    <Link to="penjahit" className={`dropdown-link ${activeMenu === "penjahit" ? "active" : ""}`} onClick={() => handleMenuClick("penjahit")}>
+                      Penjahit
+                    </Link>
+                  </li>
+                  
+                  <li>
+                     <Link to="kinerja" className={`dropdown-link ${activeMenu === "kinerja" ? "active" : ""}`} onClick={() => handleMenuClick("kinerja")}>
+                        Kinerja
+                     </Link>
+                    </li>
+                    
                   {role !== "penjahit" && (
                     <>
-                      <li>
-                        <Link to="kinerja" className={`dropdown-link ${activeMenu === "kinerja" ? "active" : ""}`} onClick={() => handleMenuClick("kinerja")}>
-                          Kinerja
-                        </Link>
-                      </li>
+                   
                       <li>
                         <Link to="pengiriman" className={`dropdown-link ${activeMenu === "pengiriman" ? "active" : ""}`} onClick={() => handleMenuClick("pengiriman")}>
                           Pengiriman

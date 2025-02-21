@@ -226,7 +226,7 @@ border-color: #356191;
   }
   
   .penjahit-table td {
-    justify-content: center;
+    justify-content: right;
     padding: 8px 10px;
     border-bottom: 1px solid #ececec; /* Garis pembatas yang lembut */
     text-align: center;
@@ -268,7 +268,7 @@ border-color: #356191;
   .penjahit-table td {
     display: block;
     width: 95%;
-   margin:0 auto;
+     margin:0 auto;
 
   }
 
@@ -1314,7 +1314,7 @@ border-color: #356191;
   max-width: 440px; /* Batasi maksimal 440px */
   min-width: 130px; /* Biarkan mengecil hingga 200px */
   height: 650px;
-  max-height: 80vh;
+  
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -1323,7 +1323,8 @@ border-color: #356191;
 }
 @media (max-width: 768px) {
   .chat-popup {
-    width: 90%;
+    width: 98%;
+    height: 640px;
     min-width: unset; /* Hapus batas min-width */
   }
 }
@@ -1366,7 +1367,7 @@ border-color: #356191;
   display: flex;
   flex-direction: column;
   height: 505px;
-  max-height: 60vh;
+  max-height: 75vh;
 }
 
 .chat-message {
@@ -1392,6 +1393,7 @@ border-color: #356191;
 .chat-audio {
   width: 210px; /* Pastikan audio mengisi seluruh lebar pembungkus */
   height: 40px;
+  font-size: 11px;
 }
 
 

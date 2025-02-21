@@ -39,6 +39,9 @@ const SpkCmt = () => {
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
   const [audioURL, setAudioURL] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState([]);
+  
   const [newSpk, setNewSpk] = useState({
     nama_produk: '',
     jumlah_produk: 0, // Akan dihitung secara otomatis
@@ -60,6 +63,8 @@ const SpkCmt = () => {
     gambar_produk: null,
     warna: [{ nama_warna: '', qty: 0 }], // Array warna dengan qty default 0
   });
+
+
   const [newDeadline, setNewDeadline] = useState({
     deadline: '',
     keterangan: '',
@@ -75,6 +80,8 @@ const SpkCmt = () => {
   console.log("User Role dari localStorage:", userRole);
 
   const chatContainerRef = useRef(null);
+
+  const pusherRef = useRef(null);
 
   const startRecording = async () => {
     try {
@@ -167,113 +174,178 @@ const SpkCmt = () => {
   // Ambil chat saat komponen pertama kali dirender
   useEffect(() => {
     if (selectedSpkId) {
-      console.log("Fetching chat for SPK ID:", selectedSpkId);
+      setMessages([]);
+      setShowChatPopup(true); // Modal baru kebuka setelah ID ter-update
       
+      // Fetch chat messages untuk SPK yang dipilih
       axios.get(`http://localhost:8000/api/spk-chats/${selectedSpkId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       .then(response => {
-        console.log("Chat API Response:", response.data); // Debugging
-        setMessages(response.data); // API langsung mengembalikan array
+        setMessages(response.data);
       })
       .catch(error => {
         console.error("Error fetching messages:", error);
+      if (error.response && error.response.status === 403) {
+        setMessages([]); // Clear chat kalau error akses
+      }
       });
     }
   }, [selectedSpkId]);
   
-//
   useEffect(() => {
     const storedNotifications = localStorage.getItem("notifications");
+    const storedUnread = localStorage.getItem("unreadNotifications");
+  
     if (storedNotifications) {
       setNotifications(JSON.parse(storedNotifications));
     }
+    if (storedUnread) {
+      const unreadData = JSON.parse(storedUnread);
+      setUnreadNotifications(unreadData);
+      setUnreadCount(unreadData.length); // Set unread count dari unread notifikasi
+    }
   }, []);
+  
 
-useEffect(() => {
+  useEffect(() => {
+    if (!pusherRef.current) {
+      pusherRef.current = new Pusher("b646c54d20b146c476dc", {
+        cluster: "ap1",
+        encrypted: true,
+      });
+      console.log("Pusher initialized di SpkCmt!");
+    }
+  
+    const globalNotifChannel = pusherRef.current.subscribe("spk-global-chat-notification");
+  
+    globalNotifChannel.bind("chat.notification", (data) => {
+      console.log("Global notification received:", data);
+  
+      const newNotification = {
+        id: data.chat.id,
+        text: data.chat.message,
+        time: new Date().toLocaleTimeString(),
+      };
+  
+      // Update semua notifikasi
+      setNotifications((prevNotifications) => {
+        const updatedNotifications = [...prevNotifications, newNotification];
+        localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
+        return updatedNotifications;
+      });
+  
+      // Update unread notifikasi dan count
+      setUnreadNotifications((prevUnread) => {
+        const updatedUnread = [...prevUnread, newNotification];
+        setUnreadCount(updatedUnread.length);
+        localStorage.setItem("unreadNotifications", JSON.stringify(updatedUnread));
+        return updatedUnread;
+      });
+    });
+  
+    return () => {
+      globalNotifChannel.unbind("chat.notification");
+      pusherRef.current.unsubscribe("spk-global-chat-notification");
+      console.log("Global Pusher channel unsubscribed dari SpkCmt!");
+    };
+  }, []);
+  
+
+  const notifHandlerRef = useRef(null);
+
+  useEffect(() => {
     if (!selectedSpkId) return;
-
-    // Inisialisasi satu koneksi Pusher saja
-    const pusher = new Pusher("b646c54d20b146c476dc", {
-      cluster: "ap1",
-      encrypted: true,
-    });
-
-    // Subscribe ke channel untuk chat dan notifikasi
-    const chatChannel = pusher.subscribe(`spk-chat.${selectedSpkId}`);
-    const notifChannel = pusher.subscribe(`spk-chat-notification.${selectedSpkId}`);
-
-    // Event listener untuk pesan baru
-    chatChannel.bind("chat.sent", (data) => {
-      console.log("Pesan baru diterima dari Pusher:", data);
-      setMessages((prevMessages) => [...prevMessages, data.chat]);
-    });
-
-    // Event listener untuk notifikasi
-    notifChannel.bind("chat.notification", (data) => {
+  
+    if (!pusherRef.current) {
+      pusherRef.current = new Pusher("b646c54d20b146c476dc", {
+        cluster: "ap1",
+        encrypted: true,
+      });
+    }
+  
+    const channelName = `spk-chat-notification.${selectedSpkId}`;
+    if (pusherRef.current.channel(channelName)) {
+      console.log("Sudah subscribe ke channel ini, tidak perlu subscribe ulang.");
+      return;
+    }
+  
+    const notifChannel = pusherRef.current.subscribe(channelName);
+  
+    const notifHandler = (data) => {
       console.log("Pesan diterima dari Pusher (notif):", data);
+  
+      setMessages((prevMessages) => [...prevMessages, data.chat]);
+  
       setNotifications((prevNotifications) => {
         const newNotification = {
           id: data.chat.id,
           text: data.chat.message,
           time: new Date().toLocaleTimeString(),
         };
+  
+        const isDuplicate = prevNotifications.some((notif) => notif.id === newNotification.id);
+        if (isDuplicate) return prevNotifications;
+  
         const updatedNotifications = [...prevNotifications, newNotification];
-
         localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
         return updatedNotifications;
       });
-    });
-
-    return () => {
-      chatChannel.unbind_all();
-      chatChannel.unsubscribe();
-      notifChannel.unbind_all();
-      notifChannel.unsubscribe();
-      pusher.disconnect(); // Tutup koneksi Pusher dengan benar
     };
-  }, [selectedSpkId]); // Hanya tergantung pada selectedSpkId
+  
+    notifHandlerRef.current = notifHandler;
+    notifChannel.bind("chat.notification", notifHandler);
+  
+    return () => {
+      notifChannel.unbind("chat.notification", notifHandlerRef.current);
+      pusherRef.current.unsubscribe(channelName);
+    };
+  }, [selectedSpkId]);
+  
+  
 
-  // Fungsi untuk mengirim pesan
-  const sendMessage = async () => {
-    if (!message.trim() && !imageFile  && !videoFile  && !vnFile) return; // Jangan kirim kalau kosong
-  
-    const formData = new FormData();
-    formData.append("id_spk", selectedSpkId);
-    formData.append("message", message);
-    if (imageFile) {
-      formData.append("image", imageFile);
-    }
-    if (videoFile) {
-      formData.append("video", videoFile);
-    }
-    if (vnFile) {
-      formData.append("vn", vnFile); // Tambahkan VN
-    }
-    try {
-      const response = await axios.post(
-        "http://localhost:8000/api/send-message",
-        formData,
-        { 
-          headers: { 
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "multipart/form-data"
-          } 
-        }
-      );
-  
-      console.log("Response dari API:", response.data);
-      setMessages([...messages, response.data.data]); // Update pesan
-      setMessage(""); // Kosongkan input teks
-      setImageFile(null); // Reset gambar
-      setVideoFile(null);
-      setVnFile(null);
-      setAudioURL(null);
-    } catch (error) {
-      console.error("Error sending message:", error.response ? error.response.data : error);
-    }
-  };
-  
+// Fungsi untuk mengirim pesan
+const sendMessage = async () => {
+  console.log("sendMessage function called"); // Debug log
+  if (!message.trim() && !imageFile && !videoFile && !vnFile) return;
+
+  const formData = new FormData();
+  formData.append("id_spk", selectedSpkId);
+  formData.append("message", message);
+  if (imageFile) formData.append("image", imageFile);
+  if (videoFile) formData.append("video", videoFile);
+  if (vnFile) formData.append("vn", vnFile);
+
+  try {
+    // Pastikan koneksi Pusher sudah ada
+    const socketId = pusherRef.current?.connection?.socket_id;
+    console.log("Socket ID:", socketId);
+
+    const response = await axios.post(
+      "http://localhost:8000/api/send-message",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+          "X-Socket-ID": socketId,
+        },
+      }
+    );
+
+    console.log("Response dari API:", response.data);
+    setMessages((prevMessages) => [...prevMessages, response.data.data]);
+
+    setMessage("");
+    setImageFile(null);
+    setVideoFile(null);
+    setVnFile(null);
+    setAudioURL(null);
+  } catch (error) {
+    console.error("Error sending message:", error.response ? error.response.data : error);
+  }
+};
+
 
   const fetchStaffList = async () => {
     try {
@@ -320,12 +392,11 @@ useEffect(() => {
       fetchStaffList();
     }
   }, [showInviteStaffModal]);
+
   
   
 const handleChatClick = (spk) => {
-  console.log("SPK yang diklik:", spk); // Debugging
-  setSelectedSpkId(spk.id_spk); // Pastikan ID diambil dari spk.id
-  setShowChatPopup(true);
+  setSelectedSpkId(spk.id_spk); 
 };
 
 
@@ -681,6 +752,7 @@ const getFilteredSpk = async (status, page = 1) => {
 };
 
 
+
 const togglePopup = () => {
   setShowPopup(!showPopup);
 };
@@ -688,10 +760,19 @@ return (
   <div>
       <div className="penjahit-container">
       <h1>Data SPK CMT</h1>
-      <div className="notif-wrapper" onClick={() => setShowPopup(!showPopup)}>
-        <FaBell className="notif-icon" />
-        {notifications.length > 0 && <span className="notif-badge">{notifications.length}</span>}
-      </div>
+      <div className="notif-wrapper" onClick={() => {
+  setShowPopup(!showPopup);
+
+  if (!showPopup) {
+    setUnreadNotifications([]);
+    setUnreadCount(0); // Reset unread count
+    localStorage.setItem("unreadNotifications", JSON.stringify([]));
+  }
+}}>
+  <FaBell className="notif-icon" />
+  {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+</div>
+
 
       {showPopup && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
@@ -787,7 +868,7 @@ return (
                   {spk.total_barang_dikirim || 0}
                 </button>
               </td>
-              <td>
+              <td  data-label="">
               <span
                 style={{
                   backgroundColor: getStatusColor(spk.status, spk.waktu_pengerjaan),
@@ -802,7 +883,7 @@ return (
                 {spk.status}
               </span>
             </td>
-              <td>
+              <td  data-label="">
                 <div className="action-card">
                   <button 
                     className="btn1-icon" 
@@ -835,7 +916,7 @@ return (
                   </button>
                 </div>      
               </td>
-              <td>
+              <td data-label="">
               <div className="action-card">
                 <button
                   onClick={() => downloadPdf(spk.id_spk)}
@@ -889,7 +970,7 @@ return (
             </button>
 
             <div className="chat-header">
-              <h3>Chat SPK #{selectedSpkId}</h3>
+              <h4>Chat SPK #{selectedSpkId}</h4>
               {(userRole === "supervisor" || userRole === "super-admin") && (
               <button className="invite-btn" onClick={() => setShowInviteStaffModal(true)}>
                 + Undang Staff

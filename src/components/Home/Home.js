@@ -152,6 +152,8 @@ const Home = () => {
   };
 
   const chartOptions = {
+    responsive: true, // Grafik akan menyesuaikan ukuran layar
+    maintainAspectRatio: false, // Biarkan ukuran fleksibel
     plugins: {
       legend: {
         labels: {
@@ -162,6 +164,12 @@ const Home = () => {
     },
     onClick: handleChartClick, // Tambahkan event handler
   };
+  const donutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+  };
+  
+  
 
   return (
     <div className="dashboard-container">
@@ -206,7 +214,9 @@ const Home = () => {
               <div className="chart-container">
                 <div className="chart-card card">
                   <h2 className="chart-title">In Progress</h2>
-                  <Doughnut data={donutData} />
+                  <div className="chart-content">
+                  <Doughnut data={donutData} options={donutOptions}   />
+                  </div>
                 </div>
               </div>
 
