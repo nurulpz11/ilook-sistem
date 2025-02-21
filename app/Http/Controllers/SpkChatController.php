@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\ChatNotification;
 use App\Events\ChatSent;
+use App\Events\GlobalChatNotification;
 use App\Models\SpkChat;
 use App\Models\SpkCmt;
 use App\Models\SpkChatInvite;
@@ -83,9 +84,16 @@ class SpkChatController extends Controller
             $chat->save();
 
             // Broadcast event ke Pusher agar real-time
-            broadcast(new ChatSent($chat))->toOthers();
+          // broadcast(new ChatSent($chat))->toOthers();
+            \Log::info('Dispatching ChatNotification for SPK ID: ' . $chat->id_spk);
             broadcast(new ChatNotification($chat))->toOthers();
+            broadcast(new GlobalChatNotification($chat))->toOthers(); 
+            \Log::info('GlobalChatNotification broadcasted', ['chat' => $chat]);
 
+            
+
+            
+            \Log::info('Socket ID from request:', [$request->header('X-Socket-ID')]);
 
                 // Kembalikan response JSON
             return response()->json([

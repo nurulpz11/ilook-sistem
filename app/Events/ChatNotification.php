@@ -15,11 +15,17 @@ class ChatNotification implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $chat;
+    public $socketId; 
 
-    public function __construct(SpkChat $chat)
+    // app/Events/ChatNotification.php
+    public function __construct(SpkChat $chat, $socketId = null)
     {
+        $this->chat = $chat->load('user');
         $this->chat = $chat;
+        $this->socketId = $socketId; // Tangkap socket ID
+        \Log::info('ChatNotification event instantiated for SPK ID: ' . $chat->id_spk);
     }
+    
 
     public function broadcastOn()
 {
@@ -29,7 +35,15 @@ class ChatNotification implements ShouldBroadcast
 
 
     public function broadcastAs()
-    {
+ {
         return 'chat.notification';
-    }
+ }
+ public function broadcastWith()
+{
+    return [
+        'chat' => $this->chat,
+    ];
+}
+
+
 }
