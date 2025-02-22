@@ -11,6 +11,8 @@ use App\Models\SpkChatInvite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use App\Models\User;
+use App\Models\Notification;
 
 class SpkChatController extends Controller
 {
@@ -59,7 +61,20 @@ class SpkChatController extends Controller
                 return response()->json(['error' => 'Access denied. Staff must be invited to this SPK.'], 403);
             }
         }
-        
+        $allowedUsers = User::role(['supervisor', 'owner', 'super-admin'])
+        ->pluck('id')
+        ->toArray();
+
+        // Ambil juga staff yang diundang ke SPK ini
+        $invitedStaff = SpkChatInvite::where('spk_id', $request->id_spk)
+                            ->pluck('staff_id')
+                            ->toArray();
+
+        // Gabungkan dan pastikan unique
+        $allowedUsers = array_unique(array_merge($allowedUsers, $invitedStaff));
+
+
+
             // Buat pesan baru
             $chat = new SpkChat();
             $chat->message = $request->message ?? null; // Bisa kosong jika hanya gambar
@@ -82,18 +97,33 @@ class SpkChatController extends Controller
             }
 
             $chat->save();
+            // Simpan notifikasi untuk semua user yang berhak
+            foreach ($allowedUsers as $receiverId) {
+                if ($receiverId != $user->id) { // Jangan kirim notif ke pengirim sendiri
+                    \Log::info('Membuat notifikasi untuk user_id: ' . $receiverId);
 
-            // Broadcast event ke Pusher agar real-time
-          // broadcast(new ChatSent($chat))->toOthers();
-            \Log::info('Dispatching ChatNotification for SPK ID: ' . $chat->id_spk);
-            broadcast(new ChatNotification($chat))->toOthers();
-            broadcast(new GlobalChatNotification($chat))->toOthers(); 
-            \Log::info('GlobalChatNotification broadcasted', ['chat' => $chat]);
+                    Notification::create([
+                        'user_id' => $receiverId,
+                        'spk_id' => $request->id_spk,
+                        'chat_id' => $chat->id,
+                        'message' => $chat->message ?? '[Media Message]',
+                        'is_read' => false,
+                    ]);
 
-            
+                    \Log::info('Notifikasi berhasil dibuat untuk user_id: ' . $receiverId);
+                }
+            }
 
-            
-            \Log::info('Socket ID from request:', [$request->header('X-Socket-ID')]);
+
+            // Kirim notifikasi real-time jika diperlukan
+            if (in_array($user->id, $allowedUsers)) {
+                broadcast(new GlobalChatNotification($chat, $allowedUsers))->toOthers();
+                \Log::info('GlobalChatNotification broadcasted', ['chat' => $chat]);
+            } else {
+                \Log::info('User tidak memiliki izin untuk menerima notifikasi', ['user_id' => $user->id]);
+            }
+                        
+          \Log::info('Socket ID from request:', [$request->header('X-Socket-ID')]);
 
                 // Kembalikan response JSON
             return response()->json([

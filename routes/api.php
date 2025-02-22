@@ -16,7 +16,7 @@ use App\Http\Controllers\PendapatanController;
 use App\Http\Controllers\SpkChatController;
 use App\Http\Controllers\SpkChatInvite;
 use App\Http\Controllers\StaffController;
-
+use App\Http\Controllers\NotificationController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -48,7 +48,10 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::get('/spk-chats/{spkId}', [SpkChatController::class, 'index']);   
         Route::post('/send-message', [SpkChatController::class, 'sendMessage']);
         Route::post('/invite-staff/{staffId}', [StaffController::class, 'inviteStaff']);
-       
+
+        Route::get('/notifications', [NotificationController::class, 'getNotifications']);
+        Route::get('/notifications/unread', [NotificationController::class, 'getUnreadNotifications']);
+        Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead']);
         Route::get('/kinerja-cmt/kategori-count', [SpkCmtController::class, 'getKategoriCount']);
         Route::get('/kinerja-cmt/kategori-count-by-penjahit', [SpkCmtController::class, 'getKategoriCountByPenjahit']);
         Route::get('/debug-deadlines', [SpkCmtController::class, 'debugDeadlines']);

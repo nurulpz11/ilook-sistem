@@ -9,6 +9,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use App\Models\SpkChat;
+use App\Models\SpkChatInvite;
 
 class ChatNotification implements ShouldBroadcast
 {
@@ -16,16 +17,19 @@ class ChatNotification implements ShouldBroadcast
 
     public $chat;
     public $socketId; 
+    public $allowedUsers;
 
     // app/Events/ChatNotification.php
     public function __construct(SpkChat $chat, $socketId = null)
     {
-        $this->chat = $chat->load('user');
-        $this->chat = $chat;
-        $this->socketId = $socketId; // Tangkap socket ID
-        \Log::info('ChatNotification event instantiated for SPK ID: ' . $chat->id_spk);
+        $this->chat = $chat->load('user'); 
+        $this->socketId = $socketId; 
+        
+        // Ambil semua user yang boleh dapat notifikasi
+        $this->allowedUsers = SpkChatInvite::where('spk_id', $chat->id_spk)
+                                          ->pluck('staff_id') // Ambil ID staff yang diundang
+                                          ->toArray();
     }
-    
 
     public function broadcastOn()
 {
@@ -42,6 +46,7 @@ class ChatNotification implements ShouldBroadcast
 {
     return [
         'chat' => $this->chat,
+        'allowed_users' => $this->allowedUsers, // Kirim daftar user yang diundang
     ];
 }
 

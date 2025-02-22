@@ -61,7 +61,12 @@ class SpkCmtController extends Controller
 
     // Menyimpan SPK baru
     public function store(Request $request)
-{
+{if (is_string($request->input('warna'))) {
+    $request->merge([
+        'warna' => json_decode($request->input('warna'), true),
+    ]);
+}
+
     $validated = $request->validate([
         'nama_produk' => 'required|string|max:100',
         'deadline' => 'required|date',
