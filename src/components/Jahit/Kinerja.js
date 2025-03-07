@@ -147,7 +147,7 @@ const Kinerja = () => {
                     </td>
                   
 
-                  <td>
+                  <td data-label="  ">
                 <div className="action-card">
                 <button 
                   key={namaPenjahit} 

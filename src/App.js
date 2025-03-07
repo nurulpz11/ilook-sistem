@@ -15,7 +15,7 @@ import Pendapatan from "./components/Jahit/Pendapatan";
 import Deadline from "./components/Jahit/Deadline";
 import Status from "./components/Jahit/Status";
 import Kinerja from "./components/Jahit/Kinerja";
-
+import Kinerja2 from "./components/Jahit/Kinerja2";
 
 const App = () => {
   
@@ -40,6 +40,7 @@ const App = () => {
           <Route path="deadline" element={<Deadline />} />
           <Route path="status" element={<Status />} />
           <Route path="kinerja" element={<Kinerja />} />
+          <Route path="kinerja2" element={<Kinerja2 />} />
           <Route path="/kinerja/:kategori" element={<Kinerja />} />
          
         </Route>

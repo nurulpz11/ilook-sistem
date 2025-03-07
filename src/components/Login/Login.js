@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Login.css'; // Import file CSS
 
@@ -18,26 +17,30 @@ const Login = () => {
                 },
                 body: JSON.stringify({ email, password })
             });
-    
+
             if (!response.ok) {
-                throw new Error("Login gagal");
+                const errorData = await response.json(); // Ambil pesan error dari backend
+                throw new Error(errorData.message || "Login gagal, periksa kembali email dan password!");
             }
-           
+
             const data = await response.json();
             console.log("Data dari API:", data);
-            console.log("Role yang akan disimpan:", data.user.role); 
-            
+
+            // Simpan token dan role
             localStorage.setItem('token', data.token);
             localStorage.setItem('userId', data.user.id);
             localStorage.setItem('role', data.user.role);
-            
+
             console.log("Role dari LocalStorage setelah disimpan:", localStorage.getItem("role"));
-            
 
             // Arahkan ke halaman Home setelah login berhasil
             navigate('/home');
+
         } catch (error) {
             console.error("Error login:", error.message);
+
+            // Tampilkan pesan error di alert
+            alert("Login Gagal: " + error.message);
         }
     };
 
@@ -46,7 +49,7 @@ const Login = () => {
             <div className="login-card">
                 <div className="login-header">
                     <img src="/path/to/logo.png" alt="" className="logo" />
-                    <h2>ILOOK ADMIN </h2>
+                    <h2>ILOOK ADMIN</h2>
                     <p>Please input your email and password</p>
                 </div>
                 <form onSubmit={handleLogin} className="login-form">
@@ -71,13 +74,9 @@ const Login = () => {
                             <input type="checkbox" />
                             Remember this Device
                         </label>
-                      
                     </div>
                     <button type="submit" className="login-button">Sign In</button>
                 </form>
-                <div className="login-footer">
-                    
-                </div>
             </div>
         </div>
     );

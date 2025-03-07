@@ -40,8 +40,10 @@ const SpkCmt = () => {
   const [audioChunks, setAudioChunks] = useState([]);
   const [audioURL, setAudioURL] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [modalType, setModalType] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState([]);
-  
+  const [readers, setReaders] = useState({});
+
   const [newSpk, setNewSpk] = useState({
     nama_produk: '',
     jumlah_produk: 0, // Akan dihitung secara otomatis
@@ -61,6 +63,9 @@ const SpkCmt = () => {
     harga_per_jasa: '',
     total_harga:'',
     gambar_produk: null,
+    harga_jasa_awal: "",
+    jenis_harga_jasa: "per_barang",
+    kategori_produk: "",
     warna: [{ nama_warna: '', qty: 0 }], // Array warna dengan qty default 0
   });
 
@@ -173,25 +178,52 @@ const SpkCmt = () => {
 
   // Ambil chat saat komponen pertama kali dirender
   useEffect(() => {
-    if (selectedSpkId) {
+    if (selectedSpkId && !showModal) { // Cek apakah modal pengiriman sedang terbuka
       setMessages([]);
-      setShowChatPopup(true); // Modal baru kebuka setelah ID ter-update
-      
+  
+      // Hanya buka popup kalau sebelumnya belum terbuka
+      setShowChatPopup(prev => prev || true);
+  
       // Fetch chat messages untuk SPK yang dipilih
       axios.get(`http://localhost:8000/api/spk-chats/${selectedSpkId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       .then(response => {
-        setMessages(response.data);
+        setMessages(response.data); // Data dari backend sudah termasuk yang ditandai sebagai dibaca
       })
       .catch(error => {
         console.error("Error fetching messages:", error);
-      if (error.response && error.response.status === 403) {
-        setMessages([]); // Clear chat kalau error akses
-      }
+        if (error.response && error.response.status === 403) {
+          setMessages([]); // Clear chat kalau error akses
+        }
       });
     }
   }, [selectedSpkId]);
+  
+  useEffect(() => {
+    if (selectedSpkId && messages.length > 0) { 
+      axios.post(`http://localhost:8000/api/spk-chats/${selectedSpkId}/mark-as-read`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      .then(() => console.log("Marked all messages as read in SPK:", selectedSpkId))
+      .catch(err => console.error("Error marking as read:", err));
+    }
+  }, [messages]); // ✅ Jalan setiap ada pesan baru
+  
+
+//useEffect(() => {
+  useEffect(() => {
+    if (selectedSpkId) {
+      axios.get(`http://localhost:8000/api/spk-chats/${selectedSpkId}/readers`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      .then(response => {
+        setReaders(response.data); // Simpan semua readers sekaligus
+      })
+      .catch(error => console.error("Error fetching chat readers:", error));
+    }
+  }, [selectedSpkId]);
+  
 
 
   const fetchNotifications = async () => {
@@ -217,56 +249,73 @@ const SpkCmt = () => {
     } catch (error) {
       console.error("Gagal mengambil notifikasi:", error);
     }
-  };
-  
-  useEffect(() => {
+  };useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const response = await axios.get("http://localhost:8000/api/notifications/unread", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-
+  
         console.log("Fetched Notifications from API:", response.data.notifications); // Debugging
-
-        const fetchedNotifications = response.data.notifications.map((notif) => {
-          return {
-            id: notif.id,
-            text: notif.message?.trim() ? notif.message : "📩 Pesan baru diterima",
-            time: new Date(notif.created_at).toLocaleTimeString(),
-          };
-        });
-
-        console.log("Formatted Notifications:", fetchedNotifications); // Debugging
-
+        const fetchedNotifications = response.data.notifications.map((notif) => ({
+          id: notif.id,
+          user_id: notif.user_id ?? "N/A", // Tambahkan user_id
+          spk_id: notif.spk_id ?? "N/A",   // Tambahkan spk_id
+          text: notif.message?.trim() ? notif.message : "📩 Pesan baru diterima",
+          time: new Date(notif.created_at).toLocaleTimeString(),
+        }));
+        
+  
+        // Ambil notifikasi lama dari localStorage
+        const storedNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
+  
+        // Gabungkan notifikasi lama dan baru, hindari duplikasi berdasarkan `id`
+        const mergedNotifications = [...fetchedNotifications, ...storedNotifications].reduce(
+          (acc, curr) => {
+            if (!acc.find((item) => item.id === curr.id)) {
+              acc.push(curr);
+            }
+            return acc;
+          }, []
+        );
+  
+        console.log("Merged Notifications:", mergedNotifications); // Debugging
+  
         // Update state dan localStorage
-        setNotifications(fetchedNotifications);
+        setNotifications(mergedNotifications);
         setUnreadNotifications(fetchedNotifications);
         setUnreadCount(fetchedNotifications.length);
-
-        localStorage.setItem("notifications", JSON.stringify(fetchedNotifications));
+  
+        localStorage.setItem("notifications", JSON.stringify(mergedNotifications));
         localStorage.setItem("unreadNotifications", JSON.stringify(fetchedNotifications));
       } catch (error) {
         console.error("Error fetching unread notifications:", error);
       }
     };
-
+  
     fetchNotifications();
-
+  
     // Ambil notifikasi dari localStorage jika ada
-    const storedNotifications = localStorage.getItem("notifications");
-    if (storedNotifications) {
-      console.log("Stored Notifications from LocalStorage:", JSON.parse(storedNotifications)); // Debugging
-      setNotifications(JSON.parse(storedNotifications));
-    }
-
-    const storedUnread = localStorage.getItem("unreadNotifications");
-    if (storedUnread) {
-      console.log("Stored Unread Notifications:", JSON.parse(storedUnread)); // Debugging
-      setUnreadNotifications(JSON.parse(storedUnread));
-      setUnreadCount(JSON.parse(storedUnread).length);
-    }
+    const storedNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
+    console.log("Stored Notifications from LocalStorage:", storedNotifications); // Debugging
+    setNotifications(storedNotifications);
+  
+    const storedUnread = JSON.parse(localStorage.getItem("unreadNotifications")) || [];
+    console.log("Stored Unread Notifications:", storedUnread); // Debugging
+    setUnreadNotifications(storedUnread);
+    setUnreadCount(storedUnread.length);
   }, []);
+  
+///////
 
+  const handleCloseChat = () => {
+    setShowChatPopup(false); // Tutup pop-up chat
+    setSelectedSpkId(null);  // Reset SPK yang dipilih
+  
+    // 🔥 Reload daftar SPK agar status chat diperbarui
+    window.location.reload();
+  };
+  
 
   //////////
   
@@ -294,6 +343,8 @@ const SpkCmt = () => {
 
       const newMessage = {
         id: data.chat.id,
+        user_id: data.chat.user_id,  // Tambahkan user_id
+        spk_id: data.chat.id_spk,    // Tambahkan spk_id
         text: data.chat.message,
         time: new Date().toLocaleTimeString(),
       };
@@ -550,14 +601,25 @@ useEffect(() => {
 
 const handleInputChange = (e) => {
   const { name, value } = e.target;
-  setNewSpk((prev) => {
-    const updatedData = { ...prev, [name]: value };
 
-    // Jika yang berubah adalah harga_per_barang, hitung total_harga
-    if (name === 'harga_per_barang') {
+  setNewSpk((prev) => {
+    let updatedData = { ...prev, [name]: value };
+
+    // Jika harga per barang berubah, update total harga
+    if (name === "harga_per_barang") {
       const totalProduk = calculateJumlahProduk(updatedData.warna);
-      const totalHarga = value * totalProduk; // harga_per_barang * jumlah_produk
-      updatedData.total_harga = totalHarga;
+      updatedData.total_harga = value * totalProduk;
+    }
+
+    if (name === "jenis_harga_jasa") {
+      // Jika user mengubah jenis harga jasa, set ulang harga_per_jasa sesuai jenis
+      updatedData.harga_per_jasa =
+        value === "per_lusin" ? prev.harga_jasa_awal : prev.harga_per_jasa;
+    }
+
+    if (name === "harga_per_jasa") {
+      // Jika user mengedit manual, biarkan inputnya berubah
+      updatedData.harga_per_jasa = value;
     }
 
     return updatedData;
@@ -565,49 +627,82 @@ const handleInputChange = (e) => {
 };
 
 
-const handleUpdateSubmit = async (e, spkId) => {
-  e.preventDefault();
 
+const handleUpdateSubmit = async (e, id) => {
+  e.preventDefault();
+  console.log("Selected SPK sebelum submit:", selectedSpk);
+  console.log("Selected SPK ID:", selectedSpk?.id_spk);
+
+  if (!id) {
+    alert("Gagal update: ID SPK tidak ditemukan!");
+    return;
+  }
+
+  console.log("Mengupdate SPK dengan ID:", id);
   const formData = new FormData();
+
+  // Tambahkan semua data kecuali 'warna' dan 'gambar_produk'
   Object.keys(newSpk).forEach((key) => {
-    if (key !== "warna") {
+    if (key !== "warna" && key !== "gambar_produk") {
       formData.append(key, newSpk[key]);
     }
   });
 
-  // Tambahkan data warna
+  // Menambahkan warna ke FormData dengan format array
   newSpk.warna.forEach((warna, index) => {
+    formData.append(`warna[${index}][id_warna]`, warna.id_warna || "");
     formData.append(`warna[${index}][nama_warna]`, warna.nama_warna);
     formData.append(`warna[${index}][qty]`, warna.qty);
   });
 
-  // Tambahkan file jika ada
-  if (newSpk.gambar_produk) {
+  formData.append("harga_jasa_awal", newSpk.harga_jasa_awal);
+  formData.append("jenis_harga_jasa", newSpk.jenis_harga_jasa);
+
+  // Cek apakah ada file baru yang diunggah
+  if (newSpk.gambar_produk instanceof File) {
     formData.append("gambar_produk", newSpk.gambar_produk);
+  } else {
+    // Jika tidak ada file baru, kirim gambar_produk lama
+    formData.append("gambar_produk_lama", newSpk.gambar_produk);
   }
 
+  formData.append("_method", "PUT"); // Tambahkan _method untuk Laravel
+
+  console.log("Data yang dikirim:", Object.fromEntries(formData.entries()));
+
   try {
-    const response = await fetch(`http://localhost:8000/api/spkcmt/${spkId}`, {
-      method: "PUT",
+    const token = localStorage.getItem("token"); // Ambil token dari localStorage atau state
+
+    const response = await fetch(`http://localhost:8000/api/spkcmt/${id}`, {
+      method: "POST",
       body: formData,
+      headers: {
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`, // Tambahkan token JWT
+      },
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to update SPK");
-    }
+    const responseText = await response.text();
+    console.error("Response dari server:", responseText);
 
-    const updatedSpk = await response.json();
-    alert("SPK berhasil diupdate!");
+    if (!response.ok) throw new Error("Gagal update SPK");
+
+    const updatedSpk = JSON.parse(responseText);
+    console.log("SPK berhasil diupdate:", updatedSpk);
+
     setShowForm(false);
-
-    // Update state dengan data terbaru
     setSpkCmtData((prev) =>
-      prev.map((spk) => (spk.id === updatedSpk.data.id ? updatedSpk.data : spk))
+      prev.map((spk) => (spk.id_spk === updatedSpk.data.id_spk ? updatedSpk.data : spk))
     );
+
+    alert("SPK berhasil diupdate!");
   } catch (error) {
+    console.error("Terjadi kesalahan:", error);
     alert("Error: " + error.message);
   }
 };
+
+
 
 // Filter data berdasarkan pencarian
 const filteredSpk = spkCmtData.filter((spk) =>
@@ -670,17 +765,41 @@ const filteredSpk = spkCmtData.filter((spk) =>
     }
   };
   
+  const downloadPdf = async (id) => {
+    try {
+      const response = await API.get(`/spk-cmt/${id}/download-pdf`, {
+        responseType: "blob", // Pastikan menerima file sebagai blob
+      });
+  
+      // Buat URL blob dari response data
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.setAttribute("download", `spk_cmt_${id}.pdf`); // Sesuaikan nama file
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      // Hapus URL blob setelah selesai
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert(error.response?.data?.error || "Gagal mengunduh SPK.");
+    }
+  };
   
   
-  const downloadPdf = (id) => {
-    const url = `http://localhost:8000/api/spk-cmt/${id}/download-pdf`;
-    window.open(url, '_blank'); // Membuka file PDF di tab baru
-};
+  
 
-const downloadStaffPdf = (id) => {
+
+
+const downloadStaffPdf = (id) => { 
   const url = `http://localhost:8000/api/spk-cmt/${id}/download-staff-pdf`;
   window.open(url, '_blank'); // Membuka file PDF di tab baru
 };
+
+
+
 
 const handleWarnaChange = (e, index) => {
   const { name, value } = e.target;
@@ -753,11 +872,13 @@ const calculateJumlahProduk = (warnaArray) => {
   const total = warnaArray.reduce((sum, item) => sum + Number(item.qty || 0), 0);
   return total;
 };
-const handleEditClick = (spk) => {
-  setSelectedSpk(spk); // Simpan data SPK yang dipilih
-  setNewSpk({ ...spk, warna: spk.warna || [] }); // Isi data ke form
+const handleEditClick = (spk) => { 
+  console.log("SPK yang diedit:", spk); // Debugging
+  setSelectedSpk(spk); 
+  setNewSpk({ ...spk, warna: spk.warna || [] }); 
   setShowForm(true); // Tampilkan form
 };
+
 const statusColors = {
   Pending: "orange",
   Completed: "#93D7A9",
@@ -771,10 +892,22 @@ const getStatusColor = (status, waktuPengerjaan) => {
   }
   return statusColors[status] || "gray";
 };
-const handlePengirimanDetailClick = (spk) => {
-  setSelectedSpkId(spk.id_spk); // Simpan ID SPK yang dipilih
-  setPengirimanDetails(spk.pengiriman); // Ambil data pengiriman dari properti SPK
-  setShowModal(true); // Tampilkan modal
+
+const handlePengirimanDetailClick = (spk, type) => {
+  setSelectedSpkId(spk.id_spk);
+  setModalType(type); // Simpan jenis modal
+
+  if (type === "jumlah_kirim") {
+    setPengirimanDetails(spk.pengiriman || []); // Simpan semua data pengiriman
+  } else if (type === "sisa_barang") {
+    const lastPengiriman = spk.pengiriman?.length > 0 
+    ? spk.pengiriman[spk.pengiriman.length - 1] 
+    : null;
+
+  setPengirimanDetails(lastPengiriman?.sisa_barang_per_warna || {}); // Simpan sisa barang per warna
+}
+
+  setShowModal(true);
 };
 
 const getFilteredSpk = async (status, page = 1) => {
@@ -819,15 +952,17 @@ return (
 
       {showPopup && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
-          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+          <div className="popup-content1" onClick={(e) => e.stopPropagation()}>
             <h3 className="popup-title">Notifikasi</h3>
             {notifications.length > 0 ? (
          <ul className="notif-list">
          {notifications.map((notif) => (
            <li key={notif.id} className="notif-item">
              <span className="notif-text">
-               {notif.text} {/* Pastikan ini menampilkan notif.text, bukan notif.message */}
-             </span>
+              <strong>User ID:</strong> {notif.user_id} <br />
+              <strong>SPK ID:</strong> {notif.spk_id} <br />
+              <strong>Pesan:</strong> {notif.text} {/* Pastikan pakai notif.text */}
+            </span>
              <span className="notif-time">{notif.time}</span>
            </li>
          ))}
@@ -881,7 +1016,7 @@ return (
           </select>
       </div>
 
-
+      <div className="table-wrapper">
       <table className="penjahit-table">
         <thead>
           <tr>
@@ -893,6 +1028,7 @@ return (
             <th>Waktu Pengerjaan</th>
             <th>Jumlah Produk</th>
             <th>Jumlah DIkirim</th>
+            <th>Sisa Barang</th>
             <th>Status</th>
             <th>Aksi</th>
             <th>Download</th>
@@ -917,12 +1053,27 @@ return (
               <td data-label= "Jumlah Produk : ">{spk.jumlah_produk}</td>
               <td data-label= "Jumlah Kirim: ">
                 <button
-                  onClick={() => handlePengirimanDetailClick(spk)}
+                onClick={() => handlePengirimanDetailClick(spk, "jumlah_kirim")}
                   className="btn-pengiriman-detail1"
                 >
                   {spk.total_barang_dikirim || 0}
                 </button>
               </td>
+
+              <td data-label="Sisa Barang : ">
+              <button
+               
+               onClick={() => handlePengirimanDetailClick(spk, "sisa_barang")}
+                  className="btn-pengiriman-detail1"
+                  >
+                     {spk.pengiriman?.length > 0
+                  ? spk.pengiriman[spk.pengiriman.length - 1].sisa_barang // Ambil sisa_barang dari pengiriman terakhir
+                  : '-'}
+                  
+                  </button>
+              </td>
+
+     
               <td  data-label="">
               <span
                 style={{
@@ -993,8 +1144,11 @@ return (
           ))}
         </tbody>
       </table>
-      {/* Pagination */}
-      <div className="pagination-container">
+      
+     
+    </div>
+     {/* Pagination */}
+     <div className="pagination-container">
         <button 
           className="pagination-button" 
           disabled={currentPage === 1} 
@@ -1020,9 +1174,10 @@ return (
       <div className="chat-overlay">
         <div className="chat-popup">
           <div className="chat-popup-content">
-            <button className="close-btn" onClick={() => setShowChatPopup(false)}>
-              <FaTimes />
-            </button>
+          <button className="close-btn" onClick={handleCloseChat}>
+  <FaTimes />
+</button>
+
 
             <div className="chat-header">
               <h4>Chat SPK #{selectedSpkId}</h4>
@@ -1075,6 +1230,18 @@ return (
             </audio>
           </div>
         )}
+       {readers[msg.id] && readers[msg.id].length > 0 && (
+  <div className="readers">
+    <small>
+      Read by: {readers[msg.id]
+        .filter(r => r.user_id !== msg.user_id) // 🔥 Filter agar pengirim tidak muncul di daftar
+        .map(r => r.user.name)
+        .join(", ")}
+    </small>
+  </div>
+)}
+
+
 
           </div>
           <small>{new Date(msg.created_at).toLocaleString()}</small>
@@ -1194,35 +1361,119 @@ return (
 
 
 
-    {showModal && (
+{showModal && (
   <div className="modal-pengiriman">
     <div className="modal-content-pengiriman">
-      <h3>Detail Pengiriman untuk SPK ID: {selectedSpkId}</h3>
-    
-      <table>
-        <thead>
-          <tr>
-            <th>ID Pengiriman</th>
-            <th>Tanggal Pengiriman</th>
-            <th>Total Barang Dikirim</th>
-            <th>Sisa Barang</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pengirimanDetails.map((detail) => (
-            <tr key={detail.id_pengiriman}>
-              <td>{detail.id_pengiriman}</td>
-              <td>{detail.tanggal_pengiriman}</td>
-              <td>{detail.total_barang_dikirim}</td>
-              <td>{detail.sisa_barang}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Modal untuk "Jumlah Kirim" */}
+      {modalType === "jumlah_kirim" && (
+        <>
+          <h3>Detail Pengiriman untuk SPK ID: {selectedSpkId}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID Pengiriman</th>
+                <th>Tanggal Pengiriman</th>
+                <th>Total Barang Dikirim</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pengirimanDetails.map((detail) => (
+                <tr key={detail.id_pengiriman}>
+                  <td>{detail.id_pengiriman}</td>
+                  <td>{detail.tanggal_pengiriman}</td>
+                  <td>{detail.total_barang_dikirim}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* Modal untuk "Sisa Barang" (Per Warna) */}
+      {modalType === "sisa_barang" && pengirimanDetails && (
+        <>
+          <h3>Sisa Barang Per Warna untuk SPK ID: {selectedSpkId}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Warna</th>
+                <th>Sisa Barang</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(pengirimanDetails).map(([warna, jumlah]) => (
+                <tr key={warna}>
+                  <td>{warna}</td>
+                  <td>{jumlah}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
       <button onClick={() => setShowModal(false)}>Tutup</button>
     </div>
   </div>
 )}
+
+{showModal && (
+  <div className="modal-pengiriman">
+    <div className="modal-content-pengiriman">
+      {/* Modal untuk "Jumlah Kirim" */}
+      {modalType === "jumlah_kirim" && (
+        <>
+          <h3>Detail Pengiriman untuk SPK ID: {selectedSpkId}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID Pengiriman</th>
+                <th>Tanggal Pengiriman</th>
+                <th>Total Barang Dikirim</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pengirimanDetails.map((detail) => (
+                <tr key={detail.id_pengiriman}>
+                  <td>{detail.id_pengiriman}</td>
+                  <td>{detail.tanggal_pengiriman}</td>
+                  <td>{detail.total_barang_dikirim}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* Modal untuk "Sisa Barang" (Per Warna) */}
+      {modalType === "sisa_barang" && (
+        <>
+          <h3>Sisa Barang Per Warna untuk SPK ID: {selectedSpkId}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Warna</th>
+                <th>Sisa Barang</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(pengirimanDetails).map(([warna, jumlah]) => (
+                <tr key={warna}>
+                  <td>{warna}</td>
+                  <td>{jumlah}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      <button onClick={() => setShowModal(false)}>Tutup</button>
+    </div>
+  </div>
+)}
+
+
 
 
    
@@ -1254,25 +1505,29 @@ return (
         {/* Detail Produk */}
         <div className="popup1-details">
           <div className="detail-group">
-            <p><span>Nama Produk:</span> {selectedSpk.nama_produk}</p>
-            <p><span>Jumlah Produk:</span> {selectedSpk.jumlah_produk}</p>
-            <p><span>Total Harga:</span> Rp {selectedSpk.total_harga}</p>
-            <p><span>Harga Barang:</span> Rp {selectedSpk.harga_per_barang}</p>
-            <p><span>Harga Jasa</span> Rp {selectedSpk.harga_per_jasa}</p>
-            <p><span>Warna </span> {selectedSpk.nama_warna}</p>
+          <p><strong>Nama Produk :</strong> <span> {selectedSpk.nama_produk}</span></p>
+          <p><strong>Jumlah Produk :</strong> <span> {selectedSpk.jumlah_produk}</span></p>
+          <p><strong>Total Harga :</strong> <span> {selectedSpk.total_harga}</span></p>
+          <p><strong>Harga Barang :</strong> <span> Rp {selectedSpk.harga_per_barang}</span></p>
+          <p><strong>Harga Jasa :</strong> <span> Rp {selectedSpk.harga_per_jasa} /PCS</span></p>
+          <p><strong> Warna:</strong> <span>
+            {selectedSpk.warna.map(w => `${w.nama_warna} (${w.qty})`).join(", ")}
+            </span></p>
+
+
             
             
             
           </div>
           <div className="detail-group">
-            <p><span>Tanggal SPK:</span> {selectedSpk.tgl_spk}</p>
-            <p><span>Deadline:</span> {selectedSpk.deadline}</p>
-            <p><span>Status:</span> {selectedSpk.status}</p>
+          <p><strong>Tanggal SPK :</strong> <span>{selectedSpk.tgl_spk}</span></p>
+          <p><strong>Deadline :</strong> <span> {selectedSpk.deadline}</span></p>
+          <p><strong>Status :</strong> <span> {selectedSpk.status}</span></p>
           </div>
           <div className="detail-group">
-            <p><span>Merek:</span> {selectedSpk.merek}</p>
-            <p><span>Aksesoris:</span> {selectedSpk.aksesoris}</p>
-            <p><span>Catatan:</span> {selectedSpk.catatan}</p>
+          <p><strong>Merek :</strong> <span> {selectedSpk.merek}</span></p>
+          <p><strong>Aksesoris :</strong> <span> {selectedSpk.aksesoris}</span></p>
+          <p><strong>Catatan :</strong> <span> {selectedSpk.catatan}</span></p>
           </div>
         </div>
       </div>
@@ -1376,7 +1631,14 @@ return (
   <div className="modal">
     <div className="modal-content">
       <h2>TAMBAH DATA SPK</h2>
-      <form onSubmit={handleSubmit} className="modern-form">
+      <form
+      className="modern-form"
+      onSubmit={(e) => {
+        console.log("Form submit triggered!"); // Debugging tambahan
+        selectedSpk ? handleUpdateSubmit(e, selectedSpk.id_spk) : handleSubmit(e);
+      }}
+    >
+
         <div className="form-group">
           <label>Nama Produk</label>
           <input
@@ -1385,19 +1647,6 @@ return (
             value={newSpk.nama_produk}
             onChange={handleInputChange}
             placeholder="Masukkan nama produk"
-            required
-          />
-        </div>
-
-        
-
-        <div className="form-group">
-          <label>Deadline</label>
-          <input
-            type="date"
-            name="deadline"
-            value={newSpk.deadline}
-            onChange={handleInputChange}
             required
           />
         </div>
@@ -1420,15 +1669,16 @@ return (
         </div>
 
         <div className="form-group">
-          <label>Keterangan</label>
-          <textarea
-            name="keterangan"
-            value={newSpk.keterangan}
+          <label>Deadline</label>
+          <input
+            type="date"
+            name="deadline"
+            value={newSpk.deadline}
             onChange={handleInputChange}
-            placeholder="Tambahkan keterangan..."
-          ></textarea>
+            required
+          />
         </div>
-
+        
         <div className="form-group">
           <label>Tanggal SPK</label>
           <input
@@ -1439,6 +1689,30 @@ return (
             required
           />
         </div>
+        
+        <div className="form-group">
+          <label>Tanggal Ambil</label>
+          <input
+            type="date"
+            name="tanggal_ambil"
+            value={newSpk.tanggal_ambil}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+
+       
+
+        <div className="form-group">
+          <label>Keterangan</label>
+          <textarea
+            name="keterangan"
+            value={newSpk.keterangan}
+            onChange={handleInputChange}
+            placeholder="Tambahkan keterangan..."
+          ></textarea>
+        </div>
+
 
         <div className="form-group">
           <label>Status</label>
@@ -1466,18 +1740,8 @@ return (
           />
         </div>
 
-        <div className="form-group">
-          <label>Tanggal Ambil</label>
-          <input
-            type="date"
-            name="tanggal_ambil"
-            value={newSpk.tanggal_ambil}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-
         
+    
         <div className="form-group">
           <label>Catatan</label>
           <textarea
@@ -1488,64 +1752,23 @@ return (
           ></textarea>
         </div>
 
+       
         <div className="form-group">
-          <label>Markeran</label>
-          <input
-            type="text"
-            name="markeran"
-            value={newSpk.markeran}
-            onChange={handleInputChange}
-            placeholder="Masukkan markeran"
-            required
-          />
-        </div>
+        <label>Gambar Produk</label>
+        <input
+          type="file"
+          name="gambar_produk"
+          onChange={handleFileChange}
+          accept="image/*"
+        />
+        {newSpk.gambar_produk && !(newSpk.gambar_produk instanceof File) && (
+          <div>
+            <p>Gambar Saat Ini:</p>
+            <img src={`http://localhost:8000/storage/${newSpk.gambar_produk}`} alt="Gambar Produk" width="100" />
+          </div>
+        )}
+      </div>
 
-        <div className="form-group">
-          <label>aksesoris</label>
-          <input
-            type="text"
-            name="aksesoris"
-            value={newSpk.aksesoris}
-            onChange={handleInputChange}
-            placeholder="Masukkan aksesoris"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Handtag</label>
-          <input
-            type="text"
-            name="handtag"
-            value={newSpk.handtag}
-            onChange={handleInputChange}
-            placeholder="Masukkan handtag"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>merek</label>
-          <input
-            type="text"
-            name="merek"
-            value={newSpk.merek}
-            onChange={handleInputChange}
-            placeholder="Masukkan merek"
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label>Gambar Produk</label>
-          <input
-            type="file"
-            name="gambar_produk"
-            onChange={handleFileChange}
-            accept="image/*"
-            required
-          />
-        </div>
 
 
         <div className="form-group">
@@ -1563,11 +1786,12 @@ return (
             <input
               type="number"
               name={`qty_${index}`}
-              value={item.qty}
+              value={item.qty === 0 ? "" : item.qty} // Jika 0, biarkan kosong agar placeholder muncul
               onChange={(e) => handleWarnaChange(e, index)}
               placeholder="Masukkan jumlah"
               required
             />
+
             <button
               type="button"
               onClick={() => handleRemoveWarna(index)}
@@ -1577,7 +1801,9 @@ return (
           </div>
           
         ))}
-        <button type="button" onClick={handleAddWarna}>
+        <button 
+       className="btn1"
+        onClick={handleAddWarna}>
         <FaPlus /> Tambah Warna
         </button>
       </div>
@@ -1602,12 +1828,33 @@ return (
             required
           />
         </div>
+
         <div className="form-group">
-          <label>Harga per jasa</label>
+        <label>Kategori Produk</label>
+        <input
+          type="text"
+          name="kategori_produk"
+          value={newSpk.kategori_produk}
+          onChange={handleInputChange}
+          placeholder="Masukkan kategori produk"
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Jenis Harga Jasa</label>
+        <select name="jenis_harga_jasa" 
+          value={newSpk.jenis_harga_jasa} 
+          onChange={handleInputChange}>
+          <option value="per_barang">Per Barang</option>
+          <option value="per_lusin">Per Lusin</option>
+        </select>
+      </div>
+        <div className="form-group">
+          <label>Harga Jasa</label>
           <input
             type="number"
             name="harga_per_jasa"
-            value={newSpk.harga_per_jasa}
+            value={newSpk.harga_per_jasa} 
             onChange={handleInputChange}
             placeholder="Masukkan harga"
             required
@@ -1624,11 +1871,59 @@ return (
           />
         </div>
 
+        <div className="form-group">
+          <label>Markeran</label>
+          <input
+            type="text"
+            name="markeran"
+            value={newSpk.markeran}
+            onChange={handleInputChange}
+            placeholder="Masukkan markeran"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Aksesoris</label>
+          <input
+            type="text"
+            name="aksesoris"
+            value={newSpk.aksesoris}
+            onChange={handleInputChange}
+            placeholder="Masukkan aksesoris"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Handtag</label>
+          <input
+            type="text"
+            name="handtag"
+            value={newSpk.handtag}
+            onChange={handleInputChange}
+            placeholder="Masukkan handtag"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Merek</label>
+          <input
+            type="text"
+            name="merek"
+            value={newSpk.merek}
+            onChange={handleInputChange}
+            placeholder="Masukkan merek"
+            required
+          />
+        </div>
+        
+
 
         <div className="form-actions">
         <button type="submit" className="btn btn-submit">
-             Simpan
-          </button>
+        {selectedSpk ? "Update" : "Simpan"}</button>
         <button
             type="button"
             className="btn btn-cancel"
@@ -1643,59 +1938,7 @@ return (
 )}
 
 
-{showForm && selectedSpk && (
-  <div className="update-form">
-    <h3>Update SPK</h3>
-    <form onSubmit={(e) => handleUpdateSubmit(e, selectedSpk.id)}>
-      <label>
-        Nama Produk:
-        <input
-          type="text"
-          name="nama_produk"
-          value={newSpk.nama_produk}
-          onChange={handleInputChange}
-        />
-      </label>
-      <label>
-        Deadline:
-        <input
-          type="date"
-          name="deadline"
-          value={newSpk.deadline}
-          onChange={handleInputChange}
-        />
-      </label>
-      <label>
-        Harga per Barang:
-        <input
-          type="number"
-          name="harga_per_barang"
-          value={newSpk.harga_per_barang}
-          onChange={handleInputChange}
-        />
-      </label>
-      <label>
-        Penjahit:
-        <select
-          name="id_penjahit"
-          value={newSpk.id_penjahit}
-          onChange={handleInputChange}
-        >
-          <option value="">Pilih Penjahit</option>
-          {penjahitList.map((penjahit) => (
-            <option key={penjahit.id} value={penjahit.id}>
-              {penjahit.nama}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button type="submit">Update</button>
-      <button type="button" onClick={() => setShowForm(false)}>
-        Cancel
-      </button>
-    </form>
-  </div>
-)}
+
 
  </div>
   );

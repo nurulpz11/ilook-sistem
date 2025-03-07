@@ -99,12 +99,26 @@ const Pengiriman = () => {
             total_bayar: "",
           });
         } catch (error) {
-          console.error("Error adding data:", error);
-          alert(error.response?.data?.message || "Terjadi kesalahan saat menambahkan pengiriman.");
-        }
-      };
-      
-    
+            console.error("Error adding data:", error);
+        
+            // Ambil pesan error dari backend
+            if (error.response?.data?.error) {
+              const errorMessage = error.response.data.error;
+              const errorDetail = error.response.data.detail;
+        
+              // Jika ada detail error (stok awal, total dikirim, sisa barang)
+              if (errorDetail) {
+                alert(
+                  `${errorMessage}\n\n📌 Detail:\n- Stok Awal: ${errorDetail.stok_awal} pcs\n- Total Sudah Dikirim: ${errorDetail.total_sudah_dikirim} pcs\n- Sisa yang Tersedia: ${errorDetail.sisa_yang_tersedia} pcs\n- Jumlah Dikirim: ${errorDetail.jumlah_dikirim} pcs`
+                );
+              } else {
+                alert(errorMessage);
+              }
+            } else {
+              alert("Terjadi kesalahan saat menambahkan pengiriman.");
+            }
+          }
+        };
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNewPengiriman((prev) => ({ ...prev, [name]: value }));
@@ -148,6 +162,7 @@ const Pengiriman = () => {
                 />
                 </div>
             </div>
+            <div className="table-wrapper">
                 <table className="penjahit-table">
                     <thead>
                         <tr>
@@ -178,7 +193,7 @@ const Pengiriman = () => {
                                 <td data-label="Total Bayar : ">{pengiriman.total_bayar}</td>
                               
                                 
-                                <td>
+                                <td data-label=" ">
                                 <div className="action-card">
                                 <button 
                                     className="btn1-icon" 
@@ -192,8 +207,9 @@ const Pengiriman = () => {
                         ))}
                     </tbody>
                 </table>
-                 {/* Pagination */}
-                    <div className="pagination-container">
+            </div>
+             {/* Pagination */}
+             <div className="pagination-container">
                         <button 
                         className="pagination-button" 
                         disabled={currentPage === 1} 
@@ -213,7 +229,6 @@ const Pengiriman = () => {
                         </button>
                     </div>
             </div>
-
 
  {/* Pop-Up Card */}
  {showPopup && selectedPengiriman && (
@@ -313,7 +328,7 @@ const Pengiriman = () => {
                     </div>
                     
                     <div className="form-group">
-                    <label>Tanggal SPK</label>
+                    <label>Tanggal Kirim</label>
                     <input
                         type="date"
                         name="tanggal_pengiriman"
@@ -385,14 +400,8 @@ const Pengiriman = () => {
                     />
                     </div>
 
-                    <div className="form-group">
-                    <label>Total Bayar</label>
-                    <input
-                        type="number"
-                       
-                        readOnly
-                    />
-                    </div>
+                    
+              
 
 
                     {/* Aksi */}

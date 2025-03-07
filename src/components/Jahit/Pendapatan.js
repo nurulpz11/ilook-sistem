@@ -188,42 +188,46 @@ const handleLoadData = async () => {
     setDetailPengiriman([]);
   };
 
-  const getFilteredPenjahit = async (selectedId) => {
+  const getFilteredPenjahit = async (selectedId, page = 1) => {
     try {
-      let endpoint = "/pendapatan";
-      if (selectedId !== "") {
-        endpoint += `?penjahit=${selectedId}`;
-      }
-  
-      const response = await API.get(endpoint);
-      setPendapatans(response.data.data || []);
+        const response = await API.get(`/pendapatan`, {
+            params: { penjahit: selectedId, page: page }
+        });
+
+        console.log("Filtered Data:", response.data); // Debugging
+
+        setPendapatans(Array.isArray(response.data.data) ? response.data.data : []);
+        setLastPage(response.data.last_page);
     } catch (error) {
-      console.error("Error fetching data:", error);
+        console.error("Error fetching data:", error);
+
+        // Tampilkan pesan error jika ada respons dari backend
+        const errorMessage = error.response?.data?.message || "Terjadi kesalahan saat mengambil data hutang.";
+        alert(errorMessage);
     }
-  };
-  
-  const handleDownload = async (idPendapatan) => {
-    try {
-      const response = await API.get(`/pendapatan/${idPendapatan}/download-nota`, {
-        responseType: "blob", // Pastikan menerima file sebagai blob
-      });
-  
-      // Buat URL blob dari response data
-      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.setAttribute("download", `nota_pendapatan_${idPendapatan}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
-      // Hapus URL blob setelah selesai
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      alert(error.response?.data?.message || "Gagal mengunduh nota.");
-    }
-  };
+};
+const handleDownload = async (idPendapatan) => {
+  try {
+    const response = await API.get(`/pendapatan/${idPendapatan}/download-nota`, {
+      responseType: "blob", // Pastikan menerima file sebagai blob
+    });
+
+    // Buat URL blob dari response data
+    const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.setAttribute("download", `nota_pendapatan_${idPendapatan}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    
+    // Hapus URL blob setelah selesai
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    alert(error.response?.data?.message || "Gagal mengunduh nota.");
+  }
+};
   
   
   
@@ -235,14 +239,15 @@ const handleLoadData = async () => {
       </div>
 
       <div className="table-container">
-      <div className="filter-header">
-        <button className="add-button" onClick={() => setShowForm(true)}>
-              Tambah
-            </button>
+      <div className="filter-header1">
+      <button 
+        onClick={() => setShowForm(true)}>
+          Tambah
+        </button>
         <label htmlFor="penjahitFilter" className="filter-label"></label>
         <select
           id="penjahitFilter"
-          className="filter-select"
+          className="filter-select1"
           onChange={(e) => getFilteredPenjahit(e.target.value)}
         >
           <option value="">All</option>
@@ -253,11 +258,12 @@ const handleLoadData = async () => {
           ))}
         </select>
 
-
-      </div>
-        <table className="penjahit-table">
+        </div>
+      <div className="table-container">
+      <table className="penjahit-table">
           <thead>
             <tr>
+              <th>ID</th>
               <th>Nama Penjahit</th>
               <th>Periode Awal</th>
               <th>Periode Akhir</th>
@@ -270,14 +276,12 @@ const handleLoadData = async () => {
           <tbody>
             {pendapatans
               .filter((pendapatan) =>
-                pendapatan.id_penjahit
-                  ?.toString()
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
+                pendapatan.id_penjahit?.toString().toLowerCase().includes(searchTerm.toLowerCase())
               )
               .map((pendapatan) => (
                 <tr key={pendapatan.id_penjahit}>
-                  <td data-label="Penjahit : ">
+                  <td data-label="Id Pendapatan : ">{pendapatan.id_pendapatan}</td>
+                   <td data-label="Penjahit : ">
                     {
                       penjahitList.find(penjahit => penjahit.id_penjahit === pendapatan.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                     }
@@ -287,7 +291,7 @@ const handleLoadData = async () => {
                   <td data-label="Total Pendapatan : ">{pendapatan.total_pendapatan}</td>
                 
                   <td data-label="Total Transfer : ">{pendapatan.total_transfer}</td>
-                  <td>
+                  <td data-label=" ">
                   <div className="action-card">
                     <button 
                       className="btn1-icon" 
@@ -295,6 +299,11 @@ const handleLoadData = async () => {
                       >
                       <FaInfoCircle className="icon" />
                      </button>   
+                     
+                  </div>
+                     </td> 
+                  <td  data-label=" ">
+                    <div className="action-card">
                      <button
                       onClick={() => handleDownload(pendapatan.id_pendapatan)}
                       className="btn1-icon3" 
@@ -302,11 +311,10 @@ const handleLoadData = async () => {
                             <FaSave className="icon" />
 
                     </button>
-                  </div>
+                   </div>
                   </td>
-                  <td>
-                   
-                  </td>
+          
+                
                 </tr>
               ))}
           </tbody>
@@ -348,17 +356,28 @@ const handleLoadData = async () => {
          <button className="modal-pendapatan-close" onClick={closeModal}>
            &times;
          </button>
-         <h2>Detail Pengiriman untuk Pendapatan ID: {selectedPendapatan.id_pendapatan}</h2>
+         <h2>Detail Pendapatan  {selectedPendapatan.id_pendapatan}</h2>
+         
+        <p><strong>Total Claim :</strong> <span>Rp {selectedPendapatan.total_claim}</span></p>
+        <p><strong>Total Refund Claim :</strong> <span>Rp {selectedPendapatan.total_refund_claim}</span></p>
+        <p><strong>Total Cashbon :</strong> <span>Rp {selectedPendapatan.total_cashbon}</span></p>
+        <p><strong>Total Hutang :</strong> <span>Rp {selectedPendapatan.total_hutang}</span></p>
+        <p><strong>Handtag :</strong> <span>Rp. {selectedPendapatan.handtag}</span></p>
+        <p><strong>Transportasi :</strong> <span>Rp. {selectedPendapatan.transportasi}</span></p>
+        <br></br>
+        <h2
+>Detail Pengiriman untuk Pendapatan ID: {selectedPendapatan.id_pendapatan}</h2>
+         
          {loading && <p>Memuat detail...</p>}
          {error && <p className="error">{error}</p>}
          {!loading && !error && (
-           <table className="table-pendapatan">
+           <table className="penjahit-table">
              <thead>
                <tr>
                  <th>ID Pengiriman</th>
                  <th>Tanggal Pengiriman</th>
                  <th>Total Pengiriman</th>
-                 <th>Total Gaji </th>
+                 <th>Gaji </th>
                  <th>Claim</th>
                  <th>Refund Claim</th>
                </tr>
@@ -366,12 +385,12 @@ const handleLoadData = async () => {
              <tbody>
                {detailPengiriman.map((pengiriman) => (
                  <tr key={pengiriman.id_pengiriman}>
-                   <td>{pengiriman.id_pengiriman}</td>
-                   <td>{pengiriman.tanggal_pengiriman}</td>
-                   <td>{pengiriman.total_barang_dikirim}</td>
-                   <td>{pengiriman.total_bayar}</td>
-                   <td>{pengiriman.claim}</td>
-                   <td>{pengiriman.refund_claim}</td>
+                   <td data-label="ID Kirim">{pengiriman.id_pengiriman}</td>
+                   <td data-label="tanggal Kirim">{pengiriman.tanggal_pengiriman}</td>
+                   <td data-label="Total Kirim">{pengiriman.total_barang_dikirim}</td>
+                   <td data-label="Gaji">{pengiriman.total_bayar}</td>
+                   <td data-label="Claim">{pengiriman.claim}</td>
+                   <td data-label="Refund Claim">{pengiriman.refund_claim}</td>
                  </tr>
                ))}
              </tbody>
@@ -519,6 +538,7 @@ const handleLoadData = async () => {
         </div>
       )}
     
+    </div>
     </div>
   );
 };

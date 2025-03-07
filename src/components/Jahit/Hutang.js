@@ -18,6 +18,7 @@ const Hutang = () => {
     status_pembayaran: "",
     tanggal_jatuh_tempo: "",
     tanggal_hutang: "",
+    jenis_hutang: "",
   });
   const [selectedHutang, setSelectedHutang] = useState(null); // Form pembayaran hutang
   const [logPembayaran, setLogPembayaran] = useState({
@@ -26,7 +27,11 @@ const Hutang = () => {
     catatan: "",
   });
 
-
+  const jenisHutangOptions = [
+    { value: "overtime", label: "Overtime" },
+    { value: "lainnya", label: "Lainnya" },
+  ];
+  
   useEffect(() => {
     const fetchHutangs = async () => {
       try {
@@ -80,6 +85,7 @@ useEffect(() => {
 }, []);
 
 
+
 const handleFormSubmit = async (e) => {
   e.preventDefault(); // Mencegah refresh halaman
 
@@ -103,6 +109,7 @@ const handleFormSubmit = async (e) => {
           status_pembayaran: "",
           tanggal_jatuh_tempo: "",
           tanggal_hutang: "",
+          jenis_hutang:"",
       });
   } catch (error) {
       console.error("Error:", error.response?.data?.message || error.message);
@@ -229,8 +236,9 @@ const handleFormSubmit = async (e) => {
               <th>TANGGAL HUTANG</th>
               <th>TANGGAL JATUH TEMPO</th>
               <th>JUMLAH HUTANG</th>
+              <th> JENIS HUTANG</th> 
               <th>STATUS PEMBAYARAN</th>
-              
+           
               <th>AKSI</th>
             </tr>
           </thead>
@@ -250,23 +258,24 @@ const handleFormSubmit = async (e) => {
                   <td data-label=" Tanggal Hutang : ">{formatTanggal(hutang.tanggal_hutang)}</td>
                   <td data-label = "Tanggal Jatuh Tempo : ">{formatTanggal(hutang.tanggal_jatuh_tempo)}</td>
                   <td data-label= "Jumlah Hutang : ">{hutang.jumlah_hutang}</td>
-                  
-                  <td>
+                  <td data-label= "Jenis Hutang : ">{hutang.jenis_hutang}</td>
+                  <td data-label=" ">
                     <span
                       style={{
                         backgroundColor: getStatusColor(hutang.status_pembayaran),
                         color: "white",
                         padding: "3px 5px",
                         borderRadius: "5px",
-                      
+                        textTransform: "capitalize", 
                     }}
                     >
                     {hutang.status_pembayaran}
                     </span>
                   </td>
                       
-                 
-                  <td>
+                
+                  
+                  <td data-label=" ">
                   <div className="action-card">
                   <button 
                     className="btn1-icon"
@@ -399,6 +408,24 @@ const handleFormSubmit = async (e) => {
                   required
                 />
               </div>
+              {/* Input Jenis Hutang */}
+        <div className="form-group">
+          <label>Jenis Hutang</label>
+          <select
+          value={newHutang.jenis_hutang}
+          onChange={(e) =>
+            setNewHutang({ ...newHutang, jenis_hutang: e.target.value })
+          }
+          required
+        >
+          <option value="">Pilih Jenis Hutang</option>
+          {jenisHutangOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+                </div>
 
               <div className="form-actions">
                 <button type="submit" className="btn btn-submit">
@@ -422,27 +449,24 @@ const handleFormSubmit = async (e) => {
             <div className="modal-card">
               <div className="modal-header">
                 <h3>Detail Hutang</h3>
-                <button
-                  className="close-button"
-                  onClick={() => setSelectedDetailHutang(null)}
-                >
-                  &times;
-                </button>
+              
               </div>
               <div className="modal-body">
                 <h4>ID Hutang: {selectedDetailHutang.id_hutang}</h4>
-                <p><strong>ID Penjahit:</strong> {selectedDetailHutang.id_penjahit}</p>
-                <p><strong>Jumlah Hutang:</strong> Rp {selectedDetailHutang.jumlah_hutang}</p>
-                <p><strong>Status Pembayaran:</strong> {selectedDetailHutang.status_pembayaran}</p>
-                <p><strong>Tanggal Jatuh Tempo:</strong> {selectedDetailHutang.tanggal_jatuh_tempo}</p>
-                <p><strong>Tanggal Cashbon:</strong> {selectedDetailHutang.tanggal_hutang}</p>
-                <h4>Log Pembayaran:</h4>
+                <p><strong>ID Penjahit :</strong><span>  {selectedDetailHutang.id_penjahit}</span></p>
+                <p><strong>Jumlah Hutang :</strong> <span> Rp {selectedDetailHutang.jumlah_hutang}</span></p>
+                <p><strong>Status Pembayaran :</strong> <span> {selectedDetailHutang.status_pembayaran}</span></p>
+                <p><strong>Tanggal Jatuh Tempo :</strong><span>  {selectedDetailHutang.tanggal_jatuh_tempo}</span></p>
+                <p><strong>Tanggal Hutang:</strong><span>  {selectedDetailHutang.tanggal_hutang}</span></p>
+                <p><strong>Sisa Hutang:</strong><span>  {selectedDetailHutang.sisa_hutang}</span></p>
+                
+                <br></br><h4>Log Pembayaran:</h4>
                 {logHistory.length > 0 ? (
                   logHistory.map((log, index) => (
                     <div key={index} className="log-item">
-                      <p><strong>Jumlah Dibayar:</strong> Rp {log.jumlah_dibayar}</p>
-                      <p><strong>Tanggal Bayar:</strong> {log.tanggal_bayar}</p>
-                      <p><strong>Catatan:</strong> {log.catatan}</p>
+                      <p><strong>Jumlah Dibayar :</strong> Rp {log.jumlah_dibayar}</p>
+                      <p><strong>Tanggal Bayar :</strong> {log.tanggal_bayar}</p>
+                      <p><strong>Catatan :</strong> {log.catatan}</p>
                     </div>
                   ))
                 ) : (
@@ -502,7 +526,7 @@ const handleFormSubmit = async (e) => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-cancel"
+                  className="btn btn-submit"
                   onClick={() => setSelectedHutang(null)}
                 >
                   Batal

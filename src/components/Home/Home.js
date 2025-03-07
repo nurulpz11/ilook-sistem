@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom"; // Tambahkan ini
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import API from "../../api"; 
 
-
 import {   } from 'react-icons/fa';
 
 
@@ -15,8 +14,11 @@ const Home = () => {
   const [spkData, setSpkData] = useState([]);
   const [chartData, setChartData] = useState(null);
   const [categoryInfo, setCategoryInfo] = useState([]); 
+  const [sisaProdukChart, setSisaProdukChart] = useState(null);
+
   const navigate = useNavigate(); // Inisialisasi useNavigate
 
+  
   useEffect(() => {
     const fetchSpkData = async () => {
       try {
@@ -108,7 +110,43 @@ const Home = () => {
     fetchCategoryCount();
   }, []);
   
-  
+  useEffect(() => {
+  const fetchSisaProdukData = async () => {
+    try {
+      const response = await API.get("/kemampuan-cmt");
+      const data = response.data;
+
+      // Hitung jumlah kategori
+      let overloadCount = 0, underloadCount = 0, normalCount = 0;
+
+      Object.values(data).forEach(item => {
+        if (item.kategori_sisa_produk === "Overload") overloadCount++;
+        else if (item.kategori_sisa_produk === "Underload") underloadCount++;
+        else normalCount++;
+      });
+
+      // Siapkan data untuk Pie Chart
+      setSisaProdukChart({
+        labels: ["Overload", "Underload", "Normal"],
+        datasets: [
+          {
+            label: "Kategori Sisa Produk",
+            data: [overloadCount, underloadCount, normalCount],
+            backgroundColor: ["#FF6384", "#FFCE56", "#36A2EB"], // Warna kategori
+            hoverBackgroundColor: ["#E74C3C", "#F1C40F", "#3498DB"],
+          },
+        ],
+      });
+
+    } catch (error) {
+      console.error("Error fetching sisa produk data:", error);
+    }
+  };
+
+  fetchSisaProdukData();
+}, []);
+
+
   const inProgressCount = spkData.filter(
     (item) => item.status === "In Progress"
   ).length;
@@ -143,27 +181,44 @@ const Home = () => {
     ],
   };
 
+
   const handleChartClick = (event, elements) => {
     if (elements.length > 0) {
-      const chartIndex = elements[0].index; // Index data yang diklik
-      const clickedLabel = chartData.labels[chartIndex]; // Label yang diklik
-      navigate(`/kinerja/${clickedLabel}`); // Navigasi ke halaman baru dengan parameter
+      const index = elements[0].index;
+      const selectedCategory = ["Overload", "Underload", "Normal"][index];
+      navigate(`/kinerja2?filter=${selectedCategory.toLowerCase()}`);
     }
   };
+  
 
   const chartOptions = {
-    responsive: true, // Grafik akan menyesuaikan ukuran layar
-    maintainAspectRatio: false, // Biarkan ukuran fleksibel
+    responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         labels: {
           usePointStyle: true,
           pointStyle: "circle",
+          position: "bottom",
+        },
+      },
+      datalabels: {
+        color: "#fff", // Warna teks label
+        anchor: "center", // Posisi teks di tengah
+        align: "center",
+        font: {
+          weight: "bold",
+          size: 14,
+        },
+        formatter: (value, context) => {
+          return value; // Menampilkan angka kategori
         },
       },
     },
-    onClick: handleChartClick, // Tambahkan event handler
+    onClick: handleChartClick,
   };
+  
+
   const donutOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -248,6 +303,19 @@ const Home = () => {
                   </div>
                 )}
               </div>
+
+              <div className="chart-container">
+        {sisaProdukChart && (
+          <div className="chart-card card">
+            <h2 className="chart-title">Sisa Produk CMT</h2>
+            <div className="chart-content">
+            <Pie data={sisaProdukChart} options={chartOptions} plugins={[ChartDataLabels]} />
+
+            </div>
+    </div>
+  )}
+</div>
+
             </div>
 
 

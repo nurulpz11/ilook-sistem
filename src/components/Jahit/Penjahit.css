@@ -22,6 +22,13 @@
 }
 
 
+.readers {
+  font-size: 12px;
+  color: gray;
+  margin-top: 5px;
+}
+
+
 /* Filter wrapper */
 
 
@@ -129,7 +136,13 @@ border-color: #356191;
     font-size: 12px;
   }
 }
-
+.table-wrapper {
+  max-height: 625px; /* Atur tinggi maksimum agar tabel bisa di-scroll */
+  overflow-y: auto; /* Scroll hanya di dalam tabel */
+  border: 1px solid #ddd; /* Opsional: Tambahkan border untuk pembatas */
+  border-radius: 8px;
+  background: white;
+}
 .table-container {
   padding: 7px;
   background-color: #ffffff;
@@ -139,6 +152,7 @@ border-color: #356191;
   overflow-x: auto;
   width: 100%;
   min-width: 200px;
+
 }
 
 .penjahit-table {
@@ -206,7 +220,19 @@ border-color: #356191;
   justify-content: center;
 }
 
+.btn1{
+  background-color: #b9b9b9;
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 135px;
+ 
 
+}
 
 @media (max-width: 768px) {
   .table-container {
@@ -232,12 +258,12 @@ border-color: #356191;
     text-align: center;
     font-weight: 300px;
     color: #5f5f5f;
-    font-size: 11px;
+    font-size: 12px;
     
   }
   
   .penjahit-table th {
-    font-size: 11px;
+    font-size: 12px;
     background-color: #3d546b; /* Warna header */
     color: #ffffff; /* Warna teks header */
     font-weight: 600; 
@@ -591,8 +617,8 @@ border-color: #356191;
 /* Popup Card */
 .popup1-card {
   background: #ffffff;
-  width: 90%;
-  max-width: 700px;
+  width: 100%;
+  max-width: 500px;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
@@ -642,14 +668,18 @@ border-color: #356191;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f7f7f7;
+  background: #ffffff;
   border-radius: 15px;
   padding: 10px;
+  width: 180px;
+  max-width: 180px;
+  max-height: 180px;
+  
 }
 
 .popup1-image {
   width: 100%;
-  max-height: 300px;
+  height: 200px;
   object-fit: cover;
   border-radius: 10px;
 }
@@ -663,19 +693,39 @@ border-color: #356191;
 .popup1-details {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
+}
+.detail-group{
+  width: 100%;
+
 }
 
 .detail-group p {
-  margin: 0;
-  font-size: 1rem;
-  color: #333333;
+  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #eeeeee;
+  font-size: 14px;
+  color: #333;
+  max-width: 270px;
+ 
+}
+
+.detail-group p strong {
+  min-width: 150px; /* Sesuaikan agar rata kiri */
+  display: inline-block;
+  font-weight: bold;
+  text-align: left;
 }
 
 .detail-group p span {
-  font-weight: bold;
-  color: #3d546b;
+  flex-grow: 1;
+  text-align: right;
+  max-width: 200px;
 }
+
 
 .notif-wrapper {
   position: relative;
@@ -717,11 +767,12 @@ border-color: #356191;
   justify-content: center;
 }
 
-.popup-content {
+.popup-content1 {
   background: white;
   padding: 20px;
-  width: 350px;
+  width: 400px;
   max-width: 100%;
+  height: 500px;
   border-radius: 8px;
   box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
   animation: fadeIn 0.3s ease-in-out;
@@ -737,8 +788,9 @@ border-color: #356191;
 .notif-list {
   list-style: none;
   padding: 0;
-  max-height: 200px;
- width: 300px;
+  max-height: 100%;
+ width: 350px;
+ height: 360px;
   overflow-y: auto;
 }
 
@@ -1603,7 +1655,7 @@ border-color: #356191;
 }
 
 .modal-invite-content select, .modal-content button {
-  padding: 10px;
+  padding: 7px 8px;
   font-size: 14px;
   border-radius: 5px;
   border: 1px solid #ccc;
@@ -1640,4 +1692,17 @@ border-color: #356191;
   max-width: 100%;
   max-height: 100%;
   border-radius: 8px;
+}
+
+.text-red {
+  color: red;
+  font-weight: bold;
+}
+.text-yellow {
+  color: orange;
+  font-weight: bold;
+}
+.text-green {
+  color: green;
+  font-weight: bold;
 }

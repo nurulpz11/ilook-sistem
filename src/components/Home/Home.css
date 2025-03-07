@@ -127,13 +127,13 @@ width:100%;
   padding-right:  10px 20px;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  max-width: 500px;
+
+  width: 50%;
+  max-width: 540px;
   min-width: 300px;
   max-height: 500px;
   min-height: 300px;
 }
-
 .chart-wrapper {
   flex: 1;
   

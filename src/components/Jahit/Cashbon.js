@@ -41,32 +41,26 @@ const Cashbon = () => {
               return;
           }
 
-          const response = await fetch(`http://localhost:8000/api/cashboan?page=${currentPage}`,{
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}` 
-            }
-        });
+          const response = await API.get(`/cashboan?page=${currentPage}`,{
+            headers: { Authorization: `Bearer ${token}` },
+          });
+    
 
-          if (!response.ok) {
-            throw new Error("Failed to fetch data");
-          }
-          const data = await response.json();
-          
-          console.log("Data Hutang:", data); // Debugging
+          console.log("Data Cashbon:", response.data); // Debugging
   
-          setCashbons(data.data); // Ambil data dari pagination Laravel
-          setLastPage(data.last_page); // Set total halaman
+          setCashbons(response.data.data || []); // Set data pendapatan
+          setLastPage(response.data.last_page); // Set total halaman
         } catch (error) {
-          setError(error.message);
+          setError(error.response?.data?.message || "Gagal mengambil data pendapatan.");
         } finally {
           setLoading(false);
         }
       };
-  
+    
       fetchCasbons();
     }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
+    
+  
   
   
     useEffect(() => {
@@ -126,31 +120,29 @@ const Cashbon = () => {
   };
 
   // Handle submit untuk form pembayaran
-  const handlePaymentSubmit = (e) => {
+  const handlePaymentSubmit = async (e) => {
     e.preventDefault();
-    fetch(`http://localhost:8000/api/log-pembayaran-cashboan/${selectedCashbon.id_cashboan}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(logPembayaran),
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal mencatat pembayaran.");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        alert(data.message || "Pembayaran berhasil dicatat!");
-        setSelectedCashbon(null); // Tutup form pembayaran
-        setLogPembayaran({
-          jumlah_dibayar: "",
-          tanggal_bayar: "",
-          catatan: "",
-        }); // Reset form pembayaran
-      })
-      .catch((error) => alert(`Terjadi kesalahan: ${error.message}`));
+  
+    try {
+      const response = await API.post(
+        `/log-pembayaran-cashboan/${selectedCashbon.id_cashboan}`,
+        JSON.stringify(logPembayaran)
+      );
+  
+      alert(response.data.message || "Pembayaran berhasil dicatat!");
+      
+      setSelectedCashbon(null); // Tutup form pembayaran
+      setLogPembayaran({
+        jumlah_dibayar: "",
+        tanggal_bayar: "",
+        catatan: "",
+      }); // Reset form pembayaran
+    } catch (error) {
+      alert(error.response?.data?.message || "Terjadi kesalahan saat mencatat pembayaran.");
+    }
   };
+
+
   const handleDetailClick = async (cashbon) => {
     try {
       const response = await API.get(`/log-pembayaran-cashboan/${cashbon.id_cashboan}`);
@@ -262,13 +254,14 @@ const Cashbon = () => {
               <td data-label="Tanggal Cashbon : ">{formatTanggal(cashbon.tanggal_cashboan)}</td>
               <td data-label="Tanggal Jatuh Tempo : ">{formatTanggal(cashbon.tanggal_jatuh_tempo)}</td>
               <td data-label="Jumlah Cashbon : ">{cashbon.jumlah_cashboan}</td>
-              <td>
+              <td   data-label=" ">
                     <span
                       style={{
                         backgroundColor: getStatusColor(cashbon.status_pembayaran),
                         color: "white",
                         padding: "3px 5px",
                         borderRadius: "5px",
+                        textTransform: "capitalize", 
                       
                     }}
                     >
@@ -277,7 +270,7 @@ const Cashbon = () => {
                   </td>
              
              
-              <td>
+              <td  data-label=" ">
               <div className="action-card">
                   <button 
                     className="btn1-icon"
@@ -338,6 +331,7 @@ const Cashbon = () => {
                 <p><strong>Status Pembayaran:</strong> {selectedDetailCashbon.status_pembayaran}</p>
                 <p><strong>Tanggal Jatuh Tempo:</strong> {selectedDetailCashbon.tanggal_jatuh_tempo}</p>
                 <p><strong>Tanggal Cashbon:</strong> {selectedDetailCashbon.tanggal_cashboan}</p>
+                <p><strong>Sisa Cashbon:</strong> Rp {selectedDetailCashbon.sisa_cashboan ?? 0}</p>
                 <h4>Log Pembayaran:</h4>
                 {logHistory.length > 0 ? (
                   logHistory.map((log, index) => (
