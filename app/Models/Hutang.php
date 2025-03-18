@@ -17,7 +17,18 @@ class Hutang extends Model
         'status_pembayaran',
         'tanggal_jatuh_tempo',
         'tanggal_hutang',
+        'jenis_hutang',
     ];
+
+    const JENIS_HUTANG = [
+        'overtime' => 'Overtime',
+        'lainnya' => 'Lainnya',
+    ];
+
+    public static function getJenisHutangOptions()
+    {
+        return self::JENIS_HUTANG;
+    }
 
     // Relasi ke tabel SPK
     public function penjahit()

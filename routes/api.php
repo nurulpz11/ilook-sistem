@@ -17,12 +17,13 @@ use App\Http\Controllers\SpkChatController;
 use App\Http\Controllers\SpkChatInvite;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProdukController;
 
-
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
 Route::get('/spk-cmt/{id}/download-staff-pdf', [SpkCmtController::class, 'downloadStaffPdf'])->name('spk.downloadStaffPdf');
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
+
 Route::middleware('auth:api')->group(function () {
    
 Route::apiResource('penjahit', PenjahitController::class);
@@ -41,6 +42,9 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
 
 
     Route::middleware('role:super-admin|supervisor|staff|owner|penjahit')->group(function () {
+
+        Route::apiResource('produk', ProdukController::class);
+
         Route::post('/spkcmt', [SpkCmtController::class, 'store']);
         Route::put('/spkcmt/{spkcmt}', [SpkCmtController::class, 'update']);
         Route::patch('/spkcmt/{spkcmt}', [SpkCmtController::class, 'update']);
@@ -48,6 +52,12 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::get('/spk-chats/{spkId}', [SpkChatController::class, 'index']);   
         Route::post('/send-message', [SpkChatController::class, 'sendMessage']);
         Route::post('/invite-staff/{staffId}', [StaffController::class, 'inviteStaff']);
+        Route::get('/kemampuan-cmt', [SpkCmtController::class, 'getKemampuanCmt']);
+
+        Route::get('/spk-chats/{chatId}/messages', [SpkChatController::class, 'getChatMessages']);
+        Route::post('/spk-chats/{chatId}/mark-as-read', [SpkChatController::class, 'markAsRead']);
+
+        Route::get('/spk-chats/{chatId}/readers', [SpkChatController::class, 'getChatReaders']);
 
         Route::get('/notifications', [NotificationController::class, 'getNotifications']);
         Route::get('/notifications/unread', [NotificationController::class, 'getUnreadNotifications']);
@@ -69,6 +79,9 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::post('/pengiriman', [PengirimanController::class, 'store']);
         Route::get('/pengiriman', [PengirimanController::class, 'index']);
         Route::get('/pengiriman/{id}', [PengirimanController::class, 'show']);
+        Route::post('/pengiriman/petugas-bawah', [PengirimanController::class, 'storePetugasBawah']);
+        Route::put('/pengiriman/petugas-atas/{id_pengiriman}', [PengirimanController::class, 'updatePetugasAtas']);
+
 
 
         Route::resource('cashboan', CashboanController::class);

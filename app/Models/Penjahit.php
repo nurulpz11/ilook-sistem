@@ -11,10 +11,20 @@ class Penjahit extends Model
     protected $table = 'penjahit_cmt'; // Nama tabel
     protected $primaryKey = 'id_penjahit'; // Primary key
 
+    protected $casts = [
+        'mesin' => 'array',
+    ];
+    
     protected $fillable = [
         'nama_penjahit',
         'kontak',
         'alamat',
+        'ktp',
+        'kategori_penjahit',
+        'jumlah_tim',
+        'no_rekening',
+        'bank',
+        'mesin', 
     ];
 
     // Relasi ke tabel SPK

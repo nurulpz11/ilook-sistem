@@ -13,12 +13,14 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\ChatReader;
 
 class SpkChatController extends Controller
 {
-    public function index($spkId){
+    public function index($spkId)
+    {
         $user = auth()->user();
-
+    
         if ($user->hasRole('staff')) {
             $isInvited = SpkChatInvite::where('staff_id', $user->id)
                                       ->where('spk_id', $spkId)
@@ -28,9 +30,23 @@ class SpkChatController extends Controller
                 return response()->json(['error' => 'Access denied. Staff must be invited to this SPK.'], 403);
             }
         }
-
-        return response()->json(SpkChat::where('id_spk', $spkId)->with('user')->get());
+    
+        // Ambil semua chat dalam SPK ini
+        $chats = SpkChat::where('id_spk', $spkId)
+        ->with(['user', 'readers.user:id,name']) // Ambil juga siapa yang sudah baca
+        ->get();
+    
+        // Tandai semua chat sebagai "dibaca" oleh user
+        foreach ($chats as $chat) {
+            ChatReader::updateOrCreate(
+                ['chat_id' => $chat->id, 'user_id' => $user->id],
+                ['read_at' => now()]
+            );
+        }
+    
+        return response()->json($chats);
     }
+    
 
     public function sendMessage(Request $request){
         $user = auth()->user();
@@ -61,7 +77,7 @@ class SpkChatController extends Controller
                 return response()->json(['error' => 'Access denied. Staff must be invited to this SPK.'], 403);
             }
         }
-        $allowedUsers = User::role(['supervisor', 'owner', 'super-admin'])
+        $allowedUsers = User::role(['supervisor', 'owner', 'super-admin','penjahit'])
         ->pluck('id')
         ->toArray();
 
@@ -153,6 +169,37 @@ class SpkChatController extends Controller
     // Jika bukan staff, otomatis bisa mengakses
     return response()->json(['invited' => true, 'message' => 'Role does not require invitation'], 200);
 }
+
+public function markAsRead($spkId)
+{
+    $userId = auth()->id();
+
+    // Ambil semua pesan dalam SPK ini
+    $unreadChats = SpkChat::where('id_spk', $spkId)->pluck('id');
+
+    foreach ($unreadChats as $chatId) {
+        ChatReader::updateOrCreate(
+            ['chat_id' => $chatId, 'user_id' => $userId],
+            ['read_at' => now()]
+        );
+    }
+
+    return response()->json(['message' => 'All messages in SPK marked as read']);
+}
+
+
+public function getChatReaders($spkId)
+{
+    $readers = ChatReader::whereIn('chat_id', function ($query) use ($spkId) {
+        $query->select('id')->from('spk_chats')->where('id_spk', $spkId);
+    })->with('user:id,name')->get();
+
+    // Grouping berdasarkan chat_id
+    $groupedReaders = $readers->groupBy('chat_id');
+
+    return response()->json($groupedReaders);
+}
+
 
     
 }

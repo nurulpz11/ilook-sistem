@@ -45,8 +45,14 @@ class ChatNotification implements ShouldBroadcast
  public function broadcastWith()
 {
     return [
-        'chat' => $this->chat,
-        'allowed_users' => $this->allowedUsers, // Kirim daftar user yang diundang
+        'chat' => [
+            'id' => $this->chat->id,
+            'user_id' => $this->chat->id_user, // Pastikan `id_user` diambil dari model SpkChat
+            'spk_id' => $this->chat->id_spk,  // Pastikan `id_spk` juga dikirim
+            'message' => $this->chat->message ?? '📩 Pesan baru diterima',
+            'time' => $this->chat->created_at->toDateTimeString(),
+        ],
+        'allowed_users' => $this->allowedUsers,
     ];
 }
 

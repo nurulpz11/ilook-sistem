@@ -9,7 +9,7 @@ class Notification extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'spk_id', 'chat_id', 'message', 'is_read'];
+    protected $fillable = ['user_id', 'spk_id', 'chat_id',  'is_read', 'read_at'];
 
     public function user()
     {
@@ -25,4 +25,5 @@ class Notification extends Model
     {
         return $this->belongsTo(SpkChat::class, 'chat_id', 'id');
     }
+    
 }

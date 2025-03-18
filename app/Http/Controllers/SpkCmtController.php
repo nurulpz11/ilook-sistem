@@ -8,49 +8,61 @@ use App\Models\Penjahit;
 use App\Models\Warna;
 use App\Models\LogDeadline;
 use App\Models\LogStatus;
-use PDF;
+use App\Models\Pengiriman;
+use App\Models\Produk;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use PDF;
+
 
 
 class SpkCmtController extends Controller
 {
     // Menampilkan semua SPK
     public function index(Request $request)
-    {
-        $user = auth()->user();
-        $statusFilter = $request->query('status');
-        $allData = $request->query('allData'); // Ambil parameter tambahan
+{
+    $user = auth()->user();
     
-        $query = SpkCmt::with(['warna', 'pengiriman']);
-    
-        if ($user->hasRole('penjahit')) {
-            $query->where('id_penjahit', $user->id_penjahit);
-        }
-        
-        if ($statusFilter) {
-            $query->where('status', $statusFilter);
-        }
-    
-        // Jika request memiliki parameter 'allData=true', ambil semua data
-        if ($allData == 'true') {
-            $spk = $query->orderBy('created_at', 'desc')->get(); // Mengambil semua data tanpa pagination
-        } else {
-            $spk = $query->orderBy('created_at', 'desc')->paginate(10); // Default pagination 10 data
-        }
-        
-    
-        // Mapping data sebelum dikembalikan
-        $spk->transform(function ($item) {
-            $item->sisa_hari = $item->sisa_hari;
-            $item->status_with_color = $item->status_with_color;
-            $item->total_barang_dikirim = $item->pengiriman->sum('total_barang_dikirim');
-            return $item;
-        });
-    
-        return response()->json($spk);
+    // Ambil semua filter dari query parameter
+    $statusFilter = $request->query('status');
+    $idPenjahit = $request->query('id_penjahit');
+    $idProduk = $request->query('id_produk');
+    $kategoriProduk = $request->query('kategori_produk');
+    $sortBy = $request->query('sortBy', 'created_at'); 
+    $sortOrder = $request->query('sortOrder', 'desc');
+    $allData = $request->query('allData');
+
+    // Query awal dengan relasi
+    $query = SpkCmt::with(['warna', 'pengiriman', 'produk:id,nama_produk,kategori_produk,gambar_produk']);
+
+    // Filter khusus untuk penjahit
+    if ($user->hasRole('penjahit')) {
+        $query->where('id_penjahit', $user->id_penjahit);
     }
-    
+
+    $query->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+          ->when($idPenjahit, fn($q) => $q->where('id_penjahit', $idPenjahit))
+          ->when($idProduk, fn($q) => $q->where('id_produk', (int) $idProduk)) // Pastikan tipe data sesuai
+          ->when($kategoriProduk, fn($q) => $q->whereHas('produk', fn($q) => $q->where('kategori_produk', $kategoriProduk))) // Filter kategori
+          ->orderBy($sortBy, $sortOrder);
+
+    // Ambil data berdasarkan parameter allData
+    $spk = $allData == 'true' ? $query->get() : $query->paginate(10);
+
+    // Mapping data sebelum dikembalikan
+    $spk->transform(function ($item) {
+        $item->sisa_hari = $item->sisa_hari;
+        $item->status_with_color = $item->status_with_color;
+        $item->total_barang_dikirim = $item->pengiriman->sum('total_barang_dikirim');
+        $item->nama_produk = $item->produk->nama_produk ?? null;
+        $item->kategori_produk = $item->produk->kategori_produk ?? null;
+        $item->gambar_produk = $item->produk->gambar_produk ?? null;
+        return $item;
+    });
+
+    return response()->json($spk);
+}
+
    
     // Menampilkan form untuk membuat SPK baru (untuk React, ini bisa digantikan dengan form di frontend)
     public function create()
@@ -68,14 +80,14 @@ class SpkCmtController extends Controller
 }
 
     $validated = $request->validate([
-        'nama_produk' => 'required|string|max:100',
+       'id_produk' => 'required|exists:produk,id',
         'deadline' => 'required|date',
         'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
         'keterangan' => 'nullable|string',
         'tgl_spk' => 'required|date',
         'status' => 'required|string|in:Pending,In Progress,Completed',
         'nomor_seri' => 'nullable|string',
-        'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
+
         'tanggal_ambil' => 'nullable|date',
         'catatan' => 'nullable|string',
         'markeran' => 'nullable|string',
@@ -84,10 +96,17 @@ class SpkCmtController extends Controller
         'merek' => 'nullable|string',
         'harga_per_barang' => 'required|numeric',
         'harga_per_jasa' => 'required|numeric',
+        'jenis_harga_jasa' => 'required|in:per_barang,per_lusin', 
         'warna' => 'required|array',
         'warna.*.nama_warna' => 'required|string|max:50',
         'warna.*.qty' => 'required|integer|min:1',
     ]);
+   
+    $harga_jasa_awal = $request->harga_per_jasa;
+
+    $harga_per_jasa = $request->jenis_harga_jasa === 'per_lusin'
+    ? $harga_jasa_awal / 12
+    : $harga_jasa_awal;
 
     // Hitung total jumlah produk
     $jumlahProduk = collect($validated['warna'])->sum('qty');
@@ -97,16 +116,15 @@ class SpkCmtController extends Controller
     $totalHarga = $validated['harga_per_barang'] * $jumlahProduk;
     $validated['total_harga'] = $totalHarga;
 
-    // Jika ada file gambar, unggah dan simpan path-nya
-    if ($request->hasFile('gambar_produk')) {
-        $file = $request->file('gambar_produk');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $filePath = $file->storeAs('public/images', $fileName);
-        $validated['gambar_produk'] = 'images/' . $fileName;
-    }
-
+   
+  
     // Membuat SPK baru
-    $spk = SpkCmt::create($validated);
+    $spk = SpkCmt::create(array_merge($validated, [
+        'jumlah_produk' => $jumlahProduk,
+        'total_harga' => $totalHarga,
+        'harga_per_jasa' => $harga_per_jasa,
+        'harga_jasa_awal' => $harga_jasa_awal, // Simpan harga awal
+    ]));
 
     // Simpan warna ke dalam tabel warna
     foreach ($validated['warna'] as $warna) {
@@ -117,7 +135,13 @@ class SpkCmtController extends Controller
         ]);
     }
 
-    return response()->json(['message' => 'SPK dan Warna berhasil dibuat!', 'data' => $spk], 201);
+    return response()->json([
+        'message' => 'SPK dan Warna berhasil dibuat!',
+        'data' => [
+            'spk' => $spk,
+            'nama_produk' => $spk->produk->nama_produk ?? null // Ambil nama produk jika ada
+        ]
+    ], 201);
 }
 
     // Menampilkan SPK berdasarkan ID
@@ -138,14 +162,13 @@ class SpkCmtController extends Controller
     public function update(Request $request, $id)
 {
     $validated = $request->validate([
-        'nama_produk' => 'required|string|max:100',
+        'id_produk' => 'required|exists:produk,id',
         'deadline' => 'required|date',
         'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
         'keterangan' => 'nullable|string',
         'tgl_spk' => 'required|date',
         'status' => 'required|string|in:Pending,In Progress,Completed',
         'nomor_seri' => 'nullable|string',
-        'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
         'tanggal_ambil' => 'nullable|date',
         'catatan' => 'nullable|string',
         'markeran' => 'nullable|string',
@@ -154,13 +177,26 @@ class SpkCmtController extends Controller
         'merek' => 'nullable|string',
         'harga_per_barang' => 'required|numeric',
         'harga_per_jasa' => 'required|numeric',
+        'jenis_harga_jasa' => 'required|in:per_barang,per_lusin',
+    
         'warna' => 'required|array',
-        'warna.*.id_warna' => 'nullable|exists:warna,id', // Untuk warna yang sudah ada
+        'warna.*.id_warna' => 'nullable|exists:warna,id_warna', // Untuk warna yang sudah ada
         'warna.*.nama_warna' => 'required|string|max:50',
         'warna.*.qty' => 'required|integer|min:1',
     ]);
 
+
+    
     $spk = SpkCmt::findOrFail($id);
+
+    $harga_jasa_awal = $request->filled('harga_per_jasa')
+    ? $request->harga_per_jasa
+    : $spk->harga_jasa_awal;
+
+    // Jika harga jasa per lusin, konversi ke harga per barang
+    $harga_per_jasa = ($request->jenis_harga_jasa === 'per_lusin')
+    ? $harga_jasa_awal / 12
+    : $harga_jasa_awal;
 
     // Hitung total jumlah produk
     $jumlahProduk = collect($validated['warna'])->sum('qty');
@@ -170,21 +206,33 @@ class SpkCmtController extends Controller
     $totalHarga = $validated['harga_per_barang'] * $jumlahProduk;
     $validated['total_harga'] = $totalHarga;
 
-    // Jika ada file gambar baru, unggah dan simpan path-nya
     if ($request->hasFile('gambar_produk')) {
         $file = $request->file('gambar_produk');
         $fileName = time() . '_' . $file->getClientOriginalName();
-        $filePath = $file->storeAs('public/images', $fileName);
-        $validated['gambar_produk'] = 'images/' . $fileName;
-
-        // Hapus gambar lama jika ada
+        
+        // Hapus gambar lama sebelum menyimpan yang baru
         if ($spk->gambar_produk) {
             \Storage::delete('public/' . $spk->gambar_produk);
         }
+
+        // Simpan gambar baru
+        $filePath = $file->storeAs('public/images', $fileName);
+        $validated['gambar_produk'] = 'images/' . $fileName;
+    } else {
+        // Gunakan gambar lama jika tidak ada yang baru diunggah
+        $validated['gambar_produk'] = $request->gambar_produk_lama ?? $spk->gambar_produk;
     }
 
-    // Update data SPK
-    $spk->update($validated);
+    
+
+
+  
+    $spk->update(array_merge($validated, [
+        'jumlah_produk' => $jumlahProduk,
+        'total_harga' => $totalHarga,
+        'harga_per_jasa' => $harga_per_jasa,
+        'harga_jasa_awal' => $harga_jasa_awal, // Simpan harga awal
+    ]));
 
     // Update atau tambahkan data warna
     foreach ($validated['warna'] as $warna) {
@@ -206,6 +254,7 @@ class SpkCmtController extends Controller
             ]);
         }
     }
+    
 
     return response()->json(['message' => 'SPK berhasil diperbarui!', 'data' => $spk], 200);
 }
@@ -223,40 +272,43 @@ class SpkCmtController extends Controller
 
 
     public function downloadPdf($id)
-    {
-        // Ambil data SPK dengan relasi penjahit
-        $spk = SpkCmt::with('penjahit')->find($id);
-    
-        if (!$spk) {
-            return response()->json(['error' => 'SPK not found'], 404);
-        }
-    
-        // Render view 'pdf.spk_cmt' dan kirim data
-        $pdf = PDF::loadView('pdf.spk_cmt', compact('spk'));
-    
-        // Return file PDF
-        return $pdf->download('spk_cmt.pdf');
-        }
+{
+    $spk = SpkCmt::with('penjahit')->find($id);
+    if (!$spk) {
+        return response()->json(['error' => 'SPK not found'], 404);
+    }
+
+    $pdf = \App::make('snappy.pdf');
+    $pdf->setOption('enable-local-file-access', true); // Tambahkan opsi ini
+
+    $html = view('pdf.spk_cmt', compact('spk'))->render();
+    return response($pdf->getOutputFromHtml($html), 200, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'attachment; filename="spk_cmt.pdf"'
+    ]);
+}
         
-        public function downloadStaffPdf($id)
-        {
-        // Ambil data SPK dengan relasi penjahit
-        $spk = SpkCmt::with('penjahit')->find($id);
-
-        if (!$spk) {
-            return response()->json(['error' => 'SPK not found'], 404);
-        }
-
-        // Render view 'pdf.spk_cmt_staff' dan kirim data
-        $pdf = PDF::loadView('pdf.spk_cmt_staff', compact('spk'));
-
-        // Return file PDF
-        return $pdf->download('spk_cmt_staff.pdf');
-        }
 
 
-    
-    public function updateDeadline(Request $request, $id)
+public function downloadStaffPdf($id)
+{
+    $spk = SpkCmt::with('penjahit')->find($id);
+    if (!$spk) {
+        return response()->json(['error' => 'SPK not found'], 404);
+    }
+
+    $pdf = \App::make('snappy.pdf');
+    $pdf->setOption('enable-local-file-access', true); // Tambahkan opsi ini
+
+    $html = view('pdf.spk_cmt_staff', compact('spk'))->render();
+    return response($pdf->getOutputFromHtml($html), 200, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'attachment; filename="spk_cmt_staff.pdf"'
+    ]);
+}
+
+
+public function updateDeadline(Request $request, $id)
     {
         $validated = $request->validate([
             'deadline' => ['required', 'date'],
@@ -588,11 +640,125 @@ public function getKategoriCountByPenjahit()
 
     return response()->json($kategoriCount);
 }
+public function getKemampuanCmt()
+{
+    $filterKategori = request()->input('kategori_sisa_produk'); // ✅ Fix: Menggunakan helper Laravel
 
-    
+    $filterKinerja = request()->input('kategori');
+    // Ambil semua penjahit dari tabel penjahit
+    $penjahits = Penjahit::all();
 
+    // Ambil data kinerja untuk digabungkan
+    $kinerjaCmt = $this->getKinerjaCmt()->getData(true); 
 
-    
+    // Array untuk menyimpan hasil per penjahit
+    $result = [];
+
+    foreach ($penjahits as $penjahit) {
+        if (empty($penjahit->nama_penjahit)) {
+            continue;
+        }
+   // Ambil semua SPK dari penjahit ini
+   $spks = SpkCmt::where('id_penjahit', $penjahit->id_penjahit)
+   ->select('id_spk', 'jumlah_produk')
+   ->get();
+
+// Hitung total sisa produk
+$totalSisaProduk = 0;
+
+foreach ($spks as $spk) {
+   // Ambil pengiriman terakhir untuk SPK ini
+   $latestPengiriman = Pengiriman::where('id_spk', $spk->id_spk)
+       ->latest('tanggal_pengiriman')
+       ->first();
+
+   // Jika ada pengiriman, ambil nilai sisa_barang terakhir
+   if ($latestPengiriman) {
+       $totalSisaProduk += $latestPengiriman->sisa_barang;
+   } else {
+       // Jika belum ada pengiriman, pakai total_barang dari SPK
+       $totalSisaProduk += $spk->jumlah_produk;
+   }
+}
+
+        $pengiriman = Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
+            ->where('spk_cmt.id_penjahit', $penjahit->id_penjahit)
+            ->select('pengiriman.id_spk', 'pengiriman.total_barang_dikirim', 'pengiriman.tanggal_pengiriman')
+            ->orderBy('pengiriman.tanggal_pengiriman')
+            ->get();
+
+        $totalSpk = $pengiriman->unique('id_spk')->count();
+        $pengirimanPerMinggu = $pengiriman->groupBy(function ($item) {
+            return Carbon::parse($item->tanggal_pengiriman)->year . '-M' . Carbon::parse($item->tanggal_pengiriman)->weekOfYear;
+        });
+
+        $jumlahMinggu = $pengirimanPerMinggu->count();
+        $totalBarang = $pengiriman->sum('total_barang_dikirim');
+        $rataRataPerminggu = $jumlahMinggu > 0 ? $totalBarang / $jumlahMinggu : 0;
+
+        $kemampuanPerMinggu = $pengirimanPerMinggu->map(function ($items, $minggu) {
+            return [
+                'minggu' => $minggu,
+                'data' => $items->map(function ($item) {
+                    return [
+                        'id_spk' => $item->id_spk,
+                        'total_barang_dikirim' => $item->total_barang_dikirim,
+                    ];
+                })->values()
+            ];
+        })->values();
+
+        // Ambil data kinerja jika ada
+        $rataRata = $kinerjaCmt[$penjahit->nama_penjahit]['rata_rata'] ?? null;
+        $kategori = $kinerjaCmt[$penjahit->nama_penjahit]['kategori'] ?? null;
+        $spks = $kinerjaCmt[$penjahit->nama_penjahit]['spks'] ?? [];
+
+        $kategoriSisaProduk = "Normal"; // Default
+        if ($rataRataPerminggu == 0) {
+            $kategoriSisaProduk = "-"; // Jika rata-rata 0, anggap Normal
+        } elseif ($totalSisaProduk > 2 * $rataRataPerminggu) {
+            $kategoriSisaProduk = "Overload";
+        } elseif ($totalSisaProduk >= $rataRataPerminggu && $totalSisaProduk <= 2 * $rataRataPerminggu) {
+            $kategoriSisaProduk = "Underload";
+        } else {
+            $kategoriSisaProduk = "Normal";
+        }
+        if (empty($kategori)) {
+            $kategori = "-";
+        }
+        
+        if (!empty($filterKategori)) {
+            if (strcasecmp($kategoriSisaProduk, $filterKategori) !== 0) {
+                continue; // Skip jika kategori tidak sesuai
+            }
+        }
+        
+        if (!empty($filterKinerja)) {
+            if (strcasecmp($kategori, $filterKinerja) !== 0) {
+                continue; // Skip jika kategori kinerja tidak sesuai
+            
+            }
+        }
+        
+
+        $result[$penjahit->nama_penjahit] = [
+            'total_barang' => $totalBarang,
+            'jumlah_minggu' => $jumlahMinggu,
+            'rata_rata_perminggu' => round($rataRataPerminggu, 0),
+            'total_spk' => $totalSpk,
+            'total_sisa_produk' => $totalSisaProduk,
+            'kategori_sisa_produk' => $kategoriSisaProduk,
+            'rata_rata' => $rataRata, // Tambahkan nilai rata-rata dari kinerja
+            'kategori' => $kategori, // Tambahkan kategori dari kinerja
+            'kemampuan_per_minggu' => $kemampuanPerMinggu,
+            'spks' => $spks,
+           
+        ];
+    }
+
+    return response()->json($result);
+}
+
 
 
 

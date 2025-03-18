@@ -27,13 +27,20 @@
             font-size: 20px;
             color: #374151;
         }
-        .info {
-            margin-top: 16px;
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px; /* Beri jarak antar kolom */
         }
+
+        .info {
+            flex: 1; /* Membagi area jadi 2 kolom */
+        }
+
         .info p {
             font-size: 16px;
-          
         }
+
         .info span {
             font-weight: normal;
         }
@@ -79,10 +86,17 @@
             <p>{{ date_format(date_create($pendapatan->periode_awal), 'd M Y') }} -  {{ date_format(date_create($pendapatan->periode_akhir), 'd M Y') }}</p>
         </div>
 
-        <div class="info">
+        <div class="info-container">
+    <div class="info">
         <p>Penjahit: <span>{{ $penjahit->nama_penjahit ?? 'Tidak Ada' }}</span></p>
         <p>Alamat: <span>{{ $penjahit->alamat ?? 'Tidak Ada' }}</span></p>
     </div>
+    <div class="info">
+        <p>Bank: <span>{{ $penjahit->bank ?? 'Tidak Ada' }}</span></p>
+        <p>No. Rekening: <span>{{ $penjahit->no_rekening ?? 'Tidak Ada' }}</span></p>
+    </div>
+</div>
+
 
         <table>
             <thead>

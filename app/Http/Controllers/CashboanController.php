@@ -9,23 +9,26 @@ use Illuminate\Http\Request;
 class CashboanController extends Controller
 {
     public function index(Request $request)
-    {
-        // Ambil parameter query dari request
-        $penjahitId = $request->query('penjahit');
-    
-      
-        $query = Cashboan::query();
-    
-        // Tambahkan kondisi filter jika ada parameter `penjahit`
-        if (!empty($penjahitId)) {
-            $query->where('id_penjahit', $penjahitId);
-        }
-    
-        // Eksekusi query dan dapatkan data
-        $cashboan = $query->orderBy('created_at', 'desc')->paginate(11); 
-    
-        return response()->json ($cashboan);
+{
+    $penjahitId = $request->query('penjahit');
+    $query = Cashboan::with('penjahit')->withSum('logPembayaran', 'jumlah_dibayar');
+
+    if (!empty($penjahitId)) {
+        $query->where('id_penjahit', $penjahitId);
     }
+
+    $cashboans = $query->orderBy('created_at', 'desc')->paginate(11);
+
+    // Tambahkan sisa_cashbon ke setiap item
+    $cashboans->getCollection()->transform(function ($cashboan) {
+        $totalDibayar = $cashboan->log_pembayaran_sum_jumlah_dibayar ?? 0; // Jika null, default ke 0
+        $cashboan->sisa_cashbon = $cashboan->jumlah_cashboan - $totalDibayar;
+        return $cashboan;
+    });
+
+    return response()->json($cashboans);
+}
+
     
 
     // Menampilkan form untuk membuat Cashboan baru

@@ -10,8 +10,9 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements JWTSubject {
     use Notifiable;
     use HasRoles; 
+    
     protected $fillable = [
-        'name', 'email', 'password','id_penjahit',  'invited_by_supervisor'
+        'name', 'email', 'password','id_penjahit',  'invited_by_supervisor', 'foto'
     ];
 
     protected $hidden = [

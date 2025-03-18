@@ -23,17 +23,32 @@ class AuthController extends Controller {
                 'password' => 'required|string|min:6|confirmed',
                 'role' => 'required|in:owner,staff,supervisor,penjahit',
                 'id_penjahit' => 'nullable|exists:penjahit_cmt,id_penjahit',
+                'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
             ]);
     
             \Log::info('Validation passed', ['validatedData' => $validatedData]);
     
+            $fotoPath = null;
+            if ($request->hasFile('foto')) {
+                $fotoPath = $request->file('foto')->store('foto_user', 'public'); 
+                \Log::info('📸 Foto berhasil disimpan', ['path' => $fotoPath]);
+            }
             // Buat user
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'id_penjahit' => $request->role === 'penjahit' ? $request->id_penjahit : null,
+                'foto' => $fotoPath, 
             ]);
+
+             // Jika ada gambar Foto, simpan ke storage
+           if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('foto_user', 'public'); // Simpan di storage/app/public/ktp_penjahit
+            \Log::info('📸 Foto berhasil disimpan', ['path' => $validated['foto']]);
+        }
+       
+
     
             \Log::info('User created successfully', ['user_id' => $user->id]);
     
@@ -84,6 +99,7 @@ class AuthController extends Controller {
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $role, // Tambahkan role di sini
+                'foto' => $user->foto,
             ],
         ]);
     }

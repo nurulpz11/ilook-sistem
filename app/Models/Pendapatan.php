@@ -28,8 +28,9 @@ class Pendapatan extends Model
     // Relasi ke Penjahit
     public function penjahit()
     {
-        return $this->belongsTo(Penjahit::class, 'id_penjahit', 'id_penjahit');
+        return $this->belongsTo(Penjahit::class, 'id_penjahit');
     }
+    
 
     public function pengiriman()
     {

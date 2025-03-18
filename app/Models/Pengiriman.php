@@ -11,6 +11,7 @@ class Pengiriman extends Model
 
     protected $table = 'pengiriman';
     protected $primaryKey = 'id_pengiriman';
+
     protected $fillable = [
         'id_spk',
         'tanggal_pengiriman',
@@ -19,36 +20,53 @@ class Pengiriman extends Model
         'total_bayar',
         'claim',
         'refund_claim',
+        'foto_nota',
+        'status_verifikasi',
     ];
-    // Properti virtual untuk sisa barang per warna
+
+    protected $attributes = [
+        'status_verifikasi' => 'pending', 
+    ];
+   
     protected $appends = ['sisa_barang_per_warna'];
 
-    // Accessor untuk `sisa_barang_per_warna`
-  // Model Pengiriman.php
-public function getSisaBarangPerWarnaAttribute()
-{
-    $sisaBarangPerWarna = [];
 
-    foreach ($this->warna as $warnaDetail) {
-        $warnaData = Warna::where('id_spk', $this->id_spk)
-            ->where('nama_warna', $warnaDetail->warna)
-            ->first();
+    public function getSisaBarangPerWarnaAttribute()
+    {
+        $sisaBarangPerWarna = [];
 
-        if ($warnaData) {
-            $sisaBarang = $warnaData->qty - $warnaDetail->jumlah_dikirim;
-            $sisaBarangPerWarna[$warnaDetail->warna] = $sisaBarang;
+        foreach ($this->warna as $warnaDetail) {
+            $warnaData = Warna::where('id_spk', $this->id_spk)
+                ->where('nama_warna', $warnaDetail->warna)
+                ->first();
+
+            if ($warnaData) {
+                $sisaBarang = $warnaData->qty - $warnaDetail->jumlah_dikirim;
+                $sisaBarangPerWarna[$warnaDetail->warna] = $sisaBarang;
+            }
         }
+
+        return $sisaBarangPerWarna;
     }
 
-    return $sisaBarangPerWarna;
-}
+    public static function getStatusOptions()
+    {
+        return ['pending', 'valid', 'invalid'];
+    }
 
-
+    public function setStatusVerifikasiAttribute($value)
+    {
+        if (!in_array($value, self::getStatusOptions())) {
+            throw new \InvalidArgumentException("Status verifikasi tidak valid.");
+        }
+        $this->attributes['status_verifikasi'] = $value;
+    }
 
     public function warna()
     {
         return $this->hasMany(PengirimanWarna::class, 'id_pengiriman');
     }
+
 
     public function spk()
     {

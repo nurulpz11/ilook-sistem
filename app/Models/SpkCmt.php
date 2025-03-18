@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Models\Produk;
 
 class SpkCmt extends Model
 {
@@ -16,7 +17,7 @@ class SpkCmt extends Model
 
     protected $fillable = [
         'tgl_spk',
-        'nama_produk',
+        'id_produk',
         'jumlah_produk',
         'deadline',
         'id_penjahit',
@@ -35,8 +36,16 @@ class SpkCmt extends Model
         'harga_per_jasa',
         'waktu_pengerjaan_terakhir',
         'sisa_hari_terakhir',
+        'jenis_harga_jasa',
+        'harga_jasa_awal'
     ];
-   
+
+    public function produk()
+    {
+        return $this->belongsTo(Produk::class, 'id_produk', 'id');
+    }
+    
+
     public function getTotalHargaAttribute()
     {
         return $this->harga_per_barang * $this->jumlah_produk;
@@ -104,32 +113,30 @@ class SpkCmt extends Model
     
     public function getStatusWithColorAttribute()
     {
-        if (in_array($this->status, ['In Progress', 'Pending'])) {
-            $waktuPengerjaan = $this->waktu_pengerjaan; // Ambil waktu pengerjaan
+       
+        $sisaHari = $this->sisa_hari ?? 0;
     
-            if ($waktuPengerjaan <= 7) {
-                return [
-                    'status' => $this->status,
-                    'color' => 'red', // Minggu pertama
-                ];
-            } elseif ($waktuPengerjaan > 7 && $waktuPengerjaan <= 14) {
-                return [
-                    'status' => $this->status,
-                    'color' => 'blue', // Minggu kedua
-                ];
-            } else {
-                return [
-                    'status' => $this->status,
-                    'color' => 'green', // Di luar minggu kedua
-                ];
-            }
+        if (in_array($this->status, ['In Progress', 'Pending'])) {
+           
+            $color = match (true) {
+                $sisaHari >= 14 => 'green',
+                $sisaHari >= 7 => 'yellow',
+                default => 'red',
+            };
+    
+            return [
+                'status' => $this->status,
+                'color' => $color,
+            ];
         }
     
+       
         return [
             'status' => $this->status,
-            'color' => 'gray', // Default untuk status lain
+            'color' => 'gray',
         ];
     }
+    
     
     // Di model SpkCmt
     public function getTotalBarangDikirimAttribute()

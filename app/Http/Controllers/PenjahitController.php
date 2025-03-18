@@ -23,20 +23,58 @@ class PenjahitController extends Controller
    // Menyimpan Penjahit baru
    public function store(Request $request)
    {
-       // Validasi input data
-       $validated = $request->validate([
-           'nama_penjahit' => 'required|string|max:100',
-           'kontak' => 'required|string|max:100',
-           'alamat' => 'required|string',
-       ]);
+       \Log::info('🔵 Menerima request POST', ['data' => $request->all()]);
+       if ($request->has('mesin') && is_string($request->mesin)) {
+        $request->merge(['mesin' => json_decode($request->mesin, true)]);
+    }
+       try {
+           // Validasi input data
+           $validated = $request->validate([
+               'nama_penjahit' => 'required|string|max:100',
+               'kontak' => 'required|string|max:100',
+               'alamat' => 'required|string',
+               'ktp' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
+               'kategori_penjahit'  => 'required|string|max:100',
+               'jumlah_tim' => 'required|integer|min:1',
+               'no_rekening' => 'required|string|max:50', // Gunakan string, bukan integer
+               'bank' => 'required|string|max:100',
+               'mesin' => 'nullable|array',
+               'mesin.*.nama' => 'required|string',
+               'mesin.*.jumlah' => 'required|integer|min:1',
+           ]);
+   
+           \Log::info('🟢 Validasi sukses', ['validated' => $validated]);
+   
+           // Jika ada gambar KTP, simpan ke storage
+           if ($request->hasFile('ktp')) {
+               $validated['ktp'] = $request->file('ktp')->store('ktp_penjahit', 'public'); // Simpan di storage/app/public/ktp_penjahit
+               \Log::info('📸 KTP berhasil disimpan', ['path' => $validated['ktp']]);
+           }
+          
+   
+           // Simpan data dengan mesin sebagai JSON
+           $penjahit = Penjahit::create([
+               'nama_penjahit' => $validated['nama_penjahit'],
+               'kontak' => $validated['kontak'],
+               'alamat' => $validated['alamat'],
+               'ktp' => $validated['ktp'] ?? null,
+               'kategori_penjahit' => $validated['kategori_penjahit'],
+               'jumlah_tim' => $validated['jumlah_tim'],
+               'no_rekening' => $validated['no_rekening'],
+               'bank' => $validated['bank'],
+               'mesin' => $validated['mesin'], // Laravel akan otomatis meng-cast ke JSON
 
-       // Membuat penjahit baru
-       $penjahit = Penjahit::create($validated);
-
-       // Mengembalikan response dengan data penjahit yang baru
-       return response()->json($penjahit, 201);
+        ]);
+   
+           \Log::info('✅ Data berhasil disimpan', ['penjahit' => $penjahit]);
+   
+           return response()->json($penjahit, 201);
+       } catch (\Exception $e) {
+           \Log::error('❌ Error saat menyimpan penjahit', ['message' => $e->getMessage()]);
+           return response()->json(['error' => 'Terjadi kesalahan'], 500);
+       }
    }
-
+   
 
     // Menampilkan penjahit berdasarkan ID
     public function show($id)
@@ -54,20 +92,41 @@ class PenjahitController extends Controller
 
     // Memperbarui penjahit yang sudah ada
     public function update(Request $request, $id) {
-        $data = $request->all(); 
-    $validated = $request->validate([
-        'nama_penjahit' => 'required|string|max:100',
-        'kontak' => 'required|string|max:100',
-        'alamat' => 'required|string',
-    ]);
-
-    \Log::debug("Validated Data: ", $validated);
-
-    // Melanjutkan logika update
-    $penjahit = Penjahit::findOrFail($id);
-    $penjahit->update($validated);
-
-    return response()->json(['message' => 'Penjahit berhasil diperbarui!', 'data' => $penjahit]);
-}
-
+        \Log::info('🔄 Menerima request PUT/PATCH', ['id' => $id, 'data' => $request->all()]);
+        
+        if ($request->has('mesin') && is_string($request->mesin)) {
+            $request->merge(['mesin' => json_decode($request->mesin, true)]);
+        }
+        
+        try {
+            $validated = $request->validate([
+                'nama_penjahit' => 'required|string|max:100',
+                'kontak' => 'required|string|max:100',
+                'alamat' => 'required|string',
+                'ktp' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
+                'kategori_penjahit' => 'required|string|max:100',
+                'jumlah_tim' => 'required|integer|min:1',
+                'no_rekening' => 'required|string|max:50',
+                'bank' => 'required|string|max:100',
+                'mesin' => 'nullable|array',
+                'mesin.*.nama' => 'required|string',
+                'mesin.*.jumlah' => 'required|integer|min:1',
+            ]);
+    
+            $penjahit = Penjahit::findOrFail($id);
+    
+            if ($request->hasFile('ktp')) {
+                $validated['ktp'] = $request->file('ktp')->store('ktp_penjahit', 'public');
+                \Log::info('📸 KTP berhasil diperbarui', ['path' => $validated['ktp']]);
+            }
+    
+            $penjahit->update($validated);
+            \Log::info('✅ Data berhasil diperbarui', ['penjahit' => $penjahit]);
+    
+            return response()->json(['message' => 'Penjahit berhasil diperbarui!', 'data' => $penjahit]);
+        } catch (\Exception $e) {
+            \Log::error('❌ Error saat memperbarui penjahit', ['message' => $e->getMessage()]);
+            return response()->json(['error' => 'Terjadi kesalahan'], 500);
+        }
+    }
 }

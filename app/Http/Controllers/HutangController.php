@@ -6,29 +6,32 @@ namespace App\Http\Controllers;
 use App\Models\Hutang;
 use App\Models\Penjahit;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class HutangController extends Controller
 {
     
     public function index(Request $request)
-    {
-        // Ambil parameter query dari request
-        $penjahitId = $request->query('penjahit');
-    
-      
-        $query = Hutang::query();
-    
-        // Tambahkan kondisi filter jika ada parameter `penjahit`
-        if (!empty($penjahitId)) {
-            $query->where('id_penjahit', $penjahitId);
-        }
-    
-        // Eksekusi query dan dapatkan data
-        $hutangs = $query->orderBy('created_at', 'desc')->paginate(11); // Default pagination 10 data
-   
-    
-        return response()->json($hutangs);
+{
+    $penjahitId = $request->query('penjahit');
+    $query = Hutang::with('penjahit')->withSum('logPembayaran', 'jumlah_dibayar');
+
+    if (!empty($penjahitId)) {
+        $query->where('id_penjahit', $penjahitId);
     }
+
+    $hutangs = $query->orderBy('created_at', 'desc')->paginate(11);
+
+    // Tambahkan sisa hutang ke setiap item
+    $hutangs->getCollection()->transform(function ($hutang) {
+        $totalDibayar = $hutang->log_pembayaran_sum_jumlah_dibayar ?? 0; // Gunakan nilai default 0 jika null
+        $hutang->sisa_hutang = $hutang->jumlah_hutang - $totalDibayar;
+        return $hutang;
+    });
+
+    return response()->json($hutangs);
+}
+
     
 
     public function create()
@@ -50,6 +53,7 @@ class HutangController extends Controller
             'status_pembayaran' => 'required|in:belum lunas,lunas,dibayar sebagian',
             'tanggal_jatuh_tempo' => 'required|date',
             'tanggal_hutang' => 'required|date',
+             'jenis_hutang' => ['required', Rule::in(array_keys(Hutang::getJenisHutangOptions()))],
         ]);
 
         // Menyimpan data Hutang

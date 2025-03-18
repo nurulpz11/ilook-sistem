@@ -71,12 +71,12 @@
         }
 
         img {
-            max-width: 160px;
+            width: 140px;
             height: 150px;
             display: block;
             margin: 10px 0;
             border-radius: 10px;
-            margin-left:60px;
+            margin-left:50px;
         }
 
         .details {
@@ -191,14 +191,14 @@
             vertical-align: top;
             text-align: left;
             color: #F4F6F7;
-            font-size: 12px;
+            font-size: 14px;
             font-family: 'Arial', sans-serif;
         }
 
         .header-table p {
             text-align: justify; /* Membuat teks lebih rapi jika multiline */
             line-height: 1.1; /* Menambah kenyamanan pembacaan */
-            font-size: 12px;
+            font-size: 14px;
         }
 
 
@@ -220,13 +220,14 @@
             <p><strong>Deadline &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; :</strong> {{ \Carbon\Carbon::parse($spk->deadline)->format('d M Y') }}</p>
             <p><strong>Tanggal Ambil &nbsp; :</strong> {{ \Carbon\Carbon::parse($spk->tanggal_ambil)->format('d M Y') }} </p>
         
-         <td></td>
-              
-                    @if($spk->gambar_produk)
-                        <img src="{{ public_path('storage/' . $spk->gambar_produk) }}" alt="Gambar Produk">
-                    @else
-                        N/A
-                    @endif
+         <td>
+         <td style="text-align: right; vertical-align: top;">
+            @if($spk->gambar_produk)
+                <img src="{{ public_path('storage/' . $spk->gambar_produk) }}" alt="Gambar Produk">
+            @else
+                <p>N/A</p>
+            @endif
+        </td>
                 
     </tr>
 </table>

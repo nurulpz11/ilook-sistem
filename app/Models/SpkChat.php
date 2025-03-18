@@ -20,5 +20,11 @@ class SpkChat extends Model
     {
         return $this->belongsTo(SpkCmt::class, 'id_spk', 'id_spk'); // Sesuaikan jika perlu
     }
+
+    public function readers()
+{
+    return $this->hasMany(ChatReader::class, 'chat_id', 'id');
+}
+
     
 }

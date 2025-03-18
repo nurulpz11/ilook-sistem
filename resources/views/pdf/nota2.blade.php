@@ -27,13 +27,20 @@
             font-size: 20px;
             color: #374151;
         }
-        .info {
-            margin-top: 16px;
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px; /* Beri jarak antar kolom */
         }
+
+        .info {
+            flex: 1; /* Membagi area jadi 2 kolom */
+        }
+
         .info p {
             font-size: 16px;
-            font-weight: bold;
         }
+
         .info span {
             font-weight: normal;
         }
@@ -78,11 +85,16 @@
             <h2>NOTA PENDAPATAN</h2>
             <p>11 Mei 2025</p>
         </div>
-
+        <div class="info-container">
         <div class="info">
             <p>Penjahit: <span>Paman Kusu</span></p>
             <p>Alamat: <span>Jl. Pekapuran</span></p>
         </div>
+        <div class="info">
+            <p>Penjahit: <span>Paman Kusu</span></p>
+            <p>Alamat: <span>Jl. Pekapuran</span></p>
+        </div>
+    </div>
 
         <table>
             <thead>

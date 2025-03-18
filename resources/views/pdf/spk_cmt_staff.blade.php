@@ -203,7 +203,7 @@
         .cutting-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 220px;
+            margin-top: 20px;
             font-size: 8px; 
             table-layout: auto;
         }
@@ -272,13 +272,14 @@
             <p><strong>Deadline &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; :</strong> {{ \Carbon\Carbon::parse($spk->deadline)->format('d M Y') }}</p>
             <p><strong>Tanggal Ambil &nbsp; :</strong> {{ \Carbon\Carbon::parse($spk->tanggal_ambil)->format('d M Y') }} </p>
         
-         <td></td>
-              
-                    @if($spk->gambar_produk)
-                        <img src="{{ public_path('storage/' . $spk->gambar_produk) }}" alt="Gambar Produk">
-                    @else
-                        N/A
-                    @endif
+            <td>
+         <td style="text-align: right; vertical-align: top;">
+            @if($spk->gambar_produk)
+                <img src="{{ public_path('storage/' . $spk->gambar_produk) }}" alt="Gambar Produk">
+            @else
+                <p>N/A</p>
+            @endif
+        </td>
                 
     </tr>
 </table>
