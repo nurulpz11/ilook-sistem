@@ -21,7 +21,7 @@ class AuthController extends Controller {
                 'name' => 'required|string',
                 'email' => 'required|string|email|unique:users',
                 'password' => 'required|string|min:6|confirmed',
-                'role' => 'required|in:owner,staff,supervisor,penjahit',
+                'role' => 'required|in:owner,staff,supervisor,penjahit,staff_bawah',
                 'id_penjahit' => 'nullable|exists:penjahit_cmt,id_penjahit',
                 'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
             ]);

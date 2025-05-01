@@ -72,7 +72,12 @@ class Pengiriman extends Model
     {
         return $this->belongsTo(SpkCmt::class, 'id_spk', 'id_spk');
     }
-
+    
+    public function pendapatan()
+    {
+        return $this->belongsToMany(Pendapatan::class, 'pengiriman_pendapatan', 'id_pengiriman', 'id_pendapatan');
+    }
+    
 
 
 }

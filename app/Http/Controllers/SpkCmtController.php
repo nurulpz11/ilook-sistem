@@ -13,6 +13,7 @@ use App\Models\Produk;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use PDF;
+use Illuminate\Support\Facades\DB;
 
 
 
@@ -31,6 +32,7 @@ class SpkCmtController extends Controller
     $sortBy = $request->query('sortBy', 'created_at'); 
     $sortOrder = $request->query('sortOrder', 'desc');
     $allData = $request->query('allData');
+    $sortColumn = $sortBy === 'sisa_hari' ? 'deadline' : $sortBy;
 
     // Query awal dengan relasi
     $query = SpkCmt::with(['warna', 'pengiriman', 'produk:id,nama_produk,kategori_produk,gambar_produk']);
@@ -44,10 +46,32 @@ class SpkCmtController extends Controller
           ->when($idPenjahit, fn($q) => $q->where('id_penjahit', $idPenjahit))
           ->when($idProduk, fn($q) => $q->where('id_produk', (int) $idProduk)) // Pastikan tipe data sesuai
           ->when($kategoriProduk, fn($q) => $q->whereHas('produk', fn($q) => $q->where('kategori_produk', $kategoriProduk))) // Filter kategori
-          ->orderBy($sortBy, $sortOrder);
+          ->orderBy($sortColumn, $sortOrder);
+
+          
+
 
     // Ambil data berdasarkan parameter allData
     $spk = $allData == 'true' ? $query->get() : $query->paginate(10);
+    $kategoriCount = SpkCmt::join('produk', 'spk_cmt.id_produk', '=', 'produk.id')
+    ->select(
+        'produk.kategori_produk',
+       DB::raw('COUNT(DISTINCT spk_cmt.id_produk) as total_produk')
+
+    )
+    ->when($idPenjahit, fn($q) => $q->where('spk_cmt.id_penjahit', $idPenjahit)) 
+    ->groupBy('produk.kategori_produk')
+    ->get();
+
+    
+// Ambil daftar produk yang kategori_produk-nya "urgent"
+$urgentProducts = SpkCmt::join('produk', 'spk_cmt.id_produk', '=', 'produk.id')
+    ->select('produk.nama_produk', 'produk.kategori_produk')
+    ->when($idPenjahit, fn($q) => $q->where('spk_cmt.id_penjahit', $idPenjahit))
+    ->where('produk.kategori_produk', 'urgent') // Filter hanya kategori "urgent"
+    ->distinct()
+    ->get();
+
 
     // Mapping data sebelum dikembalikan
     $spk->transform(function ($item) {
@@ -57,10 +81,15 @@ class SpkCmtController extends Controller
         $item->nama_produk = $item->produk->nama_produk ?? null;
         $item->kategori_produk = $item->produk->kategori_produk ?? null;
         $item->gambar_produk = $item->produk->gambar_produk ?? null;
+        $item->nama_penjahit = $item->penjahit->nama_penjahit ?? null;
         return $item;
     });
 
-    return response()->json($spk);
+   return response()->json([
+        'spk' => $spk,
+        'kategori_count' => $kategoriCount, // Tambahkan data jumlah kategori produk berdasarkan CMT
+        'urgent_products' => $urgentProducts,
+    ]);
 }
 
    
@@ -86,8 +115,7 @@ class SpkCmtController extends Controller
         'keterangan' => 'nullable|string',
         'tgl_spk' => 'required|date',
         'status' => 'required|string|in:Pending,In Progress,Completed',
-        'nomor_seri' => 'nullable|string',
-
+      
         'tanggal_ambil' => 'nullable|date',
         'catatan' => 'nullable|string',
         'markeran' => 'nullable|string',
@@ -168,7 +196,6 @@ class SpkCmtController extends Controller
         'keterangan' => 'nullable|string',
         'tgl_spk' => 'required|date',
         'status' => 'required|string|in:Pending,In Progress,Completed',
-        'nomor_seri' => 'nullable|string',
         'tanggal_ambil' => 'nullable|date',
         'catatan' => 'nullable|string',
         'markeran' => 'nullable|string',
@@ -640,52 +667,54 @@ public function getKategoriCountByPenjahit()
 
     return response()->json($kategoriCount);
 }
+
+
 public function getKemampuanCmt()
 {
-    $filterKategori = request()->input('kategori_sisa_produk'); // ✅ Fix: Menggunakan helper Laravel
-
+    $filterKategori = request()->input('kategori_sisa_produk');
     $filterKinerja = request()->input('kategori');
-    // Ambil semua penjahit dari tabel penjahit
+
+    // ✨ Tambahan untuk filter tanggal
+    $startDate = request()->input('start_date'); // contoh: '2025-04-01'
+    $endDate = request()->input('end_date');     // contoh: '2025-04-25'
+
     $penjahits = Penjahit::all();
-
-    // Ambil data kinerja untuk digabungkan
-    $kinerjaCmt = $this->getKinerjaCmt()->getData(true); 
-
-    // Array untuk menyimpan hasil per penjahit
+    $kinerjaCmt = $this->getKinerjaCmt()->getData(true);
     $result = [];
 
     foreach ($penjahits as $penjahit) {
         if (empty($penjahit->nama_penjahit)) {
             continue;
         }
-   // Ambil semua SPK dari penjahit ini
-   $spks = SpkCmt::where('id_penjahit', $penjahit->id_penjahit)
-   ->select('id_spk', 'jumlah_produk')
-   ->get();
 
-// Hitung total sisa produk
-$totalSisaProduk = 0;
+        $spks = SpkCmt::where('id_penjahit', $penjahit->id_penjahit)
+            ->select('id_spk', 'jumlah_produk')
+            ->get();
 
-foreach ($spks as $spk) {
-   // Ambil pengiriman terakhir untuk SPK ini
-   $latestPengiriman = Pengiriman::where('id_spk', $spk->id_spk)
-       ->latest('tanggal_pengiriman')
-       ->first();
+        $totalSisaProduk = 0;
+        foreach ($spks as $spk) {
+            $latestPengiriman = Pengiriman::where('id_spk', $spk->id_spk)
+                ->latest('tanggal_pengiriman')
+                ->first();
 
-   // Jika ada pengiriman, ambil nilai sisa_barang terakhir
-   if ($latestPengiriman) {
-       $totalSisaProduk += $latestPengiriman->sisa_barang;
-   } else {
-       // Jika belum ada pengiriman, pakai total_barang dari SPK
-       $totalSisaProduk += $spk->jumlah_produk;
-   }
-}
+            if ($latestPengiriman) {
+                $totalSisaProduk += $latestPengiriman->sisa_barang;
+            } else {
+                $totalSisaProduk += $spk->jumlah_produk;
+            }
+        }
 
-        $pengiriman = Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
+        // ✨ Ini bagian penting: Query pengiriman dengan filter tanggal
+        $pengirimanQuery = Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
             ->where('spk_cmt.id_penjahit', $penjahit->id_penjahit)
             ->select('pengiriman.id_spk', 'pengiriman.total_barang_dikirim', 'pengiriman.tanggal_pengiriman')
-            ->orderBy('pengiriman.tanggal_pengiriman')
-            ->get();
+            ->orderBy('pengiriman.tanggal_pengiriman');
+
+        if (!empty($startDate) && !empty($endDate)) {
+            $pengirimanQuery->whereBetween('pengiriman.tanggal_pengiriman', [$startDate, $endDate]);
+        }
+
+        $pengiriman = $pengirimanQuery->get();
 
         $totalSpk = $pengiriman->unique('id_spk')->count();
         $pengirimanPerMinggu = $pengiriman->groupBy(function ($item) {
@@ -695,6 +724,8 @@ foreach ($spks as $spk) {
         $jumlahMinggu = $pengirimanPerMinggu->count();
         $totalBarang = $pengiriman->sum('total_barang_dikirim');
         $rataRataPerminggu = $jumlahMinggu > 0 ? $totalBarang / $jumlahMinggu : 0;
+
+        // (lanjutan kode kategori, result, dll tetap sama seperti punyamu...)
 
         $kemampuanPerMinggu = $pengirimanPerMinggu->map(function ($items, $minggu) {
             return [
@@ -708,14 +739,13 @@ foreach ($spks as $spk) {
             ];
         })->values();
 
-        // Ambil data kinerja jika ada
         $rataRata = $kinerjaCmt[$penjahit->nama_penjahit]['rata_rata'] ?? null;
         $kategori = $kinerjaCmt[$penjahit->nama_penjahit]['kategori'] ?? null;
         $spks = $kinerjaCmt[$penjahit->nama_penjahit]['spks'] ?? [];
 
-        $kategoriSisaProduk = "Normal"; // Default
+        $kategoriSisaProduk = "Normal";
         if ($rataRataPerminggu == 0) {
-            $kategoriSisaProduk = "-"; // Jika rata-rata 0, anggap Normal
+            $kategoriSisaProduk = "-";
         } elseif ($totalSisaProduk > 2 * $rataRataPerminggu) {
             $kategoriSisaProduk = "Overload";
         } elseif ($totalSisaProduk >= $rataRataPerminggu && $totalSisaProduk <= 2 * $rataRataPerminggu) {
@@ -726,20 +756,18 @@ foreach ($spks as $spk) {
         if (empty($kategori)) {
             $kategori = "-";
         }
-        
+
         if (!empty($filterKategori)) {
             if (strcasecmp($kategoriSisaProduk, $filterKategori) !== 0) {
-                continue; // Skip jika kategori tidak sesuai
+                continue;
             }
         }
-        
+
         if (!empty($filterKinerja)) {
             if (strcasecmp($kategori, $filterKinerja) !== 0) {
-                continue; // Skip jika kategori kinerja tidak sesuai
-            
+                continue;
             }
         }
-        
 
         $result[$penjahit->nama_penjahit] = [
             'total_barang' => $totalBarang,
@@ -748,17 +776,15 @@ foreach ($spks as $spk) {
             'total_spk' => $totalSpk,
             'total_sisa_produk' => $totalSisaProduk,
             'kategori_sisa_produk' => $kategoriSisaProduk,
-            'rata_rata' => $rataRata, // Tambahkan nilai rata-rata dari kinerja
-            'kategori' => $kategori, // Tambahkan kategori dari kinerja
+            'rata_rata' => $rataRata,
+            'kategori' => $kategori,
             'kemampuan_per_minggu' => $kemampuanPerMinggu,
             'spks' => $spks,
-           
         ];
     }
 
     return response()->json($result);
 }
-
 
 
 

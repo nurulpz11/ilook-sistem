@@ -20,9 +20,11 @@ class Pendapatan extends Model
         'total_refund_claim',
         'total_cashbon',
         'total_hutang',
+        'potongan_aksesoris',
         'handtag',
         'transportasi',
         'total_transfer',
+        'status_pembayaran'
     ];
 
     // Relasi ke Penjahit
@@ -34,7 +36,7 @@ class Pendapatan extends Model
 
     public function pengiriman()
     {
-        return $this->hasMany(Pengiriman::class, 'id_penjahit', 'id_penjahit');
+        return $this->belongsToMany(Pengiriman::class, 'pengiriman_pendapatan', 'id_pendapatan', 'id_pengiriman');
     }
-
+    
 }

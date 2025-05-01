@@ -156,6 +156,7 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
         'PDF' => Barryvdh\Snappy\Facades\SnappyPdf::class,
+        'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
     ],
 
 ];

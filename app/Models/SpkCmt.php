@@ -23,7 +23,6 @@ class SpkCmt extends Model
         'id_penjahit',
         'keterangan',
         'status',
-        'nomor_seri', 
         'gambar_produk', 
         'tanggal_ambil', 
         'catatan', 

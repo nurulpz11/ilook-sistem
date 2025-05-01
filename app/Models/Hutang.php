@@ -15,9 +15,11 @@ class Hutang extends Model
         'id_penjahit',
         'jumlah_hutang',
         'status_pembayaran',
-        'tanggal_jatuh_tempo',
         'tanggal_hutang',
         'jenis_hutang',
+        'potongan_per_minggu',
+        'is_potongan_persen', 
+        'persentase_potongan',
     ];
 
     const JENIS_HUTANG = [
@@ -40,5 +42,11 @@ class Hutang extends Model
     {
         return $this->hasMany(LogPembayaranHutang::class, 'id_hutang');
     }
+
+    public function history()
+    {
+        return $this->hasMany(HistoryHutang::class, 'id_hutang', 'id_hutang');
+    }
+
 
 }

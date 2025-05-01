@@ -37,4 +37,22 @@ class Penjahit extends Model
         return $this->hasOne(User::class, 'id_penjahit', 'id_penjahit');
     }
 
+    
+    public function getPendapatanMingguIni()
+    {
+        $periodeAwal = now()->startOfWeek();
+        $periodeAkhir = now()->endOfWeek();
+
+        return Pengiriman::join('spk_cmt', 'pengiriman.id_spk', '=', 'spk_cmt.id_spk')
+            ->where('spk_cmt.id_penjahit', $this->id_penjahit)
+            ->whereBetween('pengiriman.tanggal_pengiriman', [$periodeAwal, $periodeAkhir])
+            ->selectRaw('
+                SUM(pengiriman.total_bayar) as total_pendapatan,
+                SUM(pengiriman.claim) as total_claim,
+                SUM(pengiriman.refund_claim) as total_refund_claim
+            ')
+            ->first();
+    }
+
+
 }

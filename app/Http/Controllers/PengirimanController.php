@@ -20,20 +20,21 @@ class PengirimanController extends Controller
         $sortOrder = $request->query('sortOrder', 'desc');
         $allData = $request->query('allData');
         $namaProduk = $request->query('nama_produk');
+        $statusVerifikasi = $request->query('status_verifikasi');
 
         // Query utama dengan relasi yang benar
-     $query = Pengiriman::with([
-    'warna',
-    'spk' => function ($q) {
-        $q->select('id_spk', 'tgl_spk', 'jumlah_produk', 'total_harga', 'deadline', 'id_penjahit', 'id_produk');
-    },
-    'spk.penjahit' => function ($q) {
-        $q->select('id_penjahit', 'nama_penjahit');
-    },
-    'spk.produk' => function ($q) {
-        $q->select('id', 'nama_produk', 'kategori_produk');
-    }
-]);
+        $query = Pengiriman::with([
+        'warna',
+        'spk' => function ($q) {
+            $q->select('id_spk', 'tgl_spk', 'jumlah_produk', 'total_harga', 'deadline', 'id_penjahit', 'id_produk');
+        },
+        'spk.penjahit' => function ($q) {
+            $q->select('id_penjahit', 'nama_penjahit');
+        },
+        'spk.produk' => function ($q) {
+            $q->select('id', 'nama_produk', 'kategori_produk');
+        }
+    ]);
 
     
         // Filter berdasarkan id_penjahit
@@ -50,7 +51,13 @@ class PengirimanController extends Controller
             });
         });
         
-        $query->orderBy($sortBy, $sortOrder);
+        
+        $query->when($statusVerifikasi, function ($q) use ($statusVerifikasi) {
+            $q->where('status_verifikasi', $statusVerifikasi);
+        });
+        
+
+         $query->orderBy($sortBy, $sortOrder);
         
 
     
@@ -81,7 +88,7 @@ class PengirimanController extends Controller
                 'id_pengiriman' => $pengiriman->id_pengiriman,
                 'id_spk' => $pengiriman->id_spk,
                 'tanggal_pengiriman' => $pengiriman->tanggal_pengiriman,
-                'total_barang_dikirim' => $pengiriman->warna->sum('jumlah_dikirim'),
+                'total_barang_dikirim' => $pengiriman->total_barang_dikirim,
                 'sisa_barang' => $pengiriman->sisa_barang,
                 'total_bayar' => $pengiriman->total_bayar,
                 'status_verifikasi' => $pengiriman->status_verifikasi,
@@ -91,7 +98,8 @@ class PengirimanController extends Controller
                 'nama_produk' => $pengiriman->spk->produk->nama_produk ?? null,
                 'kategori_produk' => $pengiriman->spk->produk->kategori_produk ?? null,
                 'nama_penjahit' => $pengiriman->spk->penjahit->nama_penjahit ?? null,
-                
+                'id_penjahit' => $pengiriman->spk->penjahit->id_penjahit ?? null,
+                'status_verifikasi' =>  $pengiriman->status_verifikasi,
                 'warna' => $pengiriman->warna->map(function ($warna) {
                     return [
                         'warna' => $warna->warna,
@@ -107,126 +115,6 @@ class PengirimanController extends Controller
     }
     
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'id_spk' => 'required|exists:spk_cmt,id_spk',
-            'tanggal_pengiriman' => 'required|date',
-            'warna' => 'required|array',
-            'warna.*.warna' => 'required|string|max:50',
-            'warna.*.jumlah_dikirim' => 'required|integer|min:0',
-            'foto_nota' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Validasi foto
-            'status_verifikasi' => 'nullable|string|in:pending,valid,invalid', // Validasi status
-        ]);
-    
-        // Ambil data SPK
-        $spk = SpkCmt::findOrFail($validated['id_spk']);
-        
-        // Ambil stok awal dari tabel warna
-        $warnaSpk = Warna::where('id_spk', $validated['id_spk'])->get();
-    
-        // Hitung jumlah barang yang sudah dikirim per warna
-        $pengirimanSebelumnya = PengirimanWarna::whereHas('pengiriman', function ($query) use ($validated) {
-            $query->where('id_spk', $validated['id_spk']);
-        })->get();
-    
-        $sudahDikirimPerWarna = $pengirimanSebelumnya->groupBy('warna')->map(function ($group) {
-            return $group->sum('jumlah_dikirim');
-        });
-    
-        $sisaBarangPerWarna = [];
-        $totalClaim = 0;
-        $totalRefundClaim = 0;
-    
-        foreach ($validated['warna'] as $warnaInput) {
-            $warnaSpkItem = $warnaInput['warna'];
-            $jumlahDikirim = $warnaInput['jumlah_dikirim'];
-    
-            $warnaData = $warnaSpk->where('nama_warna', $warnaSpkItem)->first();
-            if (!$warnaData) {
-                return response()->json(['error' => "Warna $warnaSpkItem tidak ditemukan untuk SPK ini"], 400);
-            }
-    
-            $stokAwal = $warnaData->qty;
-            $totalSudahDikirim = $sudahDikirimPerWarna[$warnaSpkItem] ?? 0;
-            $sisaBarang = $stokAwal - $totalSudahDikirim;
-    
-            if ($jumlahDikirim > $sisaBarang) {
-                return response()->json([
-                    'error' => "Jumlah barang dikirim untuk warna $warnaSpkItem melebihi sisa yang tersedia. Sisa: $sisaBarang pcs"
-                ], 400);
-            }
-    
-            $sisaBarangPerWarna[$warnaSpkItem] = $sisaBarang - $jumlahDikirim;
-        }
-    
-        // Hitung total barang dikirim
-        $totalBarangDikirim = collect($validated['warna'])->sum('jumlah_dikirim');
-    
-        // Hitung total bayar berdasarkan harga per jasa
-        $totalBayar = $totalBarangDikirim * $spk->harga_per_jasa;
-    
-        // Hitung claim
-        $claim = 0;
-        if (array_sum($sisaBarangPerWarna) > 0) {
-            $claim = array_sum($sisaBarangPerWarna) * $spk->harga_per_barang;
-            $totalClaim += $claim;
-        }
-    
-        // Hitung refund claim berdasarkan pengiriman sebelumnya
-        $refundClaim = Pengiriman::where('id_spk', $validated['id_spk'])
-            ->latest()
-            ->value('claim') ?? 0;
-        $totalRefundClaim += $refundClaim;
-    
-        // **Proses Upload Foto Nota**
-        $fotoNotaPath = null;
-        if ($request->hasFile('foto_nota')) {
-            $fotoNotaPath = $request->file('foto_nota')->store('nota_pengiriman', 'public');
-        }
-    
-        // **Simpan data pengiriman**
-        $pengiriman = Pengiriman::create([
-            'id_spk' => $validated['id_spk'],
-            'tanggal_pengiriman' => $validated['tanggal_pengiriman'],
-            'total_barang_dikirim' => $totalBarangDikirim,
-            'sisa_barang' => array_sum($sisaBarangPerWarna),
-            'total_bayar' => $totalBayar,
-            'claim' => $totalClaim,
-            'refund_claim' => $totalRefundClaim,
-            'foto_nota' => $fotoNotaPath, // Simpan path foto nota
-            'status_verifikasi' => $validated['status_verifikasi'] ?? 'pending', // Default pending
-        ]);
-    
-        // **Simpan detail pengiriman_warna**
-        foreach ($validated['warna'] as $warna) {
-            PengirimanWarna::create([
-                'id_pengiriman' => $pengiriman->id_pengiriman,
-                'warna' => $warna['warna'],
-                'jumlah_dikirim' => $warna['jumlah_dikirim'],
-                'sisa_barang_per_warna' => $sisaBarangPerWarna[$warna['warna']],
-            ]);
-        }
-    
-        // **Update SPK jika sisa barang 0**
-        if (array_sum($sisaBarangPerWarna) === 0) {
-            $spk->update([
-                'status' => 'Completed',
-                'waktu_pengerjaan_terakhir' => $spk->getWaktuPengerjaanAttribute(),
-                'sisa_hari_terakhir' => $spk->getSisaHariAttribute(),
-            ]);
-        }
-    
-        // **Respons dengan data terbaru**
-        return response()->json([
-            'message' => 'Pengiriman berhasil dibuat!',
-            'data' => array_merge($pengiriman->toArray(), [
-                'harga_per_barang' => $spk->harga_per_barang,
-                'sisa_barang_per_warna' => $sisaBarangPerWarna,
-                'warna' => $pengiriman->warna,
-            ]),
-        ], 201);
-    }
 
     public function storePetugasBawah(Request $request)
 {
@@ -246,29 +134,32 @@ class PengirimanController extends Controller
         $spk = SpkCmt::findOrFail($validated['id_spk']);
     $warnaSpk = Warna::where('id_spk', $validated['id_spk'])->get();
 
-    // Hitung total barang yang tersisa dalam SPK
-    $totalBarangSisa = $warnaSpk->sum('qty') - Pengiriman::where('id_spk', $validated['id_spk'])->sum('total_barang_dikirim');
+     // Hitung total barang yang tersisa dalam SPK sebelum pengiriman terbaru
+     $totalBarangSisaSebelumnya = $warnaSpk->sum('qty') - Pengiriman::where('id_spk', $validated['id_spk'])->sum('total_barang_dikirim');
 
-    if ($validated['total_barang_dikirim'] > $totalBarangSisa) {
-        return response()->json(['error' => 'Jumlah barang dikirim melebihi sisa produk yang tersedia.'], 400);
-    }
-
-        // Simpan data pengiriman dengan status 'pending' (menunggu input petugas atas)
-    $pengiriman = Pengiriman::create([
-        'id_spk' => $validated['id_spk'],
-        'tanggal_pengiriman' => $validated['tanggal_pengiriman'],
-        'total_barang_dikirim' => $validated['total_barang_dikirim'],
-        'foto_nota' => $fotoNotaPath,
-        'status_verifikasi' => 'pending', // Status default
-        'sisa_barang' => null,
-    ]);
-
-    return response()->json([
-        'message' => 'Pengiriman berhasil disimpan. Menunggu input dari petugas atas.',
-        'data' => $pengiriman,
-    ], 201);
-}
-
+     if ($validated['total_barang_dikirim'] > $totalBarangSisaSebelumnya) {
+         return response()->json(['error' => 'Jumlah barang dikirim melebihi sisa produk yang tersedia.'], 400);
+     }
+ 
+     // Hitung sisa barang setelah pengiriman terbaru
+     $sisaBarangSetelahPengiriman = $totalBarangSisaSebelumnya - $validated['total_barang_dikirim'];
+ 
+     // Simpan data pengiriman dengan status 'pending' (menunggu input petugas atas)
+     $pengiriman = Pengiriman::create([
+         'id_spk' => $validated['id_spk'],
+         'tanggal_pengiriman' => $validated['tanggal_pengiriman'],
+         'total_barang_dikirim' => $validated['total_barang_dikirim'],
+         'foto_nota' => $fotoNotaPath,
+         'status_verifikasi' => 'pending', // Status default
+         'sisa_barang' => $sisaBarangSetelahPengiriman, // Tambahkan sisa barang terbaru
+     ]);
+ 
+     return response()->json([
+         'message' => 'Pengiriman berhasil disimpan. Menunggu input dari petugas atas.',
+         'data' => $pengiriman,
+         'sisa_barang' => $sisaBarangSetelahPengiriman, // Kirim sisa barang terbaru dalam response
+     ], 201);
+ }
 
 
 public function updatePetugasAtas(Request $request, $id_pengiriman)

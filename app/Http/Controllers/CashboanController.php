@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cashboan;
 use App\Models\Penjahit;
 use Illuminate\Http\Request;
+use App\Models\HistoryCashboan;
 
 class CashboanController extends Controller
 {
@@ -61,6 +62,88 @@ class CashboanController extends Controller
         ], 201);
 
     }
+
+    public function tambahCashboan(Request $request)
+    {
+        $request->validate([
+            'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
+            'jumlah_cashboan' => 'required|numeric|min:0',
+            // Hapus validasi 'potongan_per_minggu' karena akan di-generate otomatis
+        ]);
+    
+        $jumlahCashboan = $request->jumlah_cashboan;
+    
+        $cashboan = Cashboan::create([
+            'id_penjahit' => $request->id_penjahit,
+            'jumlah_cashboan' => $jumlahCashboan,
+            'status_pembayaran' => 'belum lunas',
+            'tanggal_cashboan' => now(),
+            'potongan_per_minggu' => $jumlahCashboan, // samakan dengan jumlah_cashboan
+        ]);
+    
+        HistoryCashboan::create([
+            'id_cashboan' => $cashboan->id_cashboan,
+            'jenis_perubahan' => 'penambahan',
+            'tanggal_perubahan' => now(),
+            'jumlah_cashboan' => $cashboan->jumlah_cashboan,
+            'perubahan_cashboan' => $jumlahCashboan,
+        ]);
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Cashboan berhasil ditambahkan!',
+            'data' => $cashboan
+        ], 201);
+    }
+    
+
+    public function tambahCashboanLama(Request $request, $id_cashboan)
+{
+    $request->validate([
+        'perubahan_cashboan' => 'required|numeric|min:0', 
+    ]);
+
+    // Ambil cashboan yang sudah ada
+    $cashboan = Cashboan::findOrFail($id_cashboan);
+
+    // Update jumlah cashboan dengan nilai yang ditambahkan
+    $cashboan->jumlah_cashboan += $request->perubahan_cashboan;
+    $cashboan->save();
+
+    // Simpan perubahan ke history cashboan
+    HistoryCashboan::create([
+        'id_cashboan' => $cashboan->id_cashboan,
+        'jenis_perubahan' => 'penambahan', 
+        'tanggal_perubahan' => now(),
+        'jumlah_cashboan' => $cashboan->jumlah_cashboan, 
+        'perubahan_cashboan' => $request->perubahan_cashboan, 
+    ]);
+
+    return response()->json(['message' => 'Cashboan berhasil ditambahkan']);
+}
+
+public function getHistoryByCashboanId(Request $request, $id_cashboan)
+{
+    // Ambil parameter jenis_perubahan dari request
+    $jenisPerubahan = $request->query('jenis_perubahan');
+
+    // Query dasar
+    $query = HistoryCashboan::where('id_cashboan', $id_cashboan)->orderBy('tanggal_perubahan', 'desc');
+
+    // Jika ada filter jenis_perubahan, tambahkan ke query
+    if ($jenisPerubahan) {
+        $query->where('jenis_perubahan', $jenisPerubahan);
+    }
+
+    $history = $query->get();
+
+    if ($history->isEmpty()) {
+        return response()->json(['message' => 'History cashboantidak ditemukan'], 404);
+    }
+
+    return response()->json($history);
+}
+
 
     public function show($id)
     {

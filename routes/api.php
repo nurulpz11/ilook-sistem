@@ -13,11 +13,19 @@ use App\Http\Controllers\LogPembayaranCashbonController;
 use App\Http\Controllers\HutangController;
 use App\Http\Controllers\LogPembayaranHutangController;
 use App\Http\Controllers\PendapatanController;
+
 use App\Http\Controllers\SpkChatController;
 use App\Http\Controllers\SpkChatInvite;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProdukController;
+use App\Http\Controllers\AksesorisController;
+use App\Http\Controllers\PembelianAController;
+use App\Http\Controllers\PembelianBController;
+use App\Http\Controllers\StokAksesorisController;
+use App\Http\Controllers\PetugasCController;
+use App\Http\Controllers\PetugasDVerifController;
+
 
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
 Route::get('/spk-cmt/{id}/download-staff-pdf', [SpkCmtController::class, 'downloadStaffPdf'])->name('spk.downloadStaffPdf');
@@ -41,7 +49,7 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
 });
 
 
-    Route::middleware('role:super-admin|supervisor|staff|owner|penjahit')->group(function () {
+    Route::middleware('role:super-admin|supervisor|staff|owner|penjahit|staff_bawah')->group(function () {
 
         Route::apiResource('produk', ProdukController::class);
 
@@ -88,9 +96,16 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::resource('log-pembayaran-cashboan', LogPembayaranCashbonController::class);
         Route::post('/log-pembayaran-cashboan/{id_cashboan}', [LogPembayaranCashbonController::class, 'createLogPembayaran']);
         Route::get('/log-pembayaran-cashboan/{id_cashboan}', [LogPembayaranCashbonController::class, 'show']);
-
+        Route::post('/cashboan/tambah', [CashboanController::class, 'tambahCashboan']);
+        Route::post('/cashboan/tambah/{id_cashboan}', [CashboanController::class, 'tambahCashboanLama']);
+        Route::get('/cashboan/history/{id}', [CashboanController::class, 'getHistoryByCashboanId']);
 
         Route::resource('hutang', HutangController::class);
+        Route::post('/hutang/tambah', [HutangController::class, 'tambahHutang']);
+        Route::post('/hutang/tambah/{id_hutang}', [HutangController::class, 'tambahHutangLama']);
+        Route::get('/history/{id}', [HutangController::class, 'getHistoryByHutangId']);
+        Route::get('/hutang/{id_hutang}/hitung-potongan', [HutangController::class, 'hitungPotongan']);
+
         Route::resource('log-pembayaran-hutang', LogPembayaranHutangController::class);
         Route::post('/log-pembayaran-hutang/{id_hutang}', [LogPembayaranHutangController::class, 'createLogPembayaran']);
         Route::get('/log-pembayaran-hutang/{id_hutang}', [LogPembayaranHutangController::class, 'show']);
@@ -102,10 +117,32 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::get('pendapatan/{id}/pengiriman', [PendapatanController::class, 'showPengiriman']);
         Route::get('/pendapatan/{id}/download-nota', [PendapatanController::class, 'downloadNota']);
         Route::get('/penjahit-list', [PendapatanController::class, 'getPenjahitList']);
-        
+        Route::get('/pendapatan/mingguan', [PendapatanController::class, 'getPendapatanMingguIni']);
+        Route::post('/bayar-pendapatan', [PendapatanController::class, 'tambahPendapatan']);
+        Route::post('/simulasi-pendapatan', [PendapatanController::class, 'simulasiPendapatan']);
+
         Route::resource('laporancmt', LaporanCmtController::class);
       
-     
+        Route::apiResource('aksesoris', AksesorisController::class);
+
+        Route::get('/aksesoris/options', function() {
+            dd('Options route is working!');
+        });
+        
+
+
+
+        Route::apiResource('pembelian-aksesoris-a', PembelianAController::class);
+        Route::apiResource('pembelian-aksesoris-b', PembelianBController::class);
+         Route::get('/stok-aksesoris/pembelian-b/{id}', [StokAksesorisController::class, 'showByPembelianB']);      
+        Route::apiResource('petugas-c', PetugasCController::class);
+        Route::apiResource('verifikasi-aksesoris', PetugasDVerifController::class);
+        Route::apiResource('stok-aksesoris', StokAksesorisController::class);
+        Route::get('/barcode-download/{pembelianB}', [PembelianBController::class, 'downloadBarcodes'])->name('barcode.download');
+        Route::get('/detail-pesanan-aksesoris', [PetugasDVerifController::class, 'getDetailPesananAksesoris']);
+
+
+   
     });
 
    
