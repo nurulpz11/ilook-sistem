@@ -27,6 +27,15 @@ use App\Http\Controllers\PetugasCController;
 use App\Http\Controllers\PetugasDVerifController;
 
 
+Route::get('/spkcmt', [SpkCmtController::class, 'index']); 
+Route::get('/', function () {
+    return response()->json(['message' => 'API is working!']);
+});
+
+Route::get('/some-endpoint', function () {
+    return 'Hello, world!';
+});
+
 Route::get('/spk-cmt/{id}/download-pdf', [SpkCmtController::class, 'downloadPdf']);
 Route::get('/spk-cmt/{id}/download-staff-pdf', [SpkCmtController::class, 'downloadStaffPdf'])->name('spk.downloadStaffPdf');
 Route::post('/register', [AuthController::class, 'register']);
