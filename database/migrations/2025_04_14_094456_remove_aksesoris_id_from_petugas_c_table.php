@@ -15,9 +15,13 @@ class RemoveAksesorisIdFromPetugasCTable extends Migration
     {
         Schema::table('petugas_c', function (Blueprint $table) {
             $table->dropForeign(['aksesoris_id']);
+        });
+    
+        Schema::table('petugas_c', function (Blueprint $table) {
             $table->dropColumn('aksesoris_id');
         });
     }
+    
     
     public function down()
     {

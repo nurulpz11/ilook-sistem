@@ -6,15 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 class AddPotonganPerMingguToHutangTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
+    
     public function up()
     {
         Schema::table('hutang', function (Blueprint $table) {
-            $table->decimal('potongan_per_minggu', 15, 2)->nullable()->change();
+            $table->decimal('potongan_per_minggu', 15, 2)->nullable();
         });
     }
 

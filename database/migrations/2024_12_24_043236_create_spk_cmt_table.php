@@ -8,7 +8,7 @@ class CreateSpkCmtTable extends Migration
 {
     public function up()
     {
-        Schema::table('spk_cmt', function (Blueprint $table) {
+        Schema::create('spk_cmt', function (Blueprint $table) {
             $table->id('id_spk'); // Primary Key
             $table->date('tgl_spk'); // Tanggal SPK
             $table->string('nama_produk', 100); // Nama Produk
@@ -16,7 +16,7 @@ class CreateSpkCmtTable extends Migration
             $table->date('deadline'); // Deadline SPK
             $table->unsignedBigInteger('id_penjahit'); // Relasi ke tabel penjahit
             $table->text('keterangan')->nullable(); // Catatan Tambahan
-            $table->enum('status', ['Pending', 'In Progress', 'Completed'])->default('Pending')->change();
+            $table->string('status')->default('Pending');
             $table->timestamps(); // Created_at dan Updated_at
             $table->foreign('id_penjahit')->references('id_penjahit')->on('penjahit_cmt')->onDelete('cascade');
         });
@@ -24,8 +24,7 @@ class CreateSpkCmtTable extends Migration
 
     public function down()
     {
-        Schema::table('spk_cmt', function (Blueprint $table) {
-            $table->enum('status', ['In Progress', 'Completed'])->default('In Progress')->change();
-        });
+        Schema::dropIfExists('spk_cmt');
     }
+    
 }

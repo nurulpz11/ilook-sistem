@@ -10,7 +10,7 @@ class AddHargaJasaAwalToSpkCmt extends Migration
     public function up()
     {
         Schema::table('spk_cmt', function (Blueprint $table) {
-            $table->decimal('harga_jasa_awal', 10, 2)->nullable()->after('harga_per_jasa');
+            $table->decimal('harga_jasa_awal', 10, 2)->nullable();
         });
     }
 
