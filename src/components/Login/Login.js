@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css'; // Import file CSS
+import API from "../../api"; 
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -10,39 +11,28 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:8000/api/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ email, password })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json(); // Ambil pesan error dari backend
-                throw new Error(errorData.message || "Login gagal, periksa kembali email dan password!");
-            }
-
-            const data = await response.json();
+            const response = await API.post("/login", { email, password });
+    
+            const data = response.data;
             console.log("Data dari API:", data);
-
+    
             // Simpan token dan role
             localStorage.setItem('token', data.token);
             localStorage.setItem('userId', data.user.id);
             localStorage.setItem('role', data.user.role);
-
+            localStorage.setItem('foto', data.user.foto);
+    
             console.log("Role dari LocalStorage setelah disimpan:", localStorage.getItem("role"));
-
+    
             // Arahkan ke halaman Home setelah login berhasil
             navigate('/home');
-
+    
         } catch (error) {
-            console.error("Error login:", error.message);
-
-            // Tampilkan pesan error di alert
-            alert("Login Gagal: " + error.message);
+            console.error("Error login:", error.response?.data?.message || error.message);
+            alert("Login Gagal: " + (error.response?.data?.message || error.message));
         }
     };
+    
 
     return (
         <div className="login-container">

@@ -10,7 +10,7 @@ body {
   justify-content: space-between; /* Pisahkan elemen ke kiri dan kanan */
   align-items: center; /* Ratakan elemen secara vertikal */
   padding: 20px 20px;
-width:100%;
+  width:100%;
   border-radius: 10px;
   border-bottom: 1px solid #e9ecef;
   margin-top: 10px;
@@ -20,16 +20,29 @@ width:100%;
 .dashboard-header {
   text-align: center;
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .dashboard-title {
   font-size: 2.5rem;
   font-weight: 530;
   color: #426372;
-  margin-bottom: 10px;
-  text-align: left;
+  margin: 0;
+}
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px; 
 }
 
+.user-profile img {
+  width: 37px;  
+  height: 37px;
+  border-radius: 50%; 
+  object-fit: cover; 
+  border: 2px solid #426372; 
+}
 .dashboard-subtitle {
   font-size: 1rem;
   color: #555;
@@ -45,27 +58,47 @@ width:100%;
   display: flex;
   flex-wrap: wrap; /* Agar kartu beralih ke baris baru jika tidak cukup ruang */
   gap: 30px;
+  height:200px;
+  width: 55%;
+  max-width: 100%;
+  background: #ffffff;
+  justify-content: center; /* Posisi horizontal di tengah */
+  align-items: center;
+  padding: 0 20px;
+  border-radius: 15px;
 }
-
 .card {
-  background: #fff;
+  background: #f9f9f9;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  width: 380px;
+  padding: 15px;
+  width: 250px;
+  height: 130px;
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 10px;
   transition: transform 0.3s;
 }
 
+.card2{
+  background: #f3f7f8;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  width: 400px;
+  height: 430px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.3s;
+}
 .card:hover {
   transform: translateY(-5px);
 }
 
 .card-icon {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 10%;
   display: flex;
   align-items: center;
@@ -87,7 +120,7 @@ width:100%;
 .charts-wrapper {
   flex-wrap: wrap;
   display: flex;
-  gap: 35px; /* Jarak antara donut chart dan pie chart */
+  gap: 20px; /* Jarak antara donut chart dan pie chart */
   justify-content: flex-start; /* Pusatkan elemen secara horizontal */
   align-items: flex-start; /* Pastikan elemen sejajar di bagian atas */
   margin-top: 20px; /* Tambahkan margin untuk jarak dari elemen lain */
@@ -112,7 +145,14 @@ width:100%;
 
 }
 
-
+.card-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: #414040;
+  margin-bottom: 10px;
+  margin-top: 10px;
+ 
+}
 .chart-title {
   font-size: 1.5rem;
   font-weight: bold;
@@ -183,3 +223,77 @@ width:100%;
     height: 160px;
   }
 }
+
+
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+
+  gap: 20px !important;
+  margin-top: 10px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  width: 100%; /* Atur sesuai kebutuhan, bisa max-width juga */
+  max-width: 600px;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.stat-header i {
+  font-size: 24px;
+  color: #4a90e2;
+}
+
+.stat-card.urgent i {
+  color: #e74c3c;
+}
+
+.stat-header h3 {
+  font-size: 18px;
+  color: #333;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  color: #555;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.stat-card.urgent .stat-item {
+  background: #ffe6e6;
+  color: #e74c3c;
+}
+
+.empty-text {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+}
+
+

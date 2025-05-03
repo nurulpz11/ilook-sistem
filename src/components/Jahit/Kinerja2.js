@@ -1,58 +1,59 @@
 import React, { useEffect, useState } from "react";
 import { FaInfoCircle,  FaTasks, FaChartLine } from 'react-icons/fa';
 import "./Penjahit.css";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate  } from "react-router-dom";
 import API from "../../api"; 
+
 
 const KemampuanCmt = () => {
     const [kemampuanCmt, setKemampuanCmt] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedPenjahit, setSelectedPenjahit] = useState(null);
     const [kemampuanDetails, setKemampuanDetails] = useState([]);
-   
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [modalData, setModalData] = useState([]); // Untuk menyimpan data modal
     const [modalType, setModalType] = useState(""); 
     const [showModal, setShowModal] = useState(false);
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
     const location = useLocation();
-    const queryParams = new URLSearchParams(location.search);
-    const filterCategory = queryParams.get("filter");
+    const navigate = useNavigate();
+    
+    const searchParams = new URLSearchParams(location.search);
+    const filterKategori = searchParams.get("filter");  
+    const filterKinerja = searchParams.get("kinerja");
 
+    const [selectedKategori, setSelectedKategori] = useState(filterKategori || ""); 
+    const [selectedKinerja, setSelectedKinerja] = useState(filterKinerja || "");  
+
+    const fetchKemampuanCmt = async () => {
+        try {
+            setLoading(true);
+    
+            const response = await API.get(`/kemampuan-cmt`, {
+                params: { 
+                    kategori_sisa_produk: selectedKategori,
+                    kategori: selectedKinerja,
+                    start_date: startDate,
+                    end_date: endDate
+                },
+            });
+    
+            setKemampuanCmt(response.data || {});
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
     useEffect(() => {
-        const fetchKemampuanCmt = async () => {
-            try {
-                setLoading(true);
-                const token = localStorage.getItem("token"); 
-                if (!token) {
-                    setError("Token tidak ditemukan. Silakan login kembali.");
-                    setLoading(false);
-                    return;
-                }
-
-                const response = await fetch("http://localhost:8000/api/kemampuan-cmt", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Gagal mengambil data");
-                }
-                const data = await response.json();
-                setKemampuanCmt(data);
-            } catch (error) {
-                setError(error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchKemampuanCmt();
-    }, []);
+    }, [selectedKategori, selectedKinerja]);
+    
+    
 
     const filteredData = Object.keys(kemampuanCmt).filter((nama) =>
         nama.toLowerCase().includes(searchTerm.toLowerCase())
@@ -92,31 +93,91 @@ const KemampuanCmt = () => {
         
       };
 
+      const handleFilterChange = (e) => {
+        const value = e.target.value;
+        setSelectedKategori(value);
+    
+        if (value) {
+            navigate(`?filter=${value}`); // Update URL dengan filter yang dipilih
+        } else {
+            navigate(location.pathname); // Hapus filter di URL
+        }
+    };  
+    const handleKinerjaChange = (e) => {
+        const value = e.target.value;
+        setSelectedKinerja(value);
+    
+        if (value) {
+            navigate(`?filter=${selectedKategori}&kinerja=${value}`); // Update URL dengan kedua filter
+        } else {
+            navigate(`?filter=${selectedKategori}`); // Hapus filter kinerja jika kosong
+        }
+    };
+    
+
     return (
         <div>
-            <div className="penjahit-container">
-                <h1>Kemampuan CMT</h1>
+           <div className="penjahit-container">
+             <h1>Kemampuan CMT</h1>
             </div>
             <div className="table-container">
-                <div className="filter-header">
-                    <div className="search-bar">
-                        <input
-                            type="text"
-                            placeholder="Cari nama penjahit..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
+            <div className="filter-container">
+  <div className="filter-group">
+    <select value={selectedKategori} onChange={handleFilterChange} className="filter-select">
+      <option value="">Kategori (All)</option>
+      <option value="Overload">Overload</option>
+      <option value="Underload">Underload</option>
+      <option value="Normal">Normal</option>
+    </select>
+
+    <select value={selectedKinerja} onChange={handleKinerjaChange} className="filter-select">
+      <option value="">Kinerja (All)</option>
+      <option value="A">Kategori A</option>
+      <option value="B">Kategori B</option>
+      <option value="C">Kategori C</option>
+      <option value="D">Kategori D</option>
+    </select>
+  </div>
+
+  <div className="date-group">
+    <div className="date-field">
+      <label>Start Date</label>
+      <input 
+        type="date" 
+        value={startDate} 
+        onChange={(e) => setStartDate(e.target.value)} 
+        className="date-input"
+      />
+    </div>
+
+    <div className="date-field">
+      <label>End Date</label>
+      <input 
+        type="date" 
+        value={endDate} 
+        onChange={(e) => setEndDate(e.target.value)} 
+        className="date-input"
+      />
+    </div>
+
+    <button 
+      onClick={() => fetchKemampuanCmt()} 
+      className="btn-apply-filter"
+    >
+      Apply Filter
+    </button>
+  </div>
+</div>
+
                 <table className="penjahit-table">
                     <thead>
                         <tr>
                             <th>Nama CMT</th>
-                           
                             <th>Rata-rata /Minggu</th>
                             <th>Produk Belum dikirim</th>
                             <th>Total SPK</th>
-                            <th>Nilai Kinerja /100</th>
+                            <th>kategori sisa produk</th>
+                            <th>Kategori</th>
                             <th>Aksi</th>
                           
                           
@@ -129,18 +190,18 @@ const KemampuanCmt = () => {
                                 <tr key={namaPenjahit}>
                                     <td>{namaPenjahit}</td>     
                                     <td>{data.rata_rata_perminggu}</td>
-                                    <td className={
-                                data.kategori_sisa_produk === "Overload" ? "text-red" :
-                                data.kategori_sisa_produk === "Underload" ? "text-yellow" :
-                                "text-green"
-                            }>
-                                {data.total_sisa_produk}
-                            </td>
-
+                                    <td>{data.total_sisa_produk}</td>
                                     <td>{data.total_spk}</td>
-                                    <td>{data.rata_rata}</td>
+                                    <td className={
+                                        data.kategori_sisa_produk === "Overload" ? "text-red" :
+                                        data.kategori_sisa_produk === "Underload" ? "text-yellow" :
+                                        "text-green"
+                                    }>
+                                        {data.kategori_sisa_produk}
+                                    </td>
+                                    <td>{data.kategori}</td>
                             
-                                   
+                                  
                                     <td>
                                     <div className="action-card">
                                         <button 
@@ -215,8 +276,9 @@ const KemampuanCmt = () => {
     </div>
 )}
 
-
         </div>
+       
+       
     );
 };
 

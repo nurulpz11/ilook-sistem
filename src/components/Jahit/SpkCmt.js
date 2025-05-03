@@ -4,8 +4,10 @@ import axios from "axios";
 import Pusher from 'pusher-js';
 import { toast } from 'react-toastify';
 import API from "../../api"; 
-import {FaMicrophone,FaPause, FaStop, FaMicrophoneSlash, FaImage,FaPhotoVideo,  FaVideo, FaVideoSlash, FaPlus, FaTrash, FaSave, FaTimes,FaPaperPlane,FaBell, FaRegEye, FaCog,
+import {FaMicrophone, FaArrowUp, FaArrowDown, FaPause, FaStop, FaMicrophoneSlash, FaImage,FaPhotoVideo,  FaVideo, FaVideoSlash, FaPlus, FaTrash, FaSave, FaTimes,FaPaperPlane,FaBell, FaRegEye, FaCog,
   FaEdit, FaClock,FaInfoCircle,FaComments,FaCommentDots,FaComment  } from 'react-icons/fa';
+import Select from 'react-select';
+
 
 const SpkCmt = () => {
   const [spkCmtData, setSpkCmtData] = useState([]);
@@ -43,9 +45,20 @@ const SpkCmt = () => {
   const [modalType, setModalType] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState([]);
   const [readers, setReaders] = useState({});
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedPenjahit, setSelectedPenjahit] = useState("");
+  const [produkList, setProdukList] = useState([]);
+  const [kategoriList, setKategoriList] = useState([]);
+  const [sortBy, setSortBy] = useState("created_at"); // Default sorting by created_at
+  const [sortOrder, setSortOrder] = useState("desc"); // Default descending
+  const [selectedProduk, setSelectedProduk] = useState("");
+  const [selectedKategori, setSelectedKategori] = useState("");
+  const [allData, setAllData] = useState(false);
+  const [selectedSisaHari, setSelectedSisaHari] = useState("");
+  
 
   const [newSpk, setNewSpk] = useState({
-    nama_produk: '',
+    id_produk: '',
     jumlah_produk: 0, // Akan dihitung secara otomatis
     deadline: '',
     id_penjahit: '',
@@ -62,7 +75,6 @@ const SpkCmt = () => {
     harga_per_barang: '',
     harga_per_jasa: '',
     total_harga:'',
-    gambar_produk: null,
     harga_jasa_awal: "",
     jenis_harga_jasa: "per_barang",
     kategori_produk: "",
@@ -70,6 +82,11 @@ const SpkCmt = () => {
   });
 
 
+  const produkOptions = produkList.map(produk => ({
+    value: produk.id,             
+    label: produk.nama_produk
+  }));
+  
   const [newDeadline, setNewDeadline] = useState({
     deadline: '',
     keterangan: '',
@@ -155,16 +172,39 @@ const SpkCmt = () => {
   
 
   useEffect(() => {
+    console.log("Fetching SPK with sortOrder:", sortOrder); 
     const fetchSpkCmtData = async () => {
       try {
         setLoading(true);
-
-        const response = await API.get(`/spkcmt?page=${currentPage}`);
-
+  
+         // ✅ Debugging log sebelum request API
+         console.log("Current Filters:");
+         console.log("status:", selectedStatus);
+         console.log("page:", currentPage);
+         console.log("id_penjahit:", selectedPenjahit);
+         console.log("sortBy:", sortBy);
+         console.log("sortOrder:", sortOrder);
+         console.log("selectedProduk (before convert):", selectedProduk);
+         console.log("selectedProduk (converted):", selectedProduk ? Number(selectedProduk) : undefined);
+ 
+        const response = await API.get(`/spkcmt`, {
+          params: { 
+            status: selectedStatus, 
+            page: currentPage,
+            id_penjahit:selectedPenjahit,
+            sortBy: sortBy,   
+            sortOrder: sortOrder,
+            id_produk: selectedProduk,
+            kategori_produk: selectedKategori,
+            sisa_hari: selectedSisaHari, 
+          }, 
+            
+        });
+  
         console.log("Data SPK:", response.data); // Debugging
-
-        setSpkCmtData(response.data.data);
-        setLastPage(response.data.last_page);
+  
+        setSpkCmtData(response.data.spk.data);
+        setLastPage(response.data.spk.last_page);
       } catch (error) {
         setError(error.response?.data?.message || "Failed to fetch data");
         console.error("Error fetching SPK:", error);
@@ -172,9 +212,35 @@ const SpkCmt = () => {
         setLoading(false);
       }
     };
-
+  
     fetchSpkCmtData();
-  }, [currentPage]); 
+  }, [currentPage, selectedStatus,  selectedPenjahit, sortBy, sortOrder, selectedProduk,  selectedKategori, selectedSisaHari]); 
+  
+  
+  
+  
+  useEffect(() => {
+    const fetchProduks = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get("/produk"); 
+        setProdukList(response.data.data);
+
+      // Ekstrak kategori unik dari produkList
+      const uniqueKategori = [...new Set(response.data.data.map((produk) => produk.kategori_produk))];
+      setKategoriList(uniqueKategori);
+    } catch (error) {
+      setError("Gagal mengambil data produk.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+    fetchProduks();
+  }, []);
+  
+
+
 
   // Ambil chat saat komponen pertama kali dirender
   useEffect(() => {
@@ -582,9 +648,11 @@ const handleChatClick = (spk) => {
   
 
 useEffect(() => {
+  
   const fetchPenjahits = async () => {
     try {
       setLoading(true);
+
       const response = await API.get("/penjahit"); 
       setPenjahitList(response.data);
     } catch (error) {
@@ -706,7 +774,7 @@ const handleUpdateSubmit = async (e, id) => {
 
 // Filter data berdasarkan pencarian
 const filteredSpk = spkCmtData.filter((spk) =>
-    spk.nama_produk.toLowerCase().includes(searchTerm.toLowerCase())
+  spk.nama_produk?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleFileChange = (e) => {
@@ -884,14 +952,16 @@ const statusColors = {
   Completed: "#93D7A9",
 };
 
-const getStatusColor = (status, waktuPengerjaan) => {
+const getStatusColor = (status, sisaHari) => {
   if (status === "In Progress" || status === "Pending") {
-    if (waktuPengerjaan <= 7) return "#EAC98D";
-    if (waktuPengerjaan <= 14) return "#A0DCDC";
-    return "#DCA5A0";
+   
+    if (sisaHari >= 14) return "#A0DCDC"; // Hijau
+    if (sisaHari >= 7) return "#EF9651"; // Kuning
+    return "#A31D1D"; // Merah
   }
-  return statusColors[status] || "gray";
+  return "#88BC78"; // Status lain
 };
+
 
 const handlePengirimanDetailClick = (spk, type) => {
   setSelectedSpkId(spk.id_spk);
@@ -910,28 +980,20 @@ const handlePengirimanDetailClick = (spk, type) => {
   setShowModal(true);
 };
 
-const getFilteredSpk = async (status, page = 1) => {
-  try {
-    const response = await API.get(`/spkcmt`, {
-      params: { status, page }, // Menggunakan params agar lebih rapi
-    });
-
-    console.log("Filtered Data:", response.data); // Debugging
-
-    setSpkCmtData(Array.isArray(response.data.data) ? response.data.data : []);
-    setLastPage(response.data.last_page);
-  } catch (error) {
-    console.error("Error fetching filtered SPK:", error.response?.data?.message || error);
-    setSpkCmtData([]); // Reset data jika terjadi error
-  }
-};
-
 
 
 
 const togglePopup = () => {
   setShowPopup(!showPopup);
 };
+
+
+const handleSortChange = (e) => setSortBy(e.target.value);
+
+const handleOrderChange = () =>
+  setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+
+
 return (
   <div>
       <div className="penjahit-container">
@@ -1004,16 +1066,63 @@ return (
           />
           </div>
           <label htmlFor="statusFilter" className="filter-label"></label>
-          <select 
-            id="statusFilter" 
-            className="filter-select1" 
-            onChange={(e) => getFilteredSpk(e.target.value)}
-          >
-            <option value="" >All</option>
+          <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}  className="filter-select1" >
+
+            <option value="" >All Status</option>
             <option value="Pending">Pending</option>
             <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
           </select>
+          <label htmlFor="statusFilter" className="filter-label"></label>
+          <select 
+          value={selectedPenjahit} 
+          onChange={(e) => setSelectedPenjahit(e.target.value)}
+          className="filter-select1"
+           >
+          <option value="">All CMT</option>
+          {penjahitList.map((penjahit) => (
+              <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
+                  {penjahit.nama_penjahit}
+              </option>
+          ))}
+          </select>
+          <label htmlFor="statusFilter" className="filter-label"></label>
+          <select 
+          value={sortOrder} 
+          onChange={(e) => setSortOrder(e.target.value)}
+          className="filter-select1"
+          >
+            <option value="asc">Terlama</option>
+            <option value="desc">Terbaru</option>
+          </select>
+          
+          <label htmlFor="statusFilter" className="filter-label"></label>
+          <select 
+          value={selectedProduk} 
+          onChange={(e) => setSelectedProduk(e.target.value)}
+          className="filter-select1"
+           >
+          <option value="">All Produk</option>
+          {produkList.map((produk) => (
+              <option key={produk.id} value={produk.id}>
+                  {produk.nama_produk}
+              </option>
+          ))}
+          </select>
+          <label htmlFor="statusFilter" className="filter-label"></label>
+          <select 
+            value={selectedKategori} 
+            onChange={(e) => setSelectedKategori(e.target.value)}
+              className="filter-select1"
+            >
+              <option value="">All Kategori</option>
+              {kategoriList.map((kategori, index) => (
+                <option key={index} value={kategori}>
+                  {kategori}
+                </option>
+              ))}
+            </select>
+
       </div>
 
       <div className="table-wrapper">
@@ -1023,13 +1132,35 @@ return (
             <th>ID</th>
             <th>Nama Baju  </th>
             <th>Penjahit</th>
-           
-            <th>Sisa Hari</th>
+            <th>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontWeight: "bold" }}>Sisa Hari</span>
+
+            <button 
+              onClick={handleOrderChange} 
+              style={{
+                background: "none",
+                border: "none",
+                padding: "4px",
+                cursor: "pointer",
+                fontSize: "14px"
+              }}
+            >
+              {sortOrder === "asc" ? (
+                <FaArrowDown /> // Ikon panah atas
+              ) : (
+                <FaArrowUp /> // Ikon panah bawah
+              )}
+            </button>
+          </div>
+        </th>
+
             <th>Waktu Pengerjaan</th>
             <th>Jumlah Produk</th>
             <th>Jumlah DIkirim</th>
             <th>Sisa Barang</th>
             <th>Status</th>
+            <th>Kategori PRODUK</th>
             <th>Aksi</th>
             <th>Download</th>
           </tr>
@@ -1038,16 +1169,20 @@ return (
           {filteredSpk.map((spk) => (
             <tr key={spk.id_spk}>
               <td data-label="ID SPK : " >{spk.id_spk}</td>
-              <td data-label="Nama baju : ">{spk.nama_produk}</td>
-              <td data-label="Penjahit: ">
-                {
-                  penjahitList.find(penjahit => penjahit.id_penjahit === spk.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
-                }
-              </td>
+              <td data-label="Nama baju : ">
+            {spk.nama_produk || "Tidak Diketahui"}
+          </td>
+
+
+          <td data-label="Penjahit :">{spk.penjahit?.nama_penjahit || 'Tidak Diketahui'}  {spk.id_penjahit}</td>
             
-              <td data-label="Sisa Hari : "style={{ color: spk.sisa_hari < 4 ? 'red' : 'black'}}>
-                                    {spk.sisa_hari}
-              </td>
+          <td data-label="Sisa Hari : "
+              style={{ color: getStatusColor(spk.status, spk.sisa_hari),
+                 fontWeight: "bold"
+               }}>
+            {spk.sisa_hari}
+          </td>
+
 
               <td data-label="Waktu Pengerjaan : ">{spk.waktu_pengerjaan}</td> 
               <td data-label= "Jumlah Produk : ">{spk.jumlah_produk}</td>
@@ -1077,7 +1212,7 @@ return (
               <td  data-label="">
               <span
                 style={{
-                  backgroundColor: getStatusColor(spk.status, spk.waktu_pengerjaan),
+                  backgroundColor: getStatusColor(spk.status, spk.sisa_hari),
                   color: "white",
                   padding: "1px 1px", // Padding seragam
                   borderRadius: "5px",
@@ -1089,6 +1224,23 @@ return (
                 {spk.status}
               </span>
             </td>
+
+            <td data-label="">
+            <span
+              style={{
+                backgroundColor: spk.kategori_produk === "Urgent" ?  "rgb(220, 165, 160)" : "#B0B0B0", // Tentukan warna berdasarkan kategori
+                color: "white",
+                padding: "1px 1px", // Padding seragam
+                borderRadius: "5px",
+                display: "inline-block", // Pastikan ukuran bisa menyesuaikan
+                minWidth: "85px", // Tentukan ukuran minimum agar semua sama
+                textAlign: "center", // Biar teks selalu di tengah
+              }}
+            >
+              {spk.kategori_produk}
+            </span>
+          </td>
+
               <td  data-label="">
                 <div className="action-card">
                   <button 
@@ -1505,7 +1657,7 @@ return (
         {/* Detail Produk */}
         <div className="popup1-details">
           <div className="detail-group">
-          <p><strong>Nama Produk :</strong> <span> {selectedSpk.nama_produk}</span></p>
+          <p><strong>Nama Produk :</strong> <span> {selectedSpk.id_produk}</span></p>
           <p><strong>Jumlah Produk :</strong> <span> {selectedSpk.jumlah_produk}</span></p>
           <p><strong>Total Harga :</strong> <span> {selectedSpk.total_harga}</span></p>
           <p><strong>Harga Barang :</strong> <span> Rp {selectedSpk.harga_per_barang}</span></p>
@@ -1639,17 +1791,21 @@ return (
       }}
     >
 
-        <div className="form-group">
-          <label>Nama Produk</label>
-          <input
-            type="text"
-            name="nama_produk"
-            value={newSpk.nama_produk}
-            onChange={handleInputChange}
-            placeholder="Masukkan nama produk"
-            required
-          />
-        </div>
+    <div className="form-group">
+      <label>Nama Produk</label>
+      <Select
+        options={produkOptions}
+         className="custom-select"
+        onChange={(selectedOption) => {
+          setNewSpk({ ...newSpk, id_produk: selectedOption.value });
+        }}
+        value={produkOptions.find(option => option.value === newSpk.id_produk)}
+        placeholder="Cari Produk..."
+        isSearchable
+      />
+
+    </div>
+
 
         <div className="form-group">
           <label>Penjahit</label>
@@ -1726,18 +1882,6 @@ return (
             <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
           </select>
-        </div>
-
-        <div className="form-group">
-          <label>Nomor Seri</label>
-          <input
-            type="text"
-            name="nomor_seri"
-            value={newSpk.nomor_seri}
-            onChange={handleInputChange}
-            placeholder="Masukkan nomor seri"
-            required
-          />
         </div>
 
         
@@ -1829,16 +1973,7 @@ return (
           />
         </div>
 
-        <div className="form-group">
-        <label>Kategori Produk</label>
-        <input
-          type="text"
-          name="kategori_produk"
-          value={newSpk.kategori_produk}
-          onChange={handleInputChange}
-          placeholder="Masukkan kategori produk"
-        />
-      </div>
+       
 
       <div className="form-group">
         <label>Jenis Harga Jasa</label>

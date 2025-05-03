@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaClock,FaInfoCircle,FaClipboard , FaList,FaMoneyBillWave  } from 'react-icons/fa';
-import "./Penjahit";
+import "./Penjahit.css";
 import axios from "axios";
 import API from "../../api"; 
 
@@ -15,6 +15,12 @@ const Pendapatan = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [penjahitList, setPenjahitList] = useState([]);
+  const [selectedPenjahit, setSelectedPenjahit] = useState(null);
+  const [kurangiHutang, setKurangiHutang] = useState(false);
+  const [kurangiCashbon, setKurangiCashbon] = useState(false);
+  const [aksesorisDipilih, setAksesorisDipilih] = useState([]);
+  const [detailAksesoris, setDetailAksesoris] = useState([]); // buat nampung semua aksesoris
+ 
   const [newPendapatan, setNewPendapatan] = useState({
     id_pendapatan:"",
     id_penjahit: "",
@@ -30,6 +36,67 @@ const Pendapatan = () => {
     total_transfer: 0,
   });
 
+
+  const [simulasi, setSimulasi] = useState({
+    total_pendapatan: 0,
+    potongan_hutang: 0,
+    potongan_cashbon: 0,
+    total_transfer: 0,
+  });
+  ;
+  
+  const fetchSimulasi = async (id_penjahit, kurangiHutang, kurangiCashbon, aksesorisIds = []) => {
+    try {
+      const response = await API.post('/simulasi-pendapatan', {
+        id_penjahit,
+        kurangi_hutang: kurangiHutang,
+        kurangi_cashbon: kurangiCashbon,
+        detail_aksesoris_ids: aksesorisIds, // kirim array id
+      });
+  
+      if (response.data) {
+        setSimulasi({
+          total_pendapatan: response.data.total_pendapatan || 0,
+          potongan_hutang: response.data.potongan_hutang || 0,
+          potongan_cashbon: response.data.potongan_cashbon || 0,
+          potongan_aksesoris: response.data.potongan_aksesoris || 0,
+          total_transfer: response.data.total_transfer || 0,
+        });
+      } else {
+        console.warn('Data simulasi kosong:', response.data);
+        setSimulasi({
+          total_pendapatan: 0,
+          potongan_hutang: 0,
+          potongan_cashbon: 0,
+          potongan_aksesoris: 0,
+          total_transfer: 0,
+        });
+      }
+    } catch (err) {
+      console.error('Gagal fetch simulasi pendapatan', err);
+    }
+  };
+  
+  
+  // Di event handler (misal di onChange checkbox)
+  useEffect(() => {
+    if (selectedPenjahit) {
+      fetchSimulasi(selectedPenjahit.id_penjahit, kurangiHutang, kurangiCashbon,  aksesorisDipilih);
+    }
+  }, [selectedPenjahit, aksesorisDipilih, kurangiHutang, kurangiCashbon]);
+  
+  const fetchDetailAksesoris = async (penjahitId) => {
+    try {
+      const response = await API.get(`/detail-pesanan-aksesoris?penjahit_id=${penjahitId}`);
+      setDetailAksesoris(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil aksesoris:", error);
+    }
+  };
+  
+
+  
+  
   useEffect(() => {
     const fetchPendapatans = async () => {
       try {
@@ -41,16 +108,16 @@ const Pendapatan = () => {
           return;
         }
   
-        const response = await API.get(`/pendapatan?page=${currentPage}`, {
+        const response = await API.get(`/pendapatan/mingguan?page=${currentPage}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
         console.log("Data Pendapatan:", response.data); // Debugging
   
-        setPendapatans(response.data.data || []); // Set data pendapatan
-        setLastPage(response.data.last_page); // Set total halaman
+        setPendapatans(response.data || []); // Set data pendapatan
+        setLastPage(response.last_page); // Set total halaman
       } catch (error) {
-        setError(error.response?.data?.message || "Gagal mengambil data pendapatan.");
+        setError(error.response?.message || "Gagal mengambil data pendapatan.");
       } finally {
         setLoading(false);
       }
@@ -78,91 +145,36 @@ const Pendapatan = () => {
   }, []);
   
   
-
-const handleFormSubmit = async (e) => {
-  e.preventDefault();
-
-  try {
-    const response = await API.post("/pendapatan", newPendapatan);
-
-    if (response.data.message === "Pendapatan berhasil disimpan.") {
-      // Tambahkan data baru di awal array
-      setPendapatans([response.data.data, ...pendapatans]);
-      setShowForm(false);
-      resetForm();
-    } else {
-      console.error("Error adding data:", response.data);
+  const handleTambahPendapatan = async (e) => {
+    e.preventDefault();
+  
+    try {
+      const response = await API.post('/bayar-pendapatan', {
+        id_penjahit: selectedPenjahit.id_penjahit,
+        kurangi_hutang: Boolean(kurangiHutang),
+        kurangi_cashbon: Boolean(kurangiCashbon),
+        detail_aksesoris_ids: aksesorisDipilih.length > 0 ? aksesorisDipilih : null,
+      });
+  
+      if (response.data.success) {
+        alert('Pendapatan berhasil ditambahkan!');
+        setShowForm(false); // nutup form/modal kalau pakai
+        // Bisa tambahin fetchData() buat refresh data
+      } else {
+        alert(`Gagal: ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error('Error saat tambah pendapatan:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(`Error: ${error.response.data.message}`);
+      } else {
+        alert('Terjadi kesalahan saat menambahkan pendapatan.');
+      }
     }
-  } catch (error) {
-    console.error("Error adding data:", error);
-  }
-};
-
-
-
-const handleLoadData = async () => {
-  try {
-    const { id_penjahit, periode_awal, periode_akhir } = newPendapatan;
-
-    const response = await API.post("/pendapatan/calculate", {
-      id_penjahit,
-      periode_awal,
-      periode_akhir,
-    });
-
-    setNewPendapatan((prev) => ({
-      ...prev,
-      total_pendapatan: response.data.total_pendapatan || 0,
-      total_claim: response.data.total_claim || 0,
-      total_refund_claim: response.data.total_refund_claim || 0,
-      total_cashbon: response.data.total_cashbon || 0,
-      total_hutang: response.data.total_hutang || 0,
-      total_transfer: calculateTotalTransfer(response.data),
-    }));
-  } catch (error) {
-    console.error("Error loading data:", error);
-  }
-};
-
-
-  const calculateTotalTransfer = (data) => {
-    const { total_pendapatan, total_claim, total_refund_claim, total_cashbon, total_hutang } = data;
-    const { handtag, transportasi } = newPendapatan;
-    return (
-      (total_pendapatan || 0) +
-      (total_refund_claim || 0) -
-      (total_claim || 0) -
-      (total_cashbon || 0) -
-      (total_hutang || 0) -
-      (handtag || 0) -
-      (transportasi || 0)
-    );
-  };
-
-  const resetForm = () => {
-    setNewPendapatan({
-      id_penjahit: "",
-      periode_awal: "",
-      periode_akhir: "",
-      handtag: "",
-      transportasi: "",
-      total_pendapatan: 0,
-      total_claim: 0,
-      total_refund_claim: 0,
-      total_cashbon: 0,
-      total_hutang: 0,
-      total_transfer: 0,
-    });
   };
   
-  const formatTanggal = (tanggal) => {
-    const date = new Date(tanggal);
-    return new Intl.DateTimeFormat("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date);
-  };
+
+ 
 
   const handleDetailClick = async (pendapatan) => {
     setSelectedPendapatan(pendapatan);
@@ -229,7 +241,12 @@ const handleDownload = async (idPendapatan) => {
   }
 };
   
-  
+const handleOpenForm = (penjahit) => {
+  setSelectedPenjahit(penjahit);
+  setShowForm(true);
+  fetchDetailAksesoris(penjahit.id_penjahit);
+};
+
   
   return (
     <div>
@@ -240,37 +257,20 @@ const handleDownload = async (idPendapatan) => {
 
       <div className="table-container">
       <div className="filter-header1">
-      <button 
-        onClick={() => setShowForm(true)}>
-          Tambah
-        </button>
-        <label htmlFor="penjahitFilter" className="filter-label"></label>
-        <select
-          id="penjahitFilter"
-          className="filter-select1"
-          onChange={(e) => getFilteredPenjahit(e.target.value)}
-        >
-          <option value="">All</option>
-          {penjahitList.map((penjahit) => (
-            <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
-              {penjahit.nama_penjahit}
-            </option>
-          ))}
-        </select>
+     
 
         </div>
       <div className="table-container">
       <table className="penjahit-table">
           <thead>
             <tr>
-              <th>ID</th>
+              
               <th>Nama Penjahit</th>
-              <th>Periode Awal</th>
-              <th>Periode Akhir</th>
               <th>Total Pendapatan</th>
-              <th>Total Transfer</th>
+              <th>Total Transfer </th>
+              <th>Status Pembayaran Minggu Ini</th>
               <th>Aksi</th>
-              <th>DOWNLOAD</th>
+           
             </tr>
           </thead>
           <tbody>
@@ -280,30 +280,39 @@ const handleDownload = async (idPendapatan) => {
               )
               .map((pendapatan) => (
                 <tr key={pendapatan.id_penjahit}>
-                  <td data-label="Id Pendapatan : ">{pendapatan.id_pendapatan}</td>
+                
                    <td data-label="Penjahit : ">
                     {
                       penjahitList.find(penjahit => penjahit.id_penjahit === pendapatan.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                     }
                   </td>
-                  <td data-label="Periode Awal : ">{formatTanggal(pendapatan.periode_awal)}</td>
-                  <td data-label="Periode Akhir : ">{formatTanggal(pendapatan.periode_akhir)}</td>
-                  <td data-label="Total Pendapatan : ">{pendapatan.total_pendapatan}</td>
-                
-                  <td data-label="Total Transfer : ">{pendapatan.total_transfer}</td>
+                 
+                  <td data-label="Total Pendapatan : ">
+                  Rp.{new Intl.NumberFormat("id-ID").format(pendapatan.total_pendapatan)}
+                    </td>
+                  <td data-label="Total Transfer: ">
+                  Rp.{new Intl.NumberFormat("id-ID").format(pendapatan.total_transfer)}
+                 </td>
                   <td data-label=" ">
-                  <div className="action-card">
+                    <div className="action-card">
+                      {pendapatan.status_pembayaran === 'belum dibayar' ? (
+                        <button onClick={() => handleOpenForm(pendapatan)} className="btn-bayar">
+                         Belum Bayar
+                        </button>
+                      ) : (
+                        <span className="btn-bayar2">Sudah dibayar</span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td  data-label=" ">
+                    <div className="action-card">
                     <button 
                       className="btn1-icon" 
                       onClick={() => handleDetailClick(pendapatan)}
                       >
                       <FaInfoCircle className="icon" />
                      </button>   
-                     
-                  </div>
-                     </td> 
-                  <td  data-label=" ">
-                    <div className="action-card">
                      <button
                       onClick={() => handleDownload(pendapatan.id_pendapatan)}
                       className="btn1-icon3" 
@@ -401,142 +410,131 @@ const handleDownload = async (idPendapatan) => {
 
       )}
 
-      {showForm && (
-        <div className="modal">
-            <div className="modal-content">
-            <h2>Tambah Data Pendapatan</h2>
-          <form onSubmit={handleFormSubmit} className="modern-form">
-          <div className="form-group">
+
+{showForm && (
+  <div className="modal-hutang">
+    <div className="modal-content-hutang">
+      <h2>Tambah Data Pendapatan</h2>
+      <form onSubmit={handleTambahPendapatan} className="form-hutang">
+        <div className="form-group-hutang">
           <label>ID Penjahit:</label>
-          <select
-            value={newPendapatan.id_penjahit}
-            onChange={(e) =>
-              setNewPendapatan({ ...newPendapatan, id_penjahit: e.target.value })
-            }
-            required
-          >
-            <option value="" disabled>
-              Pilih Penjahit
-            </option>
-            {penjahitList.map((penjahit) => (
-              <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
-                {penjahit.nama_penjahit}
-              </option>
-            ))}
-          </select>
+          <input
+            type="text"
+            value={selectedPenjahit?.id_penjahit || ''}
+            readOnly
+          />
         </div>
 
-            
-            <div className="form-group">
-            <label>Periode Awal:</label>
-            <input
-              type="date"
-              value={newPendapatan.periode_awal}
-              onChange={(e) =>
-                setNewPendapatan({ ...newPendapatan, periode_awal: e.target.value })
-              }
-              required
-            />
-            </div>
-
-            <div className="form-group">
-            <label>Periode Akhir:</label>
-            <input
-              type="date"
-              value={newPendapatan.periode_akhir}
-              onChange={(e) =>
-                setNewPendapatan({ ...newPendapatan, periode_akhir: e.target.value })
-              }
-              required
-            />
-            </div>
-            <button 
-            type="button" 
-            className="btn btn-load-warna" 
-            onClick={handleLoadData}>
-              Load
-            </button>
-            <div className="form-group">
-            <label>Total Pendapatan: </label>
-            <input 
-                type="number"
-                value= {newPendapatan.total_pendapatan}
-                readOnly
-             />
-            </div>
-            <div className="form-group">
-            <label>Total Claim: </label>
-            <input 
-                type="number"
-                value= {newPendapatan.total_claim}
-                readOnly
-            />
-            </div>
-            <div className="form-group">
-            <label>Total Refund Claim: </label>
-            <input 
-                type="number"
-                value= {newPendapatan.total_refund_claim}
-                readOnly
-            />
-            </div>
-
-            <div className="form-group">
-            <label>Total Cashbon: </label>
-            <input 
-                type="number"
-                value= {newPendapatan.total_cashbon}
-                readOnly
-             />    
-            </div>
-            <div classname="form-group">
-            <label>Total Hutang:</label>
-            <input 
-                type="number"
-                value={newPendapatan.total_hutang}
-                readOnly
-            />
-            </div>
-            <label>Handtag:</label>
-            <input
-              type="number"
-              value={newPendapatan.handtag}
-              onChange={(e) =>
-                setNewPendapatan({ ...newPendapatan, handtag: parseFloat(e.target.value) || 0 })
-              }
-            />
-            <label>Transportasi:</label>
-            <input
-              type="number"
-              value={newPendapatan.transportasi}
-              onChange={(e) =>
-                setNewPendapatan({ ...newPendapatan, transportasi: parseFloat(e.target.value) || 0 })
-              }
-            />
-             <div className="form-group">
-            <label>Total Transfer:</label>
-            <input
-              type="number"
-              value= {newPendapatan.total_transfer}
-              readOnly
-            />
-            </div>
-           <div className="form-actions">
-                  <button type="submit" className="btn btn-submit">
-                     Simpan
-                    </button>
-                  <button
-                      type="button"
-                      className="btn btn-cancel"
-                      onClick={() => setShowForm(false)}
-                    >
-                      Batal
-                  </button>
-                  </div>
-          </form>
+        <div className="form-group">
+          <label>Nama Penjahit:</label>
+          <input
+            type="text"
+            value={selectedPenjahit?.nama_penjahit || ''}
+            readOnly
+          />
         </div>
+
+        <div className="form-group">
+          <label>Total Pendapatan:</label>
+          <input
+            type="text"
+            value={simulasi.total_pendapatan || 0}
+            readOnly
+          />
         </div>
-      )}
+
+      
+
+        {/* Menampilkan hasil simulasi */}
+        <div className="form-group">
+          <label>Potongan Hutang:</label>
+          <input
+            type="text"
+            value={simulasi.potongan_hutang || 0}
+            readOnly
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Potongan Cashbon:</label>
+          <input
+            type="text"
+            value={simulasi.potongan_cashbon || 0}
+            readOnly
+          />
+        </div>
+        <div className="form-group-hutang checkbox-group-hutang">
+          <label>
+            <input
+              type="checkbox"
+              checked={kurangiHutang}
+              onChange={(e) => setKurangiHutang(e.target.checked)}
+            />
+            Potong Hutang
+          </label>
+        </div>
+
+        <div className="form-group-hutang checkbox-group-hutang">
+          <label>
+            <input
+              type="checkbox"
+              checked={kurangiCashbon}
+              onChange={(e) => setKurangiCashbon(e.target.checked)}
+            />
+            Potong Cashbon
+          </label>
+        </div>
+
+        {/* Checklist Aksesoris */}
+        <div className="form-group-hutang checkbox-group-hutang">
+          <label>Potong Aksesoris:</label>
+          {detailAksesoris.length > 0 ? (
+            detailAksesoris.map((item) => (
+              <div key={item.id} className="checkbox-item">
+                <label>
+                  <input 
+                    type="checkbox" 
+                    value={item.id} 
+                    checked={aksesorisDipilih.includes(item.id)}
+                    onChange={(e) => {
+                      const id = parseInt(e.target.value);
+                      if (e.target.checked) {
+                        setAksesorisDipilih([...aksesorisDipilih, id]);
+                      } else {
+                        setAksesorisDipilih(aksesorisDipilih.filter((itemId) => itemId !== id));
+                      }
+                    }}
+                  />
+                  {item.aksesoris.nama_aksesoris} - Rp{parseInt(item.total_harga).toLocaleString()}
+                </label>
+              </div>
+            ))
+          ) : (
+            <p style={{ fontStyle: 'italic' }}>Tidak ada aksesoris untuk dipotong.</p>
+          )}
+        </div>
+
+        <div className="form-group">
+          <strong>Total Transfer:</strong>
+          <input
+            type="text"
+            value={simulasi.total_transfer || 0}
+            readOnly
+          />
+        </div>
+
+        <div className="form-actions-hutang">
+          <button type="submit"  className="btn-hutang btn-submit-hutang">Simpan</button>
+          <button type="button"    className="btn-hutang btn-cancel-hutang" onClick={() => setShowForm(false)}>
+            Batal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+
     
     </div>
     </div>

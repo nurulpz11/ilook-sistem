@@ -16,6 +16,14 @@ import Deadline from "./components/Jahit/Deadline";
 import Status from "./components/Jahit/Status";
 import Kinerja from "./components/Jahit/Kinerja";
 import Kinerja2 from "./components/Jahit/Kinerja2";
+import Produk from "./components/Jahit/Produk";
+import HistoryPendapatan from "./components/Jahit/HistoryPendapatan";
+import Aksesoris from "./components/Jahit/Aksesoris";
+import PembelianAksesoris from "./components/Jahit/PembelianAksesoris";
+import PembelianBAksesoris from "./components/Jahit/PembelianBAksesoris";
+import { StokAksesoris } from "./components/Jahit/StokAksesoris";
+import PesananPetugasC from "./components/Jahit/PesananPetugasC";
+import PesananPetugasD from "./components/Jahit/PesananPetugasD";
 
 const App = () => {
   
@@ -42,7 +50,14 @@ const App = () => {
           <Route path="kinerja" element={<Kinerja />} />
           <Route path="kinerja2" element={<Kinerja2 />} />
           <Route path="/kinerja/:kategori" element={<Kinerja />} />
-         
+          <Route path="produk" element={<Produk />} />
+          <Route path="historyPendapatan" element={<HistoryPendapatan />} />
+          <Route path="aksesoris" element={<Aksesoris/>} />
+          <Route path="pembelianA" element={<PembelianAksesoris/>} />
+          <Route path="pembelianB" element={<PembelianBAksesoris/>} />
+          <Route path="stok-aksesoris" element={<StokAksesoris/>} />
+          <Route path="petugas-c" element={<PesananPetugasC/>} />
+          <Route path="petugas-d" element={<PesananPetugasD/>} />
         </Route>
       </Routes>
     

@@ -8,6 +8,7 @@ const Layout = () => {
   const [isCmtOpen, setIsCmtOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("home"); // Tambahkan state untuk menu aktif
   const [role, setRole] = useState(""); // State untuk menyimpan role user
+  const [isAksesorisOpen, setIsAksesorisOpen] = useState(false);
 
   useEffect(() => {
     const userRole = localStorage.getItem("role"); // Ambil role dari localStorage
@@ -24,6 +25,10 @@ const Layout = () => {
   };
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const toggleAksesorisMenu = () => {
+    setIsAksesorisOpen(!isAksesorisOpen);
   };
 
   return (
@@ -58,7 +63,7 @@ const Layout = () => {
                  
                   <li>
                     <Link to="penjahit" className={`dropdown-link ${activeMenu === "penjahit" ? "active" : ""}`} onClick={() => handleMenuClick("penjahit")}>
-                      Penjahit
+                      CMT
                     </Link>
                   </li>
                   <li>
@@ -66,6 +71,12 @@ const Layout = () => {
                     <Link to="spkcmt" className={`dropdown-link ${activeMenu === "spk" ? "active" : ""}`} onClick={() => handleMenuClick("spk")}>
                       SPK
                     </Link>
+                  </li>
+
+                  <li>
+                  <Link to="produk" className={`dropdown-link ${activeMenu === "produk" ? "active" : ""}`} onClick={() => handleMenuClick("produk")}>
+                    Produk
+                  </Link>
                   </li>
 
                  
@@ -109,6 +120,15 @@ const Layout = () => {
                       </li>
                       <li>
                         <Link
+                          to="historyPendapatan"
+                          className={`dropdown-link ${activeMenu === "historyPendapatan" ? "active" : ""}`}
+                          onClick={() => handleMenuClick("historyPendapatan")}
+                        >
+                          History Pendapatan
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
                           to="deadline"
                           className={`dropdown-link ${activeMenu === "deadline" ? "active" : ""}`}
                           onClick={() => handleMenuClick("deadline")}
@@ -125,15 +145,78 @@ const Layout = () => {
                           Log Status
                         </Link>
                       </li>
-                      <li>
-                        <Link
-                          to="ChatPage"
-                          className={`dropdown-link ${activeMenu === "ChatPage" ? "active" : ""}`}
-                          onClick={() => handleMenuClick("ChatPage")}
-                        >
-                          ChatComponent
-                        </Link>
-                      </li>
+                      
+                     
+                    <li>
+                    <div
+                      onClick={toggleAksesorisMenu}
+                      className={`sidebar-link dropdown-toggle ${activeMenu === "aksesoris" ? "active" : ""}`}
+                    >
+                      Aksesoris
+                      <span className={`arrow ${isAksesorisOpen ? "open" : ""}`}>
+                        {isAksesorisOpen ? <FaChevronUp /> : <FaChevronDown />}
+                      </span>
+                    </div>
+                    {isAksesorisOpen && (
+                      <ul className="dropdown-menu">
+                        <li>
+                          <Link
+                            to="aksesoris"
+                            className={`dropdown-link ${activeMenu === "aksesoris" ? "active" : ""}`}
+                            onClick={() => handleMenuClick("aksesoris")}
+                          >
+                            Data Aksesoris
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="pembelianA"
+                            className={`dropdown-link ${activeMenu === "pembelianA" ? "active" : ""}`}
+                            onClick={() => handleMenuClick("pembelianA")}
+                          >
+                            Pembelian Aksesoris A
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="pembelianB"
+                            className={`dropdown-link ${activeMenu === "pembelianb" ? "active" : ""}`}
+                            onClick={() => handleMenuClick("pembelianb")}
+                          >
+                            Pembelian Aksesoris B
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="stok-aksesoris"
+                            className={`dropdown-link ${activeMenu === "stok-aksesoris" ? "active" : ""}`}
+                            onClick={() => handleMenuClick("stok-aksesoris")}
+                          >
+                            Stok Aksesoris
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="petugas-c"
+                            className={`dropdown-link ${activeMenu === "petugas-c" ? "active" : ""}`}
+                            onClick={() => handleMenuClick("petugas-c")}
+                          >
+                            Pemesanan Aksesoris 
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="petugas-d"
+                            className={`dropdown-link ${activeMenu === "petugas-d" ? "active" : ""}`}
+                            onClick={() => handleMenuClick("petugas-d")}
+                          >
+                           Detail Pemesanan Aksesoris 
+                          </Link>
+                        </li>
+                      </ul>
+                    )}
+                  </li>
+
 
                     </>
                   )}

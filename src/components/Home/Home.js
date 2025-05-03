@@ -15,53 +15,73 @@ const Home = () => {
   const [chartData, setChartData] = useState(null);
   const [categoryInfo, setCategoryInfo] = useState([]); 
   const [sisaProdukChart, setSisaProdukChart] = useState(null);
+  const [selectedCMT, setSelectedCMT] = useState("");
+  const [cmtList, setCmtList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [kinerjaData, setKinerjaData] = useState({});
+  const [kategoriProduk, setKategoriProduk] = useState([]); 
+  const [urgentProducts, setUrgentProducts] = useState([]);
 
   const navigate = useNavigate(); // Inisialisasi useNavigate
 
+
+ 
+  useEffect(() => {
+    const fetchCmtList = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get("/penjahit");
+        if (response.data.length > 0) {
+          setCmtList(response.data);
+        }
+      } catch (error) {
+        setError("Gagal mengambil data penjahit.");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchCmtList();
+  }, []);
+  
   
   useEffect(() => {
     const fetchSpkData = async () => {
       try {
         const response = await API.get("/spkcmt", {
-          params: { allData: true },
+          params: { id_penjahit: selectedCMT }
         });
-        setSpkData(response.data);
+  
+        // Ambil array dari response.data.data
+        setSpkData(Array.isArray(response.data.spk.data) ? response.data.spk.data : []);
+        setKategoriProduk(response.data.kategori_count || []); 
+        setUrgentProducts(response.data.urgent_products || [])
+
       } catch (error) {
         console.error("Error fetching SPK data:", error);
+        setSpkData([]); 
+        setKategoriProduk([])
+        setUrgentProducts([]); 
       }
     };
   
     fetchSpkData();
-  }, []);
+  }, [selectedCMT]);
+  
+  
   
 
   useEffect(() => {
-    // Fetch data from API
-    const fetchData = async () => {
+    const fetchKinerjaCMT = async () => {
       try {
         const response = await API.get("/kinerja-cmt");
-        const apiData = response.data;
-
-        // Prepare data for pie chart
-        const labels = Object.keys(apiData);
-        const values = labels.map((key) => apiData[key].rata_rata);
-
-        setChartData({
-          labels,
-          datasets: [
-            {
-              label: "Rata-rata Kinerja",
-              data: values,
-              backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
-            },
-          ],
-        });
+        setKinerjaData(response.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching kinerja CMT:", error);
       }
     };
-
-    fetchData();
+    fetchKinerjaCMT();
   }, []);
   
  
@@ -85,12 +105,12 @@ const Home = () => {
             {
               label: "Jumlah Penjahit",
               data: values,
-              backgroundColor: ["#789DBC", "#FFB0B0", "#C9E9D2", "#FFF8DE"],
+              backgroundColor: ["#B2CD38", "#5E95C3", "#E7AD41", "#DD6262"],
               hoverBackgroundColor: [
-                "#5B82A3",
-                "#ED9292",
-                "#9AE2AE",
-                "#ECE1BB",
+                "#B2CD38",
+                "#5E95C3",
+                "#E7AD41",
+                "#DD6262",
               ],
             },
           ],
@@ -170,7 +190,7 @@ const Home = () => {
 
   // Data untuk Donut Chart
   const donutData = {
-    labels: ["Periode 1", "Periode 2", "Lebih dari 2 periode"],
+    labels: ["Periode 3", "Periode 2", "Lebih dari 2 periode"],
     datasets: [
       {
         label: "In Progress Breakdown",
@@ -189,7 +209,15 @@ const Home = () => {
       navigate(`/kinerja2?filter=${selectedCategory.toLowerCase()}`);
     }
   };
-  
+
+  const handleChartClickKategoriKinerja = (event, elements) => {
+    if (elements.length > 0) {
+      const index = elements[0].index;
+      const selectedCategory = ["A", "B", "C", "D"][index]; // Misalnya kategori kinerja
+      navigate(`/kinerja2?kinerja=${selectedCategory.toLowerCase()}`);
+    }
+  };
+    
 
   const chartOptions = {
     responsive: true,
@@ -217,22 +245,121 @@ const Home = () => {
     },
     onClick: handleChartClick,
   };
-  
+  const chartOptionsKinerja = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: {
+          usePointStyle: true,
+          pointStyle: "circle",
+          position: "bottom",
+        },
+      },
+      datalabels: {
+        color: "#fff",
+        anchor: "center",
+        align: "center",
+        font: {
+          weight: "bold",
+          size: 14,
+        },
+        formatter: (value) => value,
+      },
+    },
+    onClick: handleChartClickKategoriKinerja,
+  };
 
   const donutOptions = {
     responsive: true,
     maintainAspectRatio: false,
   };
   
-  
+  // Cari nama penjahit berdasarkan selectedCMT
+  const selectedCMTName = cmtList.find(cmt => Number(cmt.id_penjahit) === Number(selectedCMT))?.nama_penjahit || ""; 
 
+  // Ambil kategori berdasarkan nama penjahit
+  const kategoriCMT = selectedCMTName && kinerjaData[selectedCMTName]
+    ? kinerjaData[selectedCMTName].kategori || "N/A"
+    : "N/A";
+
+  
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
-        <h1 className="dashboard-title">Dashboard</h1>
-      </header>
-        
+          <header className="dashboard-header">
+          <h1 className="dashboard-title">
+              Dashboard {selectedCMTName && kategoriCMT !== "N/A" ? `- ${selectedCMTName} (Kategori: ${kategoriCMT})` : ""}
+            </h1>
+
+         
+
+              <div className="user-profile">
+                  <img 
+                      src={`http://localhost:8000/storage/${localStorage.getItem('foto') || 'user.png'}`} 
+                      alt=""
+                  />
+              </div>
+          </header>
+
+            
          <div className="dashboard-content">
+          
+         <div className="filter-container">
+            <select 
+                value={selectedCMT} 
+                onChange={(e) => setSelectedCMT(e.target.value)}
+                className="filter-select1"
+                >
+                <option value="">All CMT</option>
+                {cmtList.map((cmt) => (
+                    <option key={cmt.id_penjahit} value={cmt.id_penjahit}>
+                        {cmt.nama_penjahit}
+                    </option>
+                ))}
+                </select>
+          </div>
+
+         <div className="dashboard-stats">
+          {/* Kategori Produk */}
+          <div className="stat-card">
+            <div className="stat-header">
+              <i className="fas fa-boxes"></i>
+              <h3>Kategori Produk</h3>
+            </div>
+            <div className="stat-content">
+              {kategoriProduk.length > 0 ? (
+                kategoriProduk.map((item, index) => (
+                  <div key={index} className="stat-item">
+                    <span>{item.kategori_produk}</span>
+                    <strong>{item.total_produk} produk</strong>
+                  </div>
+                ))
+              ) : (
+                <p className="empty-text">Tidak ada data kategori.</p>
+              )}
+            </div>
+          </div>
+
+            {/* Produk Urgent */}
+            <div className="stat-card urgent">
+              <div className="stat-header">
+                <i className="fas fa-exclamation-circle"></i>
+                <h3>Produk Urgent</h3>
+              </div>
+              <div className="stat-content">
+                {urgentProducts.length > 0 ? (
+                  urgentProducts.map((product, index) => (
+                    <div key={index} className="stat-item">
+                      <span>{product.nama_produk}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="empty-text">Tidak ada produk urgent.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
             {/* Kontainer untuk card-animate */}
             <div className="card-container">
               <div className="card card-animate">
@@ -240,7 +367,7 @@ const Home = () => {
                   <i className="fas fa-tasks"></i>
                 </div>
                 <div className="card-content">
-                  <h2>In Progress</h2>
+                <h4 className="card-title">In Progress </h4>
                   <p className="value">{inProgressCount}</p>
                </div>
             </div>
@@ -249,7 +376,7 @@ const Home = () => {
                   <i className="fas fa-clock"></i>
                 </div>
                 <div className="card-content">
-                  <h2>Pending</h2>
+                <h3 className="card-title">Pending </h3>
                   <p className="value">{pendingCount}</p>
                 </div>
               </div>
@@ -258,16 +385,18 @@ const Home = () => {
                   <i className="fas fa-check-circle"></i>
                 </div>
                 <div className="card-content">
-                  <h2>Completed</h2>
+                <h2 className="card-title">Completed </h2>
                   <p className="value">{completedCount}</p>
                 </div>
               </div>
             </div>
 
+
+
             <div className="charts-wrapper">
               {/* Kontainer untuk donut chart */}
               <div className="chart-container">
-                <div className="chart-card card">
+                <div className="chart-card card2">
                   <h2 className="chart-title">In Progress</h2>
                   <div className="chart-content">
                   <Doughnut data={donutData} options={donutOptions}   />
@@ -276,45 +405,46 @@ const Home = () => {
               </div>
 
               {/* Kontainer untuk pie chart */}
-              <div className="chart-container">
-                {chartData && (
-                  <div className="chart-card card">
-                    <h2 className="chart-title">Kinerja Penjahit</h2>
-                    <div className="chart-content">
-                      <Pie data={chartData} options={chartOptions} />
-                      <div className="chart-info">
-                        {categoryInfo.map((item) => (
-                          <div key={item.label} className="info-item">
-                            <span
-                              className="info-color"
-                              style={{
-                                backgroundColor:
-                                  chartData.datasets[0].backgroundColor[
-                                    chartData.labels.indexOf(item.label)
-                                  ],
-                              }}
-                            ></span>
-                            <span className="info-label">{item.label}</span>
-                            <span className="info-percentage">{item.percentage}%</span>
-                          </div>
-                        ))}
+              {chartData && !selectedCMT && (
+              <div className="chart-card card2">
+                <h2 className="chart-title">Kinerja Penjahit</h2>
+                <div className="chart-content">
+                  <Pie data={chartData} options={chartOptionsKinerja} plugins={[ChartDataLabels]} />
+                  <div className="chart-info">
+                    {categoryInfo.map((item) => (
+                      <div key={item.label} className="info-item">
+                        <span
+                          className="info-color"
+                          style={{
+                            backgroundColor:
+                              chartData.datasets[0].backgroundColor[
+                                chartData.labels.indexOf(item.label)
+                              ],
+                          }}
+                        ></span>
+                        <span className="info-label">{item.label}</span>
+                        <span className="info-percentage">{item.percentage}%</span>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
+            )}
+
 
               <div className="chart-container">
-        {sisaProdukChart && (
-          <div className="chart-card card">
-            <h2 className="chart-title">Sisa Produk CMT</h2>
-            <div className="chart-content">
-            <Pie data={sisaProdukChart} options={chartOptions} plugins={[ChartDataLabels]} />
+              { sisaProdukChart && !selectedCMT && (
+                <div className="chart-card card2">
+                  <h2 className="chart-title">Sisa Produk CMT</h2>
+                  <div className="chart-content">
+                  <Pie data={sisaProdukChart} options={chartOptions} plugins={[ChartDataLabels]} />
 
-            </div>
-    </div>
-  )}
-</div>
+                  </div>
+          </div>
+          )}
+
+          
+        </div>
 
             </div>
 

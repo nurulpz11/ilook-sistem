@@ -512,9 +512,9 @@ table {
     background-color: #ffffff;
     border-radius: 10px;
     overflow: hidden;
-    width: 400px;
-    max-width: 400px;
-    height:600px;
+    width: 500px;
+    max-width: 500px;
+    height:620px;
     max-height: 900px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     position: fixed;
@@ -1222,4 +1222,88 @@ table {
   .table-pendapatan th {
   font-size:10px;
   }
+}
+
+/* Modal pendapatan */
+.modal-pendapatan {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content-pendapatan {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.form-pendapatan {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group-pendapatan {
+  margin-bottom: 15px;
+}
+
+.form-group-pendapatan label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group-pendapatan input[type="text"],
+.form-group-pendapatan input[type="number"] {
+  width: 100%;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.checkbox-item-pendapatan {
+  margin: 5px 0;
+}
+
+.form-actions-pendapatan {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-submit-pendapatan {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-cancel-pendapatan {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-submit-pendapatan:hover {
+  background-color: #218838;
+}
+
+.btn-cancel-pendapatan:hover {
+  background-color: #c82333;
 }

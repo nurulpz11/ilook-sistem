@@ -100,6 +100,9 @@ const Penjahit = () => {
       setError("Gagal menambahkan penjahit.");
     }
   };
+
+
+  
   const handleFormUpdate = async (e) => {
     e.preventDefault();
   
@@ -189,7 +192,7 @@ const Penjahit = () => {
   return (
     <div>
      <div className="penjahit-container">
-      <h1>Data Penjahit</h1>
+      <h1>Data CMT</h1>
     </div>
 
     <div className="table-container">
@@ -248,7 +251,9 @@ const Penjahit = () => {
                      > 
                      <FaEdit className="icon" />
                    </button>
-        
+       {
+          
+        }
                   </div>
 
                   </td>

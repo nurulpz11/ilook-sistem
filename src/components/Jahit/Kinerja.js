@@ -14,10 +14,6 @@ const Kinerja = () => {
     const [error, setError] = useState(null); 
     const { kategori } = useParams(); // Ambil parameter dari URL
 
-
-
-
-
     useEffect(() => {
       const fetchkinerjaCmt = async () => {
           try {

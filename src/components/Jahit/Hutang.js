@@ -12,13 +12,19 @@ const Hutang = () => {
   const [penjahitList, setPenjahitList] = useState([]); 
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
+  const [selectedJenisPerubahan, setSelectedJenisPerubahan] = useState(""); // State filter
+  const [selectedDetailHutang, setSelectedDetailHutang] = useState(null);
+  const [logHistory, setLogHistory] = useState([]);
+
   const [newHutang, setNewHutang] = useState({
     id_penjahit: "",
     jumlah_hutang: "",
-    status_pembayaran: "",
-    tanggal_jatuh_tempo: "",
-    tanggal_hutang: "",
-    jenis_hutang: "",
+    jenis_hutang: "overtime", 
+    potongan_per_minggu: "",
+    is_potongan_persen: false,
+    persentase_potongan: null,
+
+
   });
   const [selectedHutang, setSelectedHutang] = useState(null); // Form pembayaran hutang
   const [logPembayaran, setLogPembayaran] = useState({
@@ -31,42 +37,36 @@ const Hutang = () => {
     { value: "overtime", label: "Overtime" },
     { value: "lainnya", label: "Lainnya" },
   ];
+
+
   
   useEffect(() => {
-    const fetchHutangs = async () => {
+    const fetchHutangs= async () => {
       try {
         setLoading(true);
-        
-        const token = localStorage.getItem("token"); 
-        if (!token) {
-          setError("Token tidak ditemukan. Silakan login kembali.");
-          setLoading(false);
-          return;
-        }
   
-        const response = await API.get(`/hutang?page=${currentPage}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await API.get(`/hutang`, {
         });
   
         console.log("Data Hutang:", response.data); // Debugging
   
-        setHutangs(response.data.data); // Ambil data dari pagination Laravel
-        setLastPage(response.data.last_page); // Set total halaman
+        setHutangs(response.data.data);
+        setLastPage(response.data.last_page);
       } catch (error) {
-        setError(error.response?.data?.message || "Gagal mengambil data hutang.");
+        setError(error.response?.data?.message || "Failed to fetch data");
+        console.error("Error fetching SPK:", error);
       } finally {
         setLoading(false);
       }
     };
   
     fetchHutangs();
-  }, [currentPage]); // Perbaikan: sekarang data diperbarui saat currentPage berubah
+  }, [currentPage]); 
   
+  
+  
+ 
 
-
-
-const [logHistory, setLogHistory] = useState([]); // Untuk menyimpan log pembayaran
-const [selectedDetailHutang, setSelectedDetailHutang] = useState(null); // Untuk menyimpan detail cashbon yang dipilih
 
 useEffect(() => {
   const fetchPenjahits = async () => {
@@ -90,27 +90,29 @@ const handleFormSubmit = async (e) => {
   e.preventDefault(); // Mencegah refresh halaman
 
   try {
-      const response = await API.post("/hutang", JSON.stringify(newHutang), {
-          headers: {
-              "Content-Type": "application/json",
-          },
-      });
+    const response = await API.post("/hutang/tambah", newHutang, {
+      headers: {
+          "Content-Type": "application/json",
+      },
+  });
+  
 
       alert(response.data.message); // Tampilkan pesan sukses
 
       // Perbarui daftar hutang dengan data baru
-      setHutangs([...hutangs, response.data.data]);
+      setHutangs([...hutangs, response.data]);
       setShowForm(false); // Tutup form modal
 
       // Reset form input
       setNewHutang({
-          id_penjahit: "",
-          jumlah_hutang: "",
-          status_pembayaran: "",
-          tanggal_jatuh_tempo: "",
-          tanggal_hutang: "",
-          jenis_hutang:"",
+        id_penjahit: "",
+        jumlah_hutang: "",
+        jenis_hutang: "",
+        potongan_per_minggu: "",
+        is_potongan_persen: false,
+        persentase_potongan: null,
       });
+      
   } catch (error) {
       console.error("Error:", error.response?.data?.message || error.message);
 
@@ -119,45 +121,90 @@ const handleFormSubmit = async (e) => {
   }
 };
 
+
+    const handlePaymentSubmit = async (e) => {
+      e.preventDefault(); // Mencegah refresh halaman
+
+      try {
+        const response = await API.post(`/hutang/tambah/${selectedHutang.id_hutang}`, 
+          { perubahan_hutang: newHutang.jumlah_hutang }, // Kirim data perubahan_hutang
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        alert(response.data.message); // Tampilkan pesan sukses
+
+        // Perbarui daftar hutang dengan data baru
+        const updatedHutangs = hutangs.map(hutang =>
+          hutang.id_hutang === selectedHutang.id_hutang
+            ? { ...hutang, jumlah_hutang: hutang.jumlah_hutang + parseFloat(newHutang.jumlah_hutang) }
+            : hutang
+        );
+
+        setHutangs(updatedHutangs);
+        setShowForm(false); // Tutup form modal
+
+        // Reset form input
+        setNewHutang({
+          id_penjahit: "",
+          jumlah_hutang: "",
+          jenis_hutang: "",
+          potongan_per_minggu: "",
+        });
+
+      } catch (error) {
+        console.error("Error:", error.response?.data?.message || error.message);
+
+        // Tampilkan pesan error dari backend jika ada
+        alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data hutang.");
+      }
+    };
+
+
+
      // Handle klik bayar
-  const handleBayarClick = (hutang) => {
+  const handleTambahClick = (hutang) => {
     setSelectedHutang(hutang); // Set hutang yang dipilih untuk pembayaran
   };
 
-  // Handle submit untuk form pembayaran
-  const handlePaymentSubmit = async (e) => {
-    e.preventDefault();
-  
+ 
+  const fetchHistory = async (id_hutang, jenis_perubahan) => {
     try {
-      const response = await API.post(
-        `/log-pembayaran-hutang/${selectedHutang.id_hutang}`,
-        JSON.stringify(logPembayaran)
-      );
-  
-      alert(response.data.message || "Pembayaran berhasil dicatat!");
+      console.log("Fetching history for hutang ID:", id_hutang, "with filter:", jenis_perubahan);
       
-      setSelectedHutang(null); // Tutup form pembayaran
-      setLogPembayaran({
-        jumlah_dibayar: "",
-        tanggal_bayar: "",
-        catatan: "",
-      }); // Reset form pembayaran
+      const response = await API.get(`/history/${id_hutang}`, {
+        params: { jenis_perubahan: jenis_perubahan || "" },
+      });
+  
+      console.log("Response from API:", response.data);
+      setLogHistory(response.data || []); // Harus tetap array kosong kalau tidak ada data
     } catch (error) {
-      alert(error.response?.data?.message || "Terjadi kesalahan saat mencatat pembayaran.");
+      console.error("Error fetching history:", error.response?.data || error);
+  
+      if (error.response?.status === 404) {
+        setLogHistory([]); // Jangan null, tetap kosongkan array
+      }
     }
   };
   
-  const handleDetailClick = async (hutang) => {
-    try {
-      const response = await API.get(`/log-pembayaran-hutang/${hutang.id_hutang}`);
   
-      setLogHistory(response.data.data || []); // Simpan data log pembayaran
-      setSelectedDetailHutang(hutang); // Tampilkan detail hutang yang dipilih
-    } catch (error) {
-      console.error("Error fetching payment logs:", error);
-    }
+  
+  const handleDetailClick = (hutang) => {
+    setSelectedDetailHutang(hutang); // Simpan data hutang yang dipilih
+    fetchHistory(hutang.id_hutang, selectedJenisPerubahan); // Ambil log history sesuai filter
   };
   
+
+  useEffect(() => {
+    if (selectedDetailHutang) {
+      fetchHistory(selectedDetailHutang.id_hutang, selectedJenisPerubahan);
+    }
+  }, [selectedDetailHutang, selectedJenisPerubahan]); // ✅ Tambahkan selectedDetailHutang
+  
+
 
   const getFilteredPenjahit = async (selectedId, page = 1) => {
     try {
@@ -179,14 +226,7 @@ const handleFormSubmit = async (e) => {
 };
 
   
-  const formatTanggal = (tanggal) => {
-    const date = new Date(tanggal);
-    return new Intl.DateTimeFormat("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date);
-  };
+  
 
   const getStatusColor = (status_pembayaran) => {
     switch (status_pembayaran) {
@@ -231,12 +271,10 @@ const handleFormSubmit = async (e) => {
         <table className="penjahit-table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>NAMA PENJAHIT</th>
-              <th>TANGGAL HUTANG</th>
-              <th>TANGGAL JATUH TEMPO</th>
               <th>JUMLAH HUTANG</th>
-              <th> JENIS HUTANG</th> 
+              <th>POTONGAN PER MINGGU</th>
+              <th>POTONGAN PER PERSENT</th>
               <th>STATUS PEMBAYARAN</th>
            
               <th>AKSI</th>
@@ -244,21 +282,25 @@ const handleFormSubmit = async (e) => {
           </thead>
           <tbody>
           {hutangs
-              .filter((hutang) =>
-                hutang.status_pembayaran.toLowerCase().includes(searchTerm.toLowerCase())
-              )
               .map((hutang) => (
                 <tr key={hutang.id_hutang}>
-                  <td data-label="Id Hutang : ">{hutang.id_hutang}</td>
                   <td data-label="Penjahit : ">
                     {
                       penjahitList.find(penjahit => penjahit.id_penjahit === hutang.id_penjahit)?.nama_penjahit || 'Tidak Diketahui'
                     }
                   </td>
-                  <td data-label=" Tanggal Hutang : ">{formatTanggal(hutang.tanggal_hutang)}</td>
-                  <td data-label = "Tanggal Jatuh Tempo : ">{formatTanggal(hutang.tanggal_jatuh_tempo)}</td>
-                  <td data-label= "Jumlah Hutang : ">{hutang.jumlah_hutang}</td>
-                  <td data-label= "Jenis Hutang : ">{hutang.jenis_hutang}</td>
+                  <td data-label="Jumlah Hutang: ">
+                    Rp.{new Intl.NumberFormat("id-ID").format(hutang.jumlah_hutang)}
+                    </td>
+                    <td data-label="Potongan: ">
+                      Rp.{new Intl.NumberFormat("id-ID").format(hutang.potongan_per_minggu)}
+                    </td>
+                    <td data-label="POTONGAN PER PERSENT : ">
+                      {hutang.persentase_potongan || 0}%
+                    </td>
+
+
+               
                   <td data-label=" ">
                     <span
                       style={{
@@ -279,9 +321,9 @@ const handleFormSubmit = async (e) => {
                   <div className="action-card">
                   <button 
                     className="btn1-icon"
-                    onClick={() => handleBayarClick(hutang)}
+                    onClick={() => handleTambahClick(hutang)}
                     >
-                        <FaMoneyBillWave className="icon" />
+                        <FaPlus className="icon" />
                         </button>
                   
                   <button 
@@ -319,130 +361,128 @@ const handleFormSubmit = async (e) => {
         </div>
       </div>
 
-      {/* Modal Form */}
+
       {showForm && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Tambah Data Hutang</h2>
-            <form onSubmit={handleFormSubmit} className="modern-form">
-              <div className="form-group">
-              <label>ID Penjahit:</label>
-            <select
-              value={newHutang.id_penjahit}
-              onChange={(e) =>
-                setNewHutang({ ...newHutang, id_penjahit: e.target.value })
-              }
-              required
-            >
-              <option value="" disabled>
-                Pilih Penjahit
-              </option>
-              {penjahitList.map((penjahit) => (
-                <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
-                  {penjahit.nama_penjahit}
-                </option>
-              ))}
-            </select>
-              </div>
-
-              <div className="form-group">
-                <label>Jumlah Hutang</label>
-                <input
-                  type="number"
-                  value={newHutang.jumlah_hutang}
-                  onChange={(e) =>
-                    setNewHutang({ ...newHutang, jumlah_hutang: e.target.value })
-                  }
-                  placeholder="Masukkan jumlah hutang"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Status Pembayaran</label>
-                <select
-                  type="text"
-                  value={newHutang.status_pembayaran}
-                  onChange={(e) =>
-                    setNewHutang({
-                      ...newHutang,
-                      status_pembayaran: e.target.value,
-                    })
-                  }
-                  placeholder="Masukkan status pembayaran"
-                  required
-                  >
-                  <option value="">Pilih Status Pembayaran</option>
-                  <option value="belum lunas">Belum Lunas</option>
-                  <option value="lunas">Lunas</option>
-                  <option value="dibayar sebagian">Dibayar Sebagian</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Tanggal Jatuh Tempo</label>
-                <input
-                  type="date"
-                  value={newHutang.tanggal_jatuh_tempo}
-                  onChange={(e) =>
-                    setNewHutang({
-                      ...newHutang,
-                      tanggal_jatuh_tempo: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Tanggal Hutang</label>
-                <input
-                  type="date"
-                  value={newHutang.tanggal_hutang}
-                  onChange={(e) =>
-                    setNewHutang({
-                      ...newHutang,
-                      tanggal_hutang: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-              {/* Input Jenis Hutang */}
-        <div className="form-group">
-          <label>Jenis Hutang</label>
+  <div className="modal-hutang">
+    <div className="modal-content-hutang">
+      <h2>Tambah Data Hutang</h2>
+      <form onSubmit={handleFormSubmit} className="form-hutang">
+        
+        {/* Pilih Penjahit */}
+        <div className="form-group-hutang">
+          <label>Penjahit:</label>
           <select
-          value={newHutang.jenis_hutang}
-          onChange={(e) =>
-            setNewHutang({ ...newHutang, jenis_hutang: e.target.value })
-          }
-          required
-        >
-          <option value="">Pilih Jenis Hutang</option>
-          {jenisHutangOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+            value={newHutang.id_penjahit}
+            onChange={(e) =>
+              setNewHutang({ ...newHutang, id_penjahit: e.target.value })
+            }
+            required
+          >
+            <option value="" disabled>
+              Pilih Penjahit
             </option>
-          ))}
-        </select>
-                </div>
-
-              <div className="form-actions">
-                <button type="submit" className="btn btn-submit">
-                  Simpan
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-cancel"
-                  onClick={() => setShowForm(false)}
-                >
-                  Batal
-                </button>
-              </div>
-            </form>
-          </div>
+            {penjahitList.map((penjahit) => (
+              <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
+                {penjahit.nama_penjahit}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+
+        {/* Jumlah Hutang */}
+        <div className="form-group-hutang">
+          <label>Jumlah Hutang</label>
+          <input
+            type="number"
+            value={newHutang.jumlah_hutang}
+            onChange={(e) =>
+              setNewHutang({ 
+                ...newHutang, 
+                jumlah_hutang: e.target.value !== "" ? Number(e.target.value) : ""
+              })
+            }
+            placeholder="Masukkan jumlah hutang"
+            required
+          />
+        </div>
+
+        {/* Jenis Hutang */}
+        <div className="form-group-hutang">
+          <input type="hidden" value="overtime" name="jenis_hutang" />
+        </div>
+
+        {/* Potongan Per Minggu */}
+        {!newHutang.is_potongan_persen && (
+          <div className="form-group-hutang">
+            <label>Potongan Per Minggu</label>
+            <input
+              type="number"
+              value={newHutang.potongan_per_minggu}
+              onChange={(e) =>
+                setNewHutang({ 
+                  ...newHutang, 
+                  potongan_per_minggu: e.target.value !== "" ? Number(e.target.value) : ""
+                })
+              }
+              placeholder="Masukkan jumlah potongan tetap"
+              required
+            />
+          </div>
+        )}
+
+        {/* Potongan Berdasarkan Persen */}
+        <div className="form-group-hutang checkbox-group-hutang">
+          <input
+            type="checkbox"
+            checked={newHutang.is_potongan_persen}
+            onChange={(e) =>
+              setNewHutang({
+                ...newHutang,
+                is_potongan_persen: e.target.checked,
+                persentase_potongan: e.target.checked ? newHutang.persentase_potongan : null
+              })
+            }
+          />
+          <label>Potongan berdasarkan persen</label>
+        </div>
+
+        {/* Persentase Potongan */}
+        {newHutang.is_potongan_persen && (
+          <div className="form-group-hutang">
+            <label>Persentase Potongan (%)</label>
+            <input
+              type="number"
+              value={newHutang.persentase_potongan || ""}
+              onChange={(e) =>
+                setNewHutang({
+                  ...newHutang,
+                  persentase_potongan: e.target.value !== "" ? Number(e.target.value) : null,
+                })
+              }
+              placeholder="Masukkan persentase potongan"
+              required
+            />
+          </div>
+        )}
+
+        <div className="form-actions-hutang">
+          <button type="submit" className="btn-hutang btn-submit-hutang">
+            Simpan
+          </button>
+          <button
+            type="button"
+            className="btn-hutang btn-cancel-hutang"
+            onClick={() => setShowForm(false)}
+          >
+            Batal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+
 
     {selectedDetailHutang && (
           <div className="modal">
@@ -456,23 +496,54 @@ const handleFormSubmit = async (e) => {
                 <p><strong>ID Penjahit :</strong><span>  {selectedDetailHutang.id_penjahit}</span></p>
                 <p><strong>Jumlah Hutang :</strong> <span> Rp {selectedDetailHutang.jumlah_hutang}</span></p>
                 <p><strong>Status Pembayaran :</strong> <span> {selectedDetailHutang.status_pembayaran}</span></p>
-                <p><strong>Tanggal Jatuh Tempo :</strong><span>  {selectedDetailHutang.tanggal_jatuh_tempo}</span></p>
                 <p><strong>Tanggal Hutang:</strong><span>  {selectedDetailHutang.tanggal_hutang}</span></p>
                 <p><strong>Sisa Hutang:</strong><span>  {selectedDetailHutang.sisa_hutang}</span></p>
                 
-                <br></br><h4>Log Pembayaran:</h4>
+                <br></br><h4>Log History:</h4>
+              
+                <select
+                  id="filter"
+                  value={selectedJenisPerubahan}
+                  onChange={(e) => setSelectedJenisPerubahan(e.target.value)}
+                >
+                  <option value="">Semua</option>
+                  <option value="penambahan">Penambahan</option>
+                  <option value="pengurangan">Pengurangan</option>
+                </select>
+
                 {logHistory.length > 0 ? (
-                  logHistory.map((log, index) => (
-                    <div key={index} className="log-item">
-                      <p><strong>Jumlah Dibayar :</strong> Rp {log.jumlah_dibayar}</p>
-                      <p><strong>Tanggal Bayar :</strong> {log.tanggal_bayar}</p>
-                      <p><strong>Catatan :</strong> {log.catatan}</p>
-                    </div>
-                  ))
+                  <div className="scrollable-table">
+                  <table className="log-table">
+                  <thead>
+                    <tr>
+                      <th>Tanggal Perubahan</th>
+                      <th>Jenis Perubahan</th>
+                      <th>Nominal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logHistory.length > 0 ? (
+                      logHistory.map((history, index) => (
+                        <tr key={index}>
+                          <td>{history.tanggal_perubahan}</td>
+                          <td>{history.jenis_perubahan}</td>
+                          <td>Rp {history.perubahan_hutang || 0}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" style={{ textAlign: "center" }}>Tidak ada log pembayaran.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                </div>
+                
                 ) : (
                   <p className="no-logs">Tidak ada log pembayaran.</p>
                 )}
               </div>
+
               <div className="modal-footer">
                 <button className="btn-close" onClick={() => setSelectedDetailHutang(null)}>
                   Tutup
@@ -481,45 +552,25 @@ const handleFormSubmit = async (e) => {
             </div>
           </div>
         )}
-      
 
       {/* Modal Form Pembayaran */}
       {selectedHutang && (
         <div className="modal">
           <div className="modal-content">
-            <h2>Pembayaran Hutang (ID: {selectedHutang.id_hutang})</h2>
+            <h2>Penambahan Hutang (ID: {selectedHutang.id_hutang})</h2>
             <form onSubmit={handlePaymentSubmit} className="modern-form">
-              <div className="form-group">
-                <label>Jumlah Dibayar</label>
-                <input
-                  type="number"
-                  value={logPembayaran.jumlah_dibayar}
-                  onChange={(e) =>
-                    setLogPembayaran({ ...logPembayaran, jumlah_dibayar: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Tanggal Bayar</label>
-                <input
-                  type="date"
-                  value={logPembayaran.tanggal_bayar}
-                  onChange={(e) =>
-                    setLogPembayaran({ ...logPembayaran, tanggal_bayar: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Catatan</label>
-                <textarea
-                  value={logPembayaran.catatan}
-                  onChange={(e) =>
-                    setLogPembayaran({ ...logPembayaran, catatan: e.target.value })
-                  }
-                ></textarea>
-              </div>
+            <div className="form-group">
+              <label>Jumlah Tambah Hutang</label>
+              <input
+                type="number"
+                value={newHutang.jumlah_hutang || ""}
+                onChange={(e) =>
+                  setNewHutang({ ...newHutang, jumlah_hutang: e.target.value })
+                }
+                required
+              />
+            </div>
+             
               <div className="form-actions">
                 <button type="submit" className="btn btn-submit">
                   Simpan Pembayaran

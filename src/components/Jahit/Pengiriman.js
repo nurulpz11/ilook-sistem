@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from "react";
 import "./Pengiriman.css";
 import API from "../../api"; 
-import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList,  } from 'react-icons/fa';
+import { FaPlus, FaTrash,FaMoneyBillWave, FaSave, FaTimes, FaRegEye, FaEdit, FaClock,FaInfoCircle,FaClipboard , FaList,  } from 'react-icons/fa';
 
 const Pengiriman = () => {
     const [pengirimans, setPengirimans] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [showForm, setShowForm] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-      const [lastPage, setLastPage] = useState(1);
-      const [loading, setLoading] = useState(true);
-      const [error, setError] = useState(null);
+    const [lastPage, setLastPage] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedPengiriman, setSelectedPengiriman] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
+    const [selectedPenjahit, setSelectedPenjahit] = useState("");
+    const [sortBy, setSortBy] = useState("created_at"); 
+    const [sortOrder, setSortOrder] = useState("desc");
+    const [penjahitList, setPenjahitList] = useState([]); 
+    const [produkList, setProdukList] = useState([]);
+    const [selectedNamaProduk, setSelectedNamaProduk] = useState("");
+    const [selectedStatusVerifikasi, setSelectedStatusVerifikasi] = useState("");
+    const [warnaData, setWarnaData] = useState([]);
+    const [showPetugasAtasPopup, setShowPetugasAtasPopup] = useState(false);
+
     const [newPengiriman, setNewPengiriman] = useState({
         tanggal_pengiriman: "",
         total_barang_dikirim: "",
@@ -22,107 +32,169 @@ const Pengiriman = () => {
         warna: [] // Inisialisasi warna dengan array kosong
     });
 
+    const userRole = localStorage.getItem("role");
+    console.log("User Role dari localStorage:", userRole);
+
     useEffect(() => {
     const fetchPengirimans = async () => {
         try {
             setLoading(true);
 
-            const token = localStorage.getItem("token"); 
-            if (!token) {
-                setError("Token tidak ditemukan. Silakan login kembali.");
-                setLoading(false);
-                return;
-            }
+            console.log("Selected Penjahit:", selectedPenjahit); // Debugging
+            console.log("sortBy:", sortBy);
+            console.log("sortOrder:", sortOrder);
 
-            const response = await fetch(`http://localhost:8000/api/pengiriman?page=${currentPage}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` 
-                }
-            });
+            const response = await API.get(`/pengiriman`, {
+                params: { 
+                  page: currentPage,
+                  id_penjahit:selectedPenjahit,
+                  sortBy: sortBy,   
+                  sortOrder: sortOrder,
+                  nama_produk:selectedNamaProduk,
+                  status_verifikasi: selectedStatusVerifikasi
+                }, 
+                  
+              });
             
-            if (!response.ok) {
-                throw new Error("Failed to fetch data");
+              console.log("Data Pengiriman:", response.data); // Debugging
+  
+              setPengirimans(response.data.data);
+              setLastPage(response.data.last_page);
+            } catch (error) {
+              setError(error.response?.data?.message || "Failed to fetch data");
+              console.error("Error fetching SPK:", error);
+            } finally {
+              setLoading(false);
             }
-            const data = await response.json();
+          };
+        
+          fetchPengirimans();
+ }, [currentPage, selectedPenjahit, sortBy, sortOrder,selectedNamaProduk ,selectedStatusVerifikasi]); 
+     
+ 
+ useEffect(() => {
+    const fetchPenjahits = async () => {
+      try {
+        setLoading(true);
+  
+        const response = await API.get("/penjahit"); 
+        setPenjahitList(response.data);
+      } catch (error) {
+        setError("Gagal mengambil data penjahit.");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchPenjahits();
+  }, []);
+  
+  
 
-            // Pastikan data tetap terurut sebelum disimpan ke state
-            const sortedData = data.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-            setPengirimans(sortedData);
-            setLastPage(data.last_page);
+useEffect(() => {
+    const fetchProdukList = async () => {
+        try {
+            const response = await API.get("/produk");
+            console.log("Produk List:", response.data); // Debugging
+            setProdukList(response.data.data); 
         } catch (error) {
-            setError(error.message);
-        } finally {
-            setLoading(false);
+            console.error("Error fetching produk list:", error);
         }
     };
-    
-    fetchPengirimans();
-}, [currentPage]);
+    fetchProdukList();
+}, []);
 
-      
-      
+
+useEffect(() => {
+    if (selectedPengiriman) {
+        fetchWarnaBySpk(selectedPengiriman.id_spk);
+    }
+}, [selectedPengiriman]);
+
+const fetchWarnaBySpk = async (id_spk) => {
+    try {
+        const response = await API.get(`/spk-cmt/${id_spk}/warna`);
+        
+        console.log("API Response:", response.data); // Debugging
+
+        // Pastikan data berbentuk array sebelum diproses
+        if (!Array.isArray(response.data.warna)) {
+            console.error("Expected an array but got:", response.data.warna);
+            return;
+        }
+
+        setWarnaData(response.data.warna.map(warna => ({
+            warna: warna.nama_warna,
+            jumlah_dikirim: 0
+        })));
+    } catch (error) {
+        console.error("Error fetching warna:", error);
+    }
+};
+
+
      // Filter data berdasarkan pencarian
      const filteredPengirimans = Array.isArray(pengirimans) 
      ? pengirimans
          .filter((pengiriman) =>
-           pengiriman.id_spk.toString().includes(searchTerm.toLowerCase())
+             pengiriman.id_spk.toString().includes(searchTerm.toLowerCase())
          )
-         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // Tetap urut dari terbaru
+         .sort((a, b) => 
+             sortOrder === "asc" 
+                 ? new Date(a.created_at) - new Date(b.created_at)  // Terlama dulu
+                 : new Date(b.created_at) - new Date(a.created_at)  // Terbaru dulu
+         )
      : [];
-   
+ 
     
-    // Handle submit form
-    const handleFormSubmit = async (e) => {
+     const handleFormSubmit = async (e) => {
         e.preventDefault();
-      
-        // Validasi frontend
-        if (!newPengiriman.tanggal_pengiriman || !newPengiriman.warna.length) {
-          alert("Tanggal pengiriman dan warna tidak boleh kosong.");
-          return;
+        
+        const formData = new FormData();
+        formData.append("id_spk", newPengiriman.id_spk);
+        formData.append("tanggal_pengiriman", newPengiriman.tanggal_pengiriman);
+        formData.append("total_barang_dikirim", newPengiriman.total_barang_dikirim);
+        
+        if (newPengiriman.foto_nota) {
+            formData.append("foto_nota", newPengiriman.foto_nota);
         }
-      
+    
         try {
-          const response = await API.post("/pengiriman", newPengiriman);
-      
-          setPengirimans([...pengirimans, response.data.data]); // Tambahkan data baru
-          setShowForm(false); // Tutup modal
-      
-          // Reset form
-          setNewPengiriman({
-            tanggal_pengiriman: "",
-            warna: [],
-            total_barang_dikirim: "",
-            sisa_barang: "",
-            total_bayar: "",
-          });
+            const response = await API.post("/pengiriman/petugas-bawah", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            setPengirimans([...pengirimans, response.data.data]); // Tambah ke list
+            setShowForm(false); // Tutup modal
+    
+            // Reset form
+            setNewPengiriman({
+                id_spk: "",
+                tanggal_pengiriman: "",
+                total_barang_dikirim: "",
+                foto_nota: null,
+            });
+    
         } catch (error) {
             console.error("Error adding data:", error);
-        
-            // Ambil pesan error dari backend
-            if (error.response?.data?.error) {
-              const errorMessage = error.response.data.error;
-              const errorDetail = error.response.data.detail;
-        
-              // Jika ada detail error (stok awal, total dikirim, sisa barang)
-              if (errorDetail) {
-                alert(
-                  `${errorMessage}\n\n📌 Detail:\n- Stok Awal: ${errorDetail.stok_awal} pcs\n- Total Sudah Dikirim: ${errorDetail.total_sudah_dikirim} pcs\n- Sisa yang Tersedia: ${errorDetail.sisa_yang_tersedia} pcs\n- Jumlah Dikirim: ${errorDetail.jumlah_dikirim} pcs`
-                );
-              } else {
-                alert(errorMessage);
-              }
-            } else {
-              alert("Terjadi kesalahan saat menambahkan pengiriman.");
-            }
-          }
-        };
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setNewPengiriman((prev) => ({ ...prev, [name]: value }));
+            alert(error.response?.data?.error || "Terjadi kesalahan saat menambahkan pengiriman.");
+        }
     };
+    
+    const handleQtyChange = (index, value) => {
+        const newWarnaData = [...warnaData];
+        newWarnaData[index].jumlah_dikirim = value;
+        setWarnaData(newWarnaData);
+    };
+    
+
+    const handleInputChange = (e) => {
+        setNewPengiriman({
+            ...newPengiriman,
+            [e.target.name]: e.target.value,
+        });
+    };
+    
 
     const formatTanggal = (tanggal) => {
         const date = new Date(tanggal);
@@ -136,23 +208,57 @@ const Pengiriman = () => {
       const handleDetailClick = (pengiriman) => {
         setSelectedPengiriman(pengiriman); // Simpan detail SPK yang dipilih
         setShowPopup(true);  // Tampilkan pop-up
+        setShowPetugasAtasPopup(false);
       };
       const closePopup = () => {
         setShowPopup(false); // Sembunyikan pop-up
-        setSelectedPengiriman(null); // Reset data SPK
-      };
+        setSelectedPengiriman(null); 
       
+      };
+
+      const handlePetugasAtas = (pengiriman) => {
+        setSelectedPengiriman(pengiriman); // Set pengiriman yang dipilijh
+        setShowPetugasAtasPopup(true);  // Buka modal petugas atas
+        setShowPopup(false); 
+      };
+
+      const handlePetugasAtasSubmit = async (e) => {
+        e.preventDefault();
+    
+        try {
+            const response = await API.put(`/pengiriman/petugas-atas/${selectedPengiriman.id_pengiriman}`, {
+                _method: "PUT",
+                warna: warnaData,
+            });
+    
+            alert("Data berhasil diperbarui!");
+    
+            setPengirimans(pengirimans.map(item =>
+                item.id_pengiriman === selectedPengiriman.id_pengiriman ? { ...item, ...response.data.data } : item
+            ));
+    
+            setSelectedPengiriman(null); // Tutup modal setelah submit
+        } catch (error) {
+            console.error("Error updating data:", error);
+            alert("Gagal memperbarui data pengiriman.");
+        }
+    };
+    
+    
+    
+    
     return (
         <div>
             <div className="penjahit-container">
         <h1>Daftar Pengiriman</h1>
       </div>
             <div className="table-container">
-                <div className="filter-header1">
-                <button 
-                onClick={() => setShowForm(true)}>
-                    Tambah 
-                </button>
+            <div className="filter-header1">
+                {userRole === "staff_bawah" && (
+                    <button onClick={() => setShowForm(true)}>
+                        Tambah
+                    </button>
+                )}
                 <div className="search-bar1">
                 <input
                     type="text"
@@ -161,7 +267,55 @@ const Pengiriman = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 </div>
+                <label htmlFor="statusFilter" className="filter-label"></label>
+                <select 
+                    value={selectedPenjahit} 
+                    onChange={(e) => setSelectedPenjahit(e.target.value)}
+                    className="filter-select1"
+                    >
+                    <option value="">All CMT</option>
+                    {penjahitList.map((penjahit) => (
+                        <option key={penjahit.id_penjahit} value={penjahit.id_penjahit}>
+                            {penjahit.nama_penjahit}
+                        </option>
+                ))}
+                 </select>
+                 <label htmlFor="statusFilter" className="filter-label"></label>
+                
+                 <label htmlFor="produkFilter" className="filter-label"></label>
+                <select
+                    value={selectedNamaProduk}
+                    onChange={(e) => setSelectedNamaProduk(e.target.value)}
+                    className="filter-select1"
+                >
+                    <option value="">Semua Produk</option>
+                    {produkList.map((produk) => (
+                        <option key={produk.nama_produk} value={produk.nama_produk}>
+                            {produk.nama_produk}
+                        </option>
+                    ))}
+                </select>
+                
+                <select 
+                value={sortOrder} 
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="filter-select1"
+                >
+                    <option value="asc">Terlama</option>
+                    <option value="desc">Terbaru</option>
+                </select>
+                
+                <select 
+                value={selectedStatusVerifikasi} 
+                onChange={(e) => setSelectedStatusVerifikasi(e.target.value)}
+                className="filter-select1"
+                >
+                    <option value="pending">Pending</option>
+                    <option value="invalid">Invalid</option>
+                    <option value="valid">Valid</option>
+                </select>
             </div>
+            
             <div className="table-wrapper">
                 <table className="penjahit-table">
                     <thead>
@@ -169,11 +323,11 @@ const Pengiriman = () => {
                            
                             <th>ID SPK</th>
                             <th>NAMA CMT</th>
+                            <th>NAMA PRODUK</th>
                             <th>Tanggal Pengiriman</th>
                             <th>Total Barang Dikirim</th>
                             <th>Sisa Barang</th>
-                            <th>Total Bayar</th>
-                          
+                            <th>Status Verfikasi</th>
                             <th>AKSI</th>
                         </tr>
                     </thead>
@@ -182,28 +336,45 @@ const Pengiriman = () => {
                             <tr key={pengiriman.id_pengiriman}>
                                 
                                 <td data-label="ID SPK : ">{pengiriman.id_spk}</td>
-                                <td data-label="Penjahit : ">{pengiriman.nama_penjahit}</td>
+                                <td data-label="Penjahit : ">
+                                {pengiriman.nama_penjahit} {pengiriman.id_penjahit}
+                            </td>
+
+                                <td data-label="Penjahit : ">{pengiriman.nama_produk}</td>
                                 <td data-label="Tanggal Kirim : ">{formatTanggal(pengiriman.tanggal_pengiriman)}</td>
                                 
-                                <td data-label="Total Kirim : ">{pengiriman.total_barang_dikirim}</td>
-                                <td data-label="Sisa Barang" style={{ color: pengiriman.sisa_barang > 0 ? 'red' : 'black'}}>
-                                    {pengiriman.sisa_barang}
-                                </td>
+                             
+                                <td data-label="Total Kirim : ">
+                                {userRole === "staff_bawah" || pengiriman.status_verifikasi === "valid"
+                                    ? pengiriman.total_barang_dikirim
+                                    : "-"}
+                            </td>
 
-                                <td data-label="Total Bayar : ">{pengiriman.total_bayar}</td>
-                              
-                                
+                            <td data-label="Sisa Barang" style={{ color: pengiriman.sisa_barang > 0 ? "red" : "black" }}>
+                                {userRole === "staff_bawah" || pengiriman.status_verifikasi === "valid"
+                                    ? pengiriman.sisa_barang
+                                    : "-"}
+                            </td>
+
+
+                            <td data-label="Status Verifikasi:">
+                            <span style={{ color: pengiriman.status_verifikasi === 'valid' ? 'green' : 'red' }}>
+                                {pengiriman.status_verifikasi}
+                            </span>
+                            </td>
+
+
                                 <td data-label=" ">
-                                <div className="action-card">
-                                <button 
-                                    className="btn1-icon" 
-                                    onClick={() => handleDetailClick(pengiriman)}
-                                >
-                                    <FaInfoCircle className="icon" />
-                                </button>
-                                </div>                      
+                                    <div className="action-card">
+                                        <button className="btn1-icon" onClick={() => handleDetailClick(pengiriman)}>
+                                            <FaInfoCircle className="icon" />
+                                        </button>
+                                        <button className="btn1-icon" onClick={() => handlePetugasAtas(pengiriman)}>
+                                            <FaMoneyBillWave className="icon" />
+                                        </button>
+                                    </div>
                                 </td>
-                            </tr>
+                                                            </tr>
                         ))}
                     </tbody>
                 </table>
@@ -310,24 +481,26 @@ const Pengiriman = () => {
 
 
 
-            {/* Modal Form */}
-            {showForm && (
-            <div className="modal">
-                <div className="modal-content">
-                <h2>Tambah Data Pengiriman</h2>
-                <form onSubmit={handleFormSubmit} className="modern-form">
-                    {/* Input ID SPK */}
-                    <div className="form-group">
+         {/* Modal Form */}
+{showForm && (
+    <div className="modal">
+        <div className="modal-content">
+            <h2>Tambah Data Pengiriman</h2>
+            <form onSubmit={handleFormSubmit} className="modern-form">
+                {/* Input ID SPK */}
+                <div className="form-group">
                     <label>ID SPK</label>
                     <input
                         type="number"
+                        name="id_spk"
                         value={newPengiriman.id_spk || ""}
-                        onChange={(e) => setNewPengiriman({ ...newPengiriman, id_spk: e.target.value })}
+                        onChange={handleInputChange}
                         required
                     />
-                    </div>
-                    
-                    <div className="form-group">
+                </div>
+                
+                {/* Input Tanggal Pengiriman */}
+                <div className="form-group">
                     <label>Tanggal Kirim</label>
                     <input
                         type="date"
@@ -336,91 +509,78 @@ const Pengiriman = () => {
                         onChange={handleInputChange}
                         required
                     />
-                    </div>
-                    {/* Warna dan Jumlah Dikirim */}
-                    {newPengiriman.warna && newPengiriman.warna.map((warnaItem, index) => (
-                    <div key={index} className="form-group">
-                        <label>
-                            {`Warna: ${warnaItem.warna}`} {/* Ubah warna menjadi nama_warna */}
-                        </label>
-                        <input
-                            type="number"
-                            value={warnaItem.jumlah_dikirim !== undefined ? warnaItem.jumlah_dikirim : ""} // Tampilkan kosong jika undefined
-                            onChange={(e) => {
-                                const updatedWarna = [...newPengiriman.warna];
-                                updatedWarna[index].jumlah_dikirim = parseInt(e.target.value, 10) || 0;
-                                setNewPengiriman({ ...newPengiriman, warna: updatedWarna });
-                            }}
-                            placeholder={`Jumlah untuk ${warnaItem.warna}`} 
-                            required
-                        />
-                    </div>
-))}
+                </div>
 
-
-                 
-                    {/* Tombol untuk Memuat Data Warna Berdasarkan ID SPK */}
-                    <button
-                        type="button"
-                        className="btn btn-load-warna"
-                        onClick={async () => {
-                            try {
-                                const response = await API.get(`/spk-cmt/${newPengiriman.id_spk}/warna`);
-                                console.log("Response API:", response); // Debugging API Response
-                        
-                                if (response.data?.warna && Array.isArray(response.data.warna)) {
-                                    const warnaDetails = response.data.warna.map((item) => ({
-                                        warna: item.nama_warna,
-                                        jumlah_dikirim: 0,
-                                    }));
-                                    setNewPengiriman({ ...newPengiriman, warna: warnaDetails });
-                                    console.log("Warna Loaded:", warnaDetails); // Debugging hasil mapping warna
-                                } else {
-                                    alert("Tidak ada warna ditemukan untuk ID SPK ini.");
-                                }
-                            } catch (error) {
-                                console.error("Error fetching warna:", error);
-                                alert("Gagal memuat warna. Periksa koneksi dan coba lagi.");
-                            }
-                        }}
-                        
-                    >
-                        Load Warna
-                    </button>
-
-
-
-                    {/* Kalkulasi Total Barang */}
-                    <div className="form-group">
+                {/* Input Total Barang */}
+                <div className="form-group">
                     <label>Total Barang</label>
                     <input
                         type="number"
-                        value={newPengiriman.warna?.reduce((total, item) => total + (item.jumlah_dikirim || 0), 0) || 0}
-                        readOnly
+                        name="total_barang_dikirim"
+                        value={newPengiriman.total_barang_dikirim}
+                        onChange={handleInputChange}
+                        required
                     />
+                </div>
+
+                {/* Upload Nota (Upload File) */}
+                <div className="form-group">
+                    <label>Upload Nota</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                            setNewPengiriman({ ...newPengiriman, foto_nota: e.target.files[0] })
+                        }
+                    />
+                </div>
+
+                {/* Aksi */}
+                <div className="form-actions">
+                    <button type="submit" className="btn btn-submit">Simpan</button>
+                    <button type="button" className="btn btn-cancel" onClick={() => setShowForm(false)}>Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+)}
+
+
+
+      {/* Modal Form Petugas Atas */}
+{ showPetugasAtasPopup && selectedPengiriman && (
+    <div className="modal">
+        <div className="modal-content">
+            <h2>Pengiriman (ID: {selectedPengiriman.id_pengiriman})</h2>
+            <form onSubmit={handlePetugasAtasSubmit} className="modern-form">
+                {warnaData.map((item, index) => (
+                    <div className="form-group" key={index}>
+                        <label>Warna: {item.warna}</label>
+                        <input
+                            type="number"
+                            value={item.jumlah_dikirim}
+                            onChange={(e) => handleQtyChange(index, parseInt(e.target.value))}
+                            min="0"
+                        />
                     </div>
-
-                    
-              
-
-
-                    {/* Aksi */}
-                    <div className="form-actions">
+                ))}
+                <div className="form-actions">
                     <button type="submit" className="btn btn-submit">
-                        Simpan
+                        Simpan 
                     </button>
                     <button
                         type="button"
-                        className="btn btn-cancel"
-                        onClick={() => setShowForm(false)}
+                        className="btn btn-submit"
+                        onClick={() => setSelectedPengiriman(null)}
                     >
                         Batal
                     </button>
-                    </div>
-                </form>
                 </div>
-            </div>
-            )}
+            </form>
+        </div>
+    </div>
+)}
+
 
         </div>
     );
