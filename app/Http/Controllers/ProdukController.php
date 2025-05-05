@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class ProdukController extends Controller
 {
@@ -68,23 +69,32 @@ class ProdukController extends Controller
     }
 
    
- public function update(Request $request, Produk $produk)
-{
-    $validated = $request->validate([
-        'nama_produk' => 'required|string|max:255',
-        'kategori_produk' => 'required|string|max:255',
-        'jenis_produk' => 'required|string|max:255',
-        'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
-    ]);
-
-    if ($request->hasFile('gambar_produk')) {
-        $validated['gambar_produk'] = $request->file('gambar_produk')->store('produk', 'public');
+    public function update(Request $request, Produk $produk)
+    {
+        $validated = $request->validate([
+            'nama_produk' => 'required|string|max:255',
+            'kategori_produk' => 'required|string|max:255',
+            'jenis_produk' => 'required|string|max:255',
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
+        ]);
+    
+        if ($request->hasFile('gambar_produk')) {
+            // Hapus gambar lama kalau ada
+            if ($produk->gambar_produk && Storage::disk('public')->exists($produk->gambar_produk)) {
+                Storage::disk('public')->delete($produk->gambar_produk);
+            }
+    
+            // Simpan gambar baru
+            $file = $request->file('gambar_produk');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('public/images', $fileName);
+            $validated['gambar_produk'] = 'images/' . $fileName;
+        }
+    
+        $produk->update($validated);
+    
+        return response()->json($produk, Response::HTTP_OK);
     }
-
-    $produk->update($validated);
-
-    return response()->json($produk, Response::HTTP_OK);
-}
 
     
 
