@@ -10,7 +10,9 @@ const Produk = () => {
   const [showForm, setShowForm] = useState(false); 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedKategori, setSelectedKategori] = useState("");
-  
+  const [showCustomJenis, setShowCustomJenis] = useState(false);
+
+
   const [newProduk, setNewProduk] = useState({
     nama_produk: "",
     kategori_produk: "",
@@ -175,7 +177,17 @@ const handleFormUpdate = async (e) => {
 const handleCancelEdit = () => {
   setShowEditForm(false);
 };
-
+const handleJenisChange = (e) => {
+    const value = e.target.value;
+    if (value === 'custom') {
+      setShowCustomJenis(true);
+      // kosongkan dulu biar input manual ambil alih
+      setNewProduk(prev => ({ ...prev, jenis_produk: '' }));
+    } else {
+      setShowCustomJenis(false);
+      setNewProduk(prev => ({ ...prev, jenis_produk: value }));
+    }
+  };
 
   return (
     <div>
@@ -279,7 +291,7 @@ const handleCancelEdit = () => {
                 />
               </div>
               <div className="form-group">
-              <label>Kategori Produk</label>
+              <label>Status Produk</label>
                 <select 
                 name="kategori_produk" 
                 value={newProduk.kategori_produk} 
@@ -291,16 +303,27 @@ const handleCancelEdit = () => {
             </div>
             <div className="form-group">
               <label>Jenis Produk</label>
-                <select 
+              <select 
                 name="jenis_produk" 
-                value={newProduk.jenis_produk} 
-                onChange={handleInputChange}>
-                  <option value="">Pilih Jenis </option>
-                  <option value="Gamis">Gamis</option>
-                  <option value="Kaos">Kaos</option>
-                  <option value="Celana">Celana</option>
-                 
-                </select>
+                value={showCustomJenis ? 'custom' : newProduk.jenis_produk}
+                onChange={handleJenisChange}>
+                <option value="">Pilih Jenis</option>
+                <option value="Gamis">Gamis</option>
+                <option value="Kaos">Kaos</option>
+                <option value="Celana">Celana</option>
+                <option value="custom">Lainnya...</option>
+              </select>
+
+              {showCustomJenis && (
+                <input 
+                  type="text"
+                  name="jenis_produk"
+                  placeholder="Masukkan jenis produk baru"
+                  value={newProduk.jenis_produk}
+                  onChange={handleInputChange}
+                  className="form-control mt-2"
+                />
+              )}
             </div>
 
               <div className="form-group">
@@ -355,26 +378,26 @@ const handleCancelEdit = () => {
 
               </div>
           <div className="form-group">
-       <label>Kategori Produk:</label>
+       <label>Status Produk:</label>
           <select 
             name="kategori_produk" 
             value={editProduk.kategori_produk} 
             onChange={handleInputChange}
           >
-            <option value="">Pilih Kategori</option>
+            <option value="">Pilih Status</option>
             <option value="Urgent">Urgent</option>
             <option value="Normal">Normal</option>
           </select>
           </div>
           
           <div className="form-group">
-       <label>Jenis Produk:</label>
+       <label>Kategori Produk:</label>
           <select 
             name="jenis_produk" 
             value={editProduk.jenis_produk} 
             onChange={handleInputChange}
           >
-            <option value="">Pilih Kategori</option>
+            <option value="">Pilih Status</option>
             <option value="Gamis">Gamis</option>
             <option value="Kaos">Kaos</option>
             <option value="Celana">Celana</option>
