@@ -50,10 +50,10 @@ const [showEditForm, setShowEditForm] = useState(false);
   }, [selectedKategori]);
 
 
- const filteredProduk = (produks || []).filter((produk) =>
-  produk?.nama_produk?.toLowerCase().includes(searchTerm.toLowerCase())
-);
-
+  const filteredProduk = (produks || []).filter((produk) =>
+    !searchTerm || produk?.nama_produk?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
 
 
 const handleFormSubmit = async (e) => {
