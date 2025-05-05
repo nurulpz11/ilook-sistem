@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 
 class ProdukController extends Controller
 {
@@ -44,7 +43,7 @@ class ProdukController extends Controller
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
             'kategori_produk' => 'required|string|max:255',
-           'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:15000',
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
             'jenis_produk' => 'required|string|max:255',
 
         ]);
@@ -52,19 +51,11 @@ class ProdukController extends Controller
         // Jika ada file gambar, unggah dan simpan path-nya
         if ($request->hasFile('gambar_produk')) {
             $file = $request->file('gambar_produk');
-            $fileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+            $fileName = time() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('public/images', $fileName);
-            
-            // Cek validitas file gambar setelah disimpan
-            if (!getimagesize(storage_path('app/public/images/' . $fileName))) {
-                return response()->json(['error' => 'File gambar tidak valid'], 400);
-            }
-        \Log::info('File uploaded', ['file_path' => $filePath]);
-
             $validated['gambar_produk'] = 'images/' . $fileName;
         }
-        
-        
+    
         $produk = Produk::create($validated);
     
         return response()->json($produk, Response::HTTP_CREATED);
