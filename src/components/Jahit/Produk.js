@@ -138,13 +138,22 @@ const handleFormUpdate = async (e) => {
 };
 
 
+const handleFileChange = (e) => {
+  const file = e.target.files[0];
 
-  const handleFileChange = (e) => {
+  if (showEditForm) {
+    setEditProduk((prev) => ({
+      ...prev,
+      gambar_produk: file,
+    }));
+  } else {
     setNewProduk((prev) => ({
       ...prev,
-      gambar_produk: e.target.files[0], // Menyimpan file gambar
+      gambar_produk: file,
     }));
-  };
+  }
+};
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
   
