@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Penjahit.css";
 import API from "../../api"; 
+import getImageUrl from '../../getImageUrl';
 import {FaInfoCircle, FaPlus, FaEdit, FaClock } from 'react-icons/fa';
 
 const Produk = () => {
@@ -346,7 +347,8 @@ const handleJenisChange = (e) => {
               {newProduk.gambar_produk && !(newProduk.gambar_produk instanceof File) && (
                 <div>
                   <p>Gambar Saat Ini:</p>
-                  <img src={`http://localhost:8000/storage/${newProduk.gambar_produk}`} alt="Gambar Produk" width="100" />
+                
+                  <img src={getImageUrl(newProduk.gambar_produk)} alt="Gambar Produk" width="100" />
                 </div>
               )}
             </div>
