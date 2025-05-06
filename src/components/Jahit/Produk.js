@@ -172,17 +172,19 @@ const handleFileChange = (e) => {
   };
   
 
-  const handleEditClick = (produk) => { 
+  const handleEditClick = (produk) => {
+    console.log("Produk yang dipilih untuk diedit:", produk);  // Tambahkan log untuk memastikan data yang dikirim
     setSelectedProduk(produk); // Simpan produk yang akan diedit
-    setEditProduk({ 
+    setEditProduk({
         id: produk.id,
         nama_produk: produk.nama_produk,
         kategori_produk: produk.kategori_produk,
         jenis_produk: produk.jenis_produk,
-        gambar_produk: null, // Gambar diatur null karena hanya diperbarui jika diunggah baru
+        gambar_produk: produk.gambar_produk, // Pastikan gambar_produk terisi
     });
     setShowEditForm(true); // Tampilkan form edit
 };
+
 
 const handleCancelEdit = () => {
   setShowEditForm(false);
