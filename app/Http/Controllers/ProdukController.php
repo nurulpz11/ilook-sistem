@@ -39,29 +39,6 @@ class ProdukController extends Controller
         return response()->json(['data' => $produk], Response::HTTP_OK);
     }
     
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nama_produk' => 'required|string|max:255',
-            'kategori_produk' => 'required|string|max:255',
-            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
-            'jenis_produk' => 'required|string|max:255',
-
-        ]);
-    
-        // Jika ada file gambar, unggah dan simpan path-nya
-        if ($request->hasFile('gambar_produk')) {
-            $file = $request->file('gambar_produk');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('public/images', $fileName);
-            $validated['gambar_produk'] = 'images/' . $fileName;
-        }
-    
-        $produk = Produk::create($validated);
-    
-        return response()->json($produk, Response::HTTP_CREATED);
-    }
-    
   
     public function show(Produk $produk)
     {
@@ -69,25 +46,27 @@ class ProdukController extends Controller
     }
 
    
-    public function update(Request $request, Produk $produk)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
             'kategori_produk' => 'required|string|max:255',
-            'jenis_produk' => 'required|string|max:255',
             'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
+            'jenis_produk' => 'required|string|max:255',
         ]);
     
+        $produk = Produk::findOrFail($id);
+    
+        // Jika ada file gambar baru, unggah dan simpan path-nya
         if ($request->hasFile('gambar_produk')) {
-            // Hapus gambar lama kalau ada
-            if ($produk->gambar_produk && Storage::disk('public')->exists($produk->gambar_produk)) {
-                Storage::disk('public')->delete($produk->gambar_produk);
+            // Hapus gambar lama jika ada
+            if ($produk->gambar_produk && \Storage::exists('public/' . $produk->gambar_produk)) {
+                \Storage::delete('public/' . $produk->gambar_produk);
             }
     
-            // Simpan gambar baru
             $file = $request->file('gambar_produk');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('public/images', $fileName);
+            $filePath = $file->storeAs('public/images', $fileName);
             $validated['gambar_produk'] = 'images/' . $fileName;
         }
     
@@ -95,6 +74,7 @@ class ProdukController extends Controller
     
         return response()->json($produk, Response::HTTP_OK);
     }
+    
 
     
 
