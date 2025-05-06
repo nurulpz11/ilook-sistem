@@ -217,6 +217,7 @@ $urgentProducts = SpkCmt::join('produk', 'spk_cmt.id_produk', '=', 'produk.id')
             'warna.*.nama_warna' => 'required|string|max:50',
             'warna.*.qty' => 'required|integer|min:1',
         ]);
+        
     
         $spk = SpkCmt::findOrFail($id);
     
