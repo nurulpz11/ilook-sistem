@@ -102,75 +102,75 @@ $urgentProducts = SpkCmt::join('produk', 'spk_cmt.id_produk', '=', 'produk.id')
 
     // Menyimpan SPK baru
     public function store(Request $request)
-{if (is_string($request->input('warna'))) {
-    $request->merge([
-        'warna' => json_decode($request->input('warna'), true),
-    ]);
-}
+        {if (is_string($request->input('warna'))) {
+            $request->merge([
+                'warna' => json_decode($request->input('warna'), true),
+            ]);
+        }
 
-    $validated = $request->validate([
-       'id_produk' => 'required|exists:produk,id',
-        'deadline' => 'required|date',
-        'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
-        'keterangan' => 'nullable|string',
-        'tgl_spk' => 'required|date',
-        'status' => 'required|string|in:Pending,In Progress,Completed',
-      
-        'tanggal_ambil' => 'nullable|date',
-        'catatan' => 'nullable|string',
-        'markeran' => 'nullable|string',
-        'aksesoris' => 'nullable|string',
-        'handtag' => 'nullable|string',
-        'merek' => 'nullable|string',
-        'harga_per_barang' => 'required|numeric',
-        'harga_per_jasa' => 'required|numeric',
-        'jenis_harga_jasa' => 'required|in:per_barang,per_lusin', 
-        'warna' => 'required|array',
-        'warna.*.nama_warna' => 'required|string|max:50',
-        'warna.*.qty' => 'required|integer|min:1',
-    ]);
-   
-    $harga_jasa_awal = $request->harga_per_jasa;
+            $validated = $request->validate([
+            'id_produk' => 'required|exists:produk,id',
+                'deadline' => 'required|date',
+                'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
+                'keterangan' => 'nullable|string',
+                'tgl_spk' => 'required|date',
+                'status' => 'required|string|in:Pending,In Progress,Completed',
+            
+                'tanggal_ambil' => 'nullable|date',
+                'catatan' => 'nullable|string',
+                'markeran' => 'nullable|string',
+                'aksesoris' => 'nullable|string',
+                'handtag' => 'nullable|string',
+                'merek' => 'nullable|string',
+                'harga_per_barang' => 'required|numeric',
+                'harga_per_jasa' => 'required|numeric',
+                'jenis_harga_jasa' => 'required|in:per_barang,per_lusin', 
+                'warna' => 'required|array',
+                'warna.*.nama_warna' => 'required|string|max:50',
+                'warna.*.qty' => 'required|integer|min:1',
+            ]);
+        
+            $harga_jasa_awal = $request->harga_per_jasa;
 
-    $harga_per_jasa = $request->jenis_harga_jasa === 'per_lusin'
-    ? $harga_jasa_awal / 12
-    : $harga_jasa_awal;
+            $harga_per_jasa = $request->jenis_harga_jasa === 'per_lusin'
+            ? $harga_jasa_awal / 12
+            : $harga_jasa_awal;
 
-    // Hitung total jumlah produk
-    $jumlahProduk = collect($validated['warna'])->sum('qty');
-    $validated['jumlah_produk'] = $jumlahProduk;
+            // Hitung total jumlah produk
+            $jumlahProduk = collect($validated['warna'])->sum('qty');
+            $validated['jumlah_produk'] = $jumlahProduk;
 
-    // Hitung total harga
-    $totalHarga = $validated['harga_per_barang'] * $jumlahProduk;
-    $validated['total_harga'] = $totalHarga;
+            // Hitung total harga
+            $totalHarga = $validated['harga_per_barang'] * $jumlahProduk;
+            $validated['total_harga'] = $totalHarga;
 
-   
-  
-    // Membuat SPK baru
-    $spk = SpkCmt::create(array_merge($validated, [
-        'jumlah_produk' => $jumlahProduk,
-        'total_harga' => $totalHarga,
-        'harga_per_jasa' => $harga_per_jasa,
-        'harga_jasa_awal' => $harga_jasa_awal, // Simpan harga awal
-    ]));
+        
+        
+            // Membuat SPK baru
+            $spk = SpkCmt::create(array_merge($validated, [
+                'jumlah_produk' => $jumlahProduk,
+                'total_harga' => $totalHarga,
+                'harga_per_jasa' => $harga_per_jasa,
+                'harga_jasa_awal' => $harga_jasa_awal, // Simpan harga awal
+            ]));
 
-    // Simpan warna ke dalam tabel warna
-    foreach ($validated['warna'] as $warna) {
-        Warna::create([
-            'id_spk' => $spk->id_spk,
-            'nama_warna' => $warna['nama_warna'],
-            'qty' => $warna['qty'],
-        ]);
-    }
+            // Simpan warna ke dalam tabel warna
+            foreach ($validated['warna'] as $warna) {
+                Warna::create([
+                    'id_spk' => $spk->id_spk,
+                    'nama_warna' => $warna['nama_warna'],
+                    'qty' => $warna['qty'],
+                ]);
+            }
 
-    return response()->json([
-        'message' => 'SPK dan Warna berhasil dibuat!',
-        'data' => [
-            'spk' => $spk,
-            'nama_produk' => $spk->produk->nama_produk ?? null // Ambil nama produk jika ada
-        ]
-    ], 201);
-}
+            return response()->json([
+                'message' => 'SPK dan Warna berhasil dibuat!',
+                'data' => [
+                    'spk' => $spk,
+                    'nama_produk' => $spk->produk->nama_produk ?? null // Ambil nama produk jika ada
+                ]
+            ], 201);
+        }
 
     // Menampilkan SPK berdasarkan ID
     public function show($id)
@@ -188,104 +188,87 @@ $urgentProducts = SpkCmt::join('produk', 'spk_cmt.id_produk', '=', 'produk.id')
     }
 
     public function update(Request $request, $id)
-{
-    $validated = $request->validate([
-        'id_produk' => 'required|exists:produk,id',
-        'deadline' => 'required|date',
-        'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
-        'keterangan' => 'nullable|string',
-        'tgl_spk' => 'required|date',
-        'status' => 'required|string|in:Pending,In Progress,Completed',
-        'tanggal_ambil' => 'nullable|date',
-        'catatan' => 'nullable|string',
-        'markeran' => 'nullable|string',
-        'aksesoris' => 'nullable|string',
-        'handtag' => 'nullable|string',
-        'merek' => 'nullable|string',
-        'harga_per_barang' => 'required|numeric',
-        'harga_per_jasa' => 'required|numeric',
-        'jenis_harga_jasa' => 'required|in:per_barang,per_lusin',
-    
-        'warna' => 'required|array',
-        'warna.*.id_warna' => 'nullable|exists:warna,id_warna', // Untuk warna yang sudah ada
-        'warna.*.nama_warna' => 'required|string|max:50',
-        'warna.*.qty' => 'required|integer|min:1',
-    ]);
-
-
-    
-    $spk = SpkCmt::findOrFail($id);
-
-    $harga_jasa_awal = $request->filled('harga_per_jasa')
-    ? $request->harga_per_jasa
-    : $spk->harga_jasa_awal;
-
-    // Jika harga jasa per lusin, konversi ke harga per barang
-    $harga_per_jasa = ($request->jenis_harga_jasa === 'per_lusin')
-    ? $harga_jasa_awal / 12
-    : $harga_jasa_awal;
-
-    // Hitung total jumlah produk
-    $jumlahProduk = collect($validated['warna'])->sum('qty');
-    $validated['jumlah_produk'] = $jumlahProduk;
-
-    // Hitung total harga
-    $totalHarga = $validated['harga_per_barang'] * $jumlahProduk;
-    $validated['total_harga'] = $totalHarga;
-
-    if ($request->hasFile('gambar_produk')) {
-        $file = $request->file('gambar_produk');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        
-        // Hapus gambar lama sebelum menyimpan yang baru
-        if ($spk->gambar_produk) {
-            \Storage::delete('public/' . $spk->gambar_produk);
+    {
+        // Parsing warna jika dikirim sebagai string JSON dari frontend
+        if (is_string($request->input('warna'))) {
+            $request->merge([
+                'warna' => json_decode($request->input('warna'), true),
+            ]);
         }
-
-        // Simpan gambar baru
-        $filePath = $file->storeAs('public/images', $fileName);
-        $validated['gambar_produk'] = 'images/' . $fileName;
-    } else {
-        // Gunakan gambar lama jika tidak ada yang baru diunggah
-        $validated['gambar_produk'] = $request->gambar_produk_lama ?? $spk->gambar_produk;
-    }
-
     
-
-
-  
-    $spk->update(array_merge($validated, [
-        'jumlah_produk' => $jumlahProduk,
-        'total_harga' => $totalHarga,
-        'harga_per_jasa' => $harga_per_jasa,
-        'harga_jasa_awal' => $harga_jasa_awal, // Simpan harga awal
-    ]));
-
-    // Update atau tambahkan data warna
-    foreach ($validated['warna'] as $warna) {
-        if (isset($warna['id_warna'])) {
-            // Update warna yang sudah ada
-            $existingWarna = Warna::find($warna['id_warna']);
-            if ($existingWarna) {
-                $existingWarna->update([
+        $validated = $request->validate([
+            'id_produk' => 'required|exists:produk,id',
+            'deadline' => 'required|date',
+            'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
+            'keterangan' => 'nullable|string',
+            'tgl_spk' => 'required|date',
+            'status' => 'required|string|in:Pending,In Progress,Completed',
+            'tanggal_ambil' => 'nullable|date',
+            'catatan' => 'nullable|string',
+            'markeran' => 'nullable|string',
+            'aksesoris' => 'nullable|string',
+            'handtag' => 'nullable|string',
+            'merek' => 'nullable|string',
+            'harga_per_barang' => 'required|numeric',
+            'harga_per_jasa' => 'required|numeric',
+            'jenis_harga_jasa' => 'required|in:per_barang,per_lusin',
+            'warna' => 'required|array',
+            'warna.*.id_warna' => 'nullable|exists:warna,id_warna',
+            'warna.*.nama_warna' => 'required|string|max:50',
+            'warna.*.qty' => 'required|integer|min:1',
+        ]);
+    
+        $spk = SpkCmt::findOrFail($id);
+    
+        $harga_jasa_awal = $validated['harga_per_jasa'];
+        $harga_per_jasa = $validated['jenis_harga_jasa'] === 'per_lusin'
+            ? $harga_jasa_awal / 12
+            : $harga_jasa_awal;
+    
+        $jumlahProduk = collect($validated['warna'])->sum('qty');
+        $totalHarga = $validated['harga_per_barang'] * $jumlahProduk;
+    
+        // Update data utama SPK
+        $spk->update(array_merge($validated, [
+            'jumlah_produk' => $jumlahProduk,
+            'total_harga' => $totalHarga,
+            'harga_per_jasa' => $harga_per_jasa,
+            'harga_jasa_awal' => $harga_jasa_awal,
+        ]));
+    
+        // Dapatkan semua ID warna yang dikirim dari request
+        $warnaIds = collect($validated['warna'])->pluck('id_warna')->filter()->toArray();
+    
+        // Hapus warna lama yang tidak dikirim lagi dari frontend
+        Warna::where('id_spk', $spk->id_spk)
+            ->whereNotIn('id_warna', $warnaIds)
+            ->delete();
+    
+        // Update warna yang ada atau tambahkan warna baru
+        foreach ($validated['warna'] as $warna) {
+            if (isset($warna['id_warna'])) {
+                $existingWarna = Warna::find($warna['id_warna']);
+                if ($existingWarna) {
+                    $existingWarna->update([
+                        'nama_warna' => $warna['nama_warna'],
+                        'qty' => $warna['qty'],
+                    ]);
+                }
+            } else {
+                Warna::create([
+                    'id_spk' => $spk->id_spk,
                     'nama_warna' => $warna['nama_warna'],
                     'qty' => $warna['qty'],
                 ]);
             }
-        } else {
-            // Tambahkan warna baru
-            Warna::create([
-                'id_spk' => $spk->id_spk,
-                'nama_warna' => $warna['nama_warna'],
-                'qty' => $warna['qty'],
-            ]);
         }
+    
+        return response()->json([
+            'message' => 'SPK berhasil diperbarui!',
+            'data' => $spk
+        ], 200);
     }
     
-
-    return response()->json(['message' => 'SPK berhasil diperbarui!', 'data' => $spk], 200);
-}
-
     
 
     // Menghapus SPK
