@@ -38,7 +38,28 @@ class ProdukController extends Controller
     
         return response()->json(['data' => $produk], Response::HTTP_OK);
     }
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_produk' => 'required|string|max:255',
+            'kategori_produk' => 'required|string|max:255',
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
+            'jenis_produk' => 'required|string|max:255',
+
+        ]);
     
+        // Jika ada file gambar, unggah dan simpan path-nya
+        if ($request->hasFile('gambar_produk')) {
+            $file = $request->file('gambar_produk');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('public/images', $fileName);
+            $validated['gambar_produk'] = 'images/' . $fileName;
+        }
+    
+        $produk = Produk::create($validated);
+    
+        return response()->json($produk, Response::HTTP_CREATED);
+    }
   
     public function show(Produk $produk)
     {
