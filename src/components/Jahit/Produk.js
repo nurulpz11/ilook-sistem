@@ -109,6 +109,7 @@ const handleFormUpdate = async (e) => {
   if (editProduk.gambar_produk) {
       formData.append("gambar_produk", editProduk.gambar_produk);
   }
+  console.log(editProduk.gambar_produk);
 
   // Karena route update hanya menerima PUT, tambahkan _method untuk spoofing
   formData.append("_method", "PUT");
