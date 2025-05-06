@@ -709,9 +709,9 @@ const handleUpdateSubmit = async (e, id) => {
   console.log("Mengupdate SPK dengan ID:", id);
   const formData = new FormData();
 
-  // Tambahkan semua data kecuali 'warna' dan 'gambar_produk'
+  // Tambahkan semua data kecuali 'warna' 
   Object.keys(newSpk).forEach((key) => {
-    if (key !== "warna" && key !== "gambar_produk") {
+    if (key !== "warna" && key !== "jenis_harga_jasa") {
       formData.append(key, newSpk[key]);
     }
   });
@@ -724,50 +724,53 @@ const handleUpdateSubmit = async (e, id) => {
   });
 
   formData.append("harga_jasa_awal", newSpk.harga_jasa_awal);
-  formData.append("jenis_harga_jasa", newSpk.jenis_harga_jasa);
+  formData.append("jenis_harga_jasa", newSpk.jenis_harga_jasa); 
 
-  // Cek apakah ada file baru yang diunggah
-  if (newSpk.gambar_produk instanceof File) {
-    formData.append("gambar_produk", newSpk.gambar_produk);
-  } else {
-    // Jika tidak ada file baru, kirim gambar_produk lama
-    formData.append("gambar_produk_lama", newSpk.gambar_produk);
-  }
 
+
+  console.log("Jenis harga jasa yang dikirim:", newSpk.jenis_harga_jasa);
+
+  
   formData.append("_method", "PUT"); // Tambahkan _method untuk Laravel
 
-  console.log("Data yang dikirim:", Object.fromEntries(formData.entries()));
-
+  for (let pair of formData.entries()) {
+    console.log(pair[0] + ": " + pair[1]);
+  }
+  
   try {
-    const token = localStorage.getItem("token"); // Ambil token dari localStorage atau state
-
-    const response = await fetch(`http://localhost:8000/api/spkcmt/${id}`, {
-      method: "POST",
-      body: formData,
+    const token = localStorage.getItem("token");
+  
+    const response = await API.post(`/spkcmt/${id}`, formData, {
       headers: {
-        "Accept": "application/json",
-        "Authorization": `Bearer ${token}`, // Tambahkan token JWT
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
-
-    const responseText = await response.text();
-    console.error("Response dari server:", responseText);
-
-    if (!response.ok) throw new Error("Gagal update SPK");
-
-    const updatedSpk = JSON.parse(responseText);
+  
+    console.log("Response dari server:", response.data); // ✅ ini benar
+  
+    const updatedSpk = response.data;
     console.log("SPK berhasil diupdate:", updatedSpk);
-
+  
     setShowForm(false);
     setSpkCmtData((prev) =>
       prev.map((spk) => (spk.id_spk === updatedSpk.data.id_spk ? updatedSpk.data : spk))
     );
-
+  
     alert("SPK berhasil diupdate!");
   } catch (error) {
-    console.error("Terjadi kesalahan:", error);
-    alert("Error: " + error.message);
+    if (error.response) {
+      console.error("Detail kesalahan:", error.response.data.errors);
+      alert(
+        "Validasi gagal: " +
+          JSON.stringify(error.response.data.errors, null, 2)
+      );
+    } else {
+      console.error("Terjadi kesalahan:", error);
+      alert("Error: " + error.message);
+    }
   }
+  
 };
 
 
@@ -777,12 +780,7 @@ const filteredSpk = spkCmtData.filter((spk) =>
   spk.nama_produk?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleFileChange = (e) => {
-    setNewSpk((prev) => ({
-      ...prev,
-      gambar_produk: e.target.files[0], // Menyimpan file gambar
-    }));
-  };
+ 
   
 
   const handleSubmit = async (e) => {
@@ -1897,22 +1895,7 @@ return (
         </div>
 
        
-        <div className="form-group">
-        <label>Gambar Produk</label>
-        <input
-          type="file"
-          name="gambar_produk"
-          onChange={handleFileChange}
-          accept="image/*"
-        />
-        {newSpk.gambar_produk && !(newSpk.gambar_produk instanceof File) && (
-          <div>
-            <p>Gambar Saat Ini:</p>
-            <img src={`http://localhost:8000/storage/${newSpk.gambar_produk}`} alt="Gambar Produk" width="100" />
-          </div>
-        )}
-      </div>
-
+        
 
 
         <div className="form-group">
