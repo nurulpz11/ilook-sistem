@@ -98,6 +98,7 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::get('/pengiriman/{id}', [PengirimanController::class, 'show']);
         Route::post('/pengiriman/petugas-bawah', [PengirimanController::class, 'storePetugasBawah']);
         Route::put('/pengiriman/petugas-atas/{id_pengiriman}', [PengirimanController::class, 'updatePetugasAtas']);
+        Route::delete('/pengiriman/{id_pengiriman}', [PengirimanController::class, 'destroy']);
 
 
 

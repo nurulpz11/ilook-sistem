@@ -257,6 +257,31 @@ $refundClaim = $pengirimanSebelumnya ? $pengirimanSebelumnya->claim : 0;
     ], 200);
 }
 
+    public function destroy($id_pengiriman)
+    {
+        // Ambil data pengiriman
+        $pengiriman = Pengiriman::find($id_pengiriman);
+
+        // Cek apakah data ditemukan
+        if (!$pengiriman) {
+            return response()->json(['error' => 'Data pengiriman tidak ditemukan.'], 404);
+        }
+
+        // Hapus data relasi dari pengiriman_warna jika ada
+        PengirimanWarna::where('id_pengiriman', $id_pengiriman)->delete();
+
+        // Hapus file nota jika ada
+        if ($pengiriman->foto_nota) {
+            \Storage::disk('public')->delete($pengiriman->foto_nota);
+        }
+
+        // Hapus data pengiriman
+        $pengiriman->delete();
+
+        return response()->json(['message' => 'Data pengiriman berhasil dihapus.'], 200);
+    }
+
+
 
 
 }
