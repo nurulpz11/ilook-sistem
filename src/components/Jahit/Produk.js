@@ -105,38 +105,42 @@ const handleFormUpdate = async (e) => {
   formData.append("nama_produk", editProduk.nama_produk);
   formData.append("kategori_produk", editProduk.kategori_produk);
   formData.append("jenis_produk", editProduk.jenis_produk);
+
   
-  if (editProduk.gambar_produk) {
-      formData.append("gambar_produk", editProduk.gambar_produk);
-  }
-  console.log(editProduk.gambar_produk);
+// Hanya kirim gambar jika user pilih file baru
+if (editProduk.gambar_produk instanceof File) {
+  formData.append("gambar_produk", editProduk.gambar_produk);
+}
+
 
   // Karena route update hanya menerima PUT, tambahkan _method untuk spoofing
   formData.append("_method", "PUT");
 
   try {
-      const response = await API.post(`/produk/${editProduk.id}`, formData, {
-          headers: {
-              "Content-Type": "multipart/form-data",
-          },
-      });
+    const response = await API.post(`/produk/${editProduk.id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-      console.log("Response API:", response.data);
-      alert("Produk berhasil diperbarui!");
+    console.log("Response API:", response.data);
+    alert("Produk berhasil diperbarui!");
 
-      // Perbarui state produk setelah edit
-      setProduks((prevProduks) =>
-          prevProduks.map((produk) =>
-              produk.id === editProduk.id ? response.data : produk
-          )
-      );
+    // Perbarui state produk setelah edit
+    setProduks((prevProduks) =>
+      prevProduks.map((produk) =>
+        produk.id === editProduk.id ? response.data : produk
+      )
+    );
 
-      setShowEditForm(false); // Tutup modal edit
+    setShowEditForm(false); // Tutup modal edit
   } catch (error) {
-      console.error("Error:", error.response?.data?.message || error.message);
-      alert(error.response?.data?.message || "Terjadi kesalahan saat mengupdate produk.");
+    console.error("Error:", error.response?.data?.message || error.message);
+    alert(error.response?.data?.message || "Terjadi kesalahan saat mengupdate produk.");
   }
 };
+
+
 
 
 const handleFileChange = (e) => {
@@ -422,13 +426,15 @@ const handleJenisChange = (e) => {
           </div>
 
           <div className="form-group">
-            <label>Gambar Produk:</label>
+          <label>Gambar Produk:</label>
           <input
             type="file"
             accept="image/*"
             onChange={handleFileChange}
           />
-          </div>
+          
+        </div>
+
            <div className="form-actions">
                 <button type="submit" className="btn btn-submit">
                   Simpan Edit
