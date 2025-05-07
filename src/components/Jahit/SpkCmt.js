@@ -1173,11 +1173,12 @@ return (
             <tr key={spk.id_spk}>
               <td data-label="ID SPK : " >{spk.id_spk}</td>
               <td data-label="Nama baju : ">
-            {spk.nama_produk || "Tidak Diketahui"}
+              {(spk.nama_produk || "Tidak Diketahui") + " " + spk.nomor_seri}
+
           </td>
 
 
-          <td data-label="Penjahit :">{spk.penjahit?.nama_penjahit || 'Tidak Diketahui'}  {spk.id_penjahit}</td>
+          <td data-label="Penjahit :">{spk.penjahit?.nama_penjahit || 'Tidak Diketahui'} </td>
             
           <td data-label="Sisa Hari : "
               style={{ color: getStatusColor(spk.status, spk.sisa_hari),
