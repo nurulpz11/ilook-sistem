@@ -65,7 +65,7 @@ const SpkCmt = () => {
     keterangan: '',
     tgl_spk: '',
     status: 'Pending',
-    nomor_seri: '',
+    nomor_seri: "",
     tanggal_ambil: '',
     catatan: '',
     markeran: '',
@@ -830,6 +830,11 @@ const filteredSpk = spkCmtData.filter((spk) =>
       alert("Error: " + (error.response?.data?.message || error.message));
     }
   };
+
+
+
+
+
   
   const downloadPdf = async (id) => {
     try {
@@ -1801,9 +1806,21 @@ return (
         placeholder="Cari Produk..."
         isSearchable
       />
-
     </div>
 
+    
+    <div className="form-group">
+          <label>Nomor Seri </label>
+          <input
+           type="text"
+            name="nomor_seri"
+            value={newSpk.nomor_seri}
+            onChange={handleInputChange}
+            placeholder="Tambahkan nomor seri.."
+          />
+        </div>
+
+       
 
         <div className="form-group">
           <label>Penjahit</label>
@@ -1997,7 +2014,7 @@ return (
             value={newSpk.markeran}
             onChange={handleInputChange}
             placeholder="Masukkan markeran"
-            required
+           
           />
         </div>
 
@@ -2009,7 +2026,7 @@ return (
             value={newSpk.aksesoris}
             onChange={handleInputChange}
             placeholder="Masukkan aksesoris"
-            required
+           
           />
         </div>
 
@@ -2021,7 +2038,7 @@ return (
             value={newSpk.handtag}
             onChange={handleInputChange}
             placeholder="Masukkan handtag"
-            required
+           
           />
         </div>
 
@@ -2033,7 +2050,7 @@ return (
             value={newSpk.merek}
             onChange={handleInputChange}
             placeholder="Masukkan merek"
-            required
+           
           />
         </div>
         
