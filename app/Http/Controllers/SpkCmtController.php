@@ -115,7 +115,7 @@ $urgentProducts = SpkCmt::join('produk', 'spk_cmt.id_produk', '=', 'produk.id')
                 'keterangan' => 'nullable|string',
                 'tgl_spk' => 'required|date',
                 'status' => 'required|string|in:Pending,In Progress,Completed',
-            
+                'nomor_seri' => 'nullable|string',
                 'tanggal_ambil' => 'nullable|date',
                 'catatan' => 'nullable|string',
                 'markeran' => 'nullable|string',
@@ -206,6 +206,7 @@ $urgentProducts = SpkCmt::join('produk', 'spk_cmt.id_produk', '=', 'produk.id')
             'tanggal_ambil' => 'nullable|date',
             'catatan' => 'nullable|string',
             'markeran' => 'nullable|string',
+            'nomor_seri' => 'nullable|string',
             'aksesoris' => 'nullable|string',
             'handtag' => 'nullable|string',
             'merek' => 'nullable|string',

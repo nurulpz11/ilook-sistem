@@ -36,7 +36,8 @@ class SpkCmt extends Model
         'waktu_pengerjaan_terakhir',
         'sisa_hari_terakhir',
         'jenis_harga_jasa',
-        'harga_jasa_awal'
+        'harga_jasa_awal',
+        'nomor_seri',
     ];
 
     public function produk()
