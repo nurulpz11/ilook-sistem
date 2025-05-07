@@ -369,12 +369,14 @@ const fetchWarnaBySpk = async (id_spk) => {
                                         <button className="btn1-icon" onClick={() => handleDetailClick(pengiriman)}>
                                             <FaInfoCircle className="icon" />
                                         </button>
-                                        <button className="btn1-icon" onClick={() => handlePetugasAtas(pengiriman)}>
-                                            <FaMoneyBillWave className="icon" />
-                                        </button>
-                                    </div>
-                                </td>
-                                                            </tr>
+                                        {userRole !== "staff_bawah" && (
+                                                <button className="btn1-icon" onClick={() => handlePetugasAtas(pengiriman)}>
+                                                    <FaMoneyBillWave className="icon" />
+                                                </button>
+                                            )}
+                             </div>
+                                </td> 
+                        </tr>
                         ))}
                     </tbody>
                 </table>
