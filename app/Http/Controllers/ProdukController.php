@@ -102,7 +102,15 @@ class ProdukController extends Controller
     
     public function destroy(Produk $produk)
     {
+        // Hapus gambar dari storage jika ada
+        if ($produk->gambar_produk && Storage::exists('public/' . $produk->gambar_produk)) {
+            Storage::delete('public/' . $produk->gambar_produk);
+        }
+    
+        // Hapus data produk dari database
         $produk->delete();
+    
         return response()->json(['message' => 'Produk berhasil dihapus'], Response::HTTP_OK);
     }
+    
 }
