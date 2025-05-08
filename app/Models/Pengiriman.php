@@ -34,21 +34,25 @@ class Pengiriman extends Model
     public function getSisaBarangPerWarnaAttribute()
     {
         $sisaBarangPerWarna = [];
-
-        foreach ($this->warna as $warnaDetail) {
-            $warnaData = Warna::where('id_spk', $this->id_spk)
-                ->where('nama_warna', $warnaDetail->warna)
-                ->first();
-
-            if ($warnaData) {
-                $sisaBarang = $warnaData->qty - $warnaDetail->jumlah_dikirim;
-                $sisaBarangPerWarna[$warnaDetail->warna] = $sisaBarang;
-            }
+    
+        // Ambil semua warna dari SPK terkait
+        $warnaDataSpk = Warna::where('id_spk', $this->id_spk)->get();
+    
+        foreach ($warnaDataSpk as $warnaSpk) {
+            // Hitung total dikirim untuk warna ini di SEMUA pengiriman SPK yang sama
+            $totalDikirim = PengirimanWarna::whereHas('pengiriman', function ($q) {
+                    $q->where('id_spk', $this->id_spk);
+                })
+                ->where('warna', $warnaSpk->nama_warna)
+                ->sum('jumlah_dikirim');
+    
+            $sisa = $warnaSpk->qty - $totalDikirim;
+            $sisaBarangPerWarna[$warnaSpk->nama_warna] = max($sisa, 0); // jaga-jaga biar tidak negatif
         }
-
+    
         return $sisaBarangPerWarna;
     }
-
+    
     public static function getStatusOptions()
     {
         return ['pending', 'valid', 'invalid'];

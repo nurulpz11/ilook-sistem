@@ -221,7 +221,7 @@ public function updatePetugasAtas(Request $request, $id_pengiriman)
     }
     
 
-    // Hitung total bayar
+    // Hitung total bayar+
     $totalBayar = $totalDikirimPetugasAtas * $spk->harga_per_jasa;
 
     // Hitung claim
@@ -233,7 +233,25 @@ public function updatePetugasAtas(Request $request, $id_pengiriman)
     ->orderBy('id_pengiriman', 'desc') // Ambil yang terbaru sebelum ini
     ->first(); // Ambil satu data terakhir sebelum yang sekarang
 
-$refundClaim = $pengirimanSebelumnya ? $pengirimanSebelumnya->claim : 0;
+    $refundClaim = $pengirimanSebelumnya ? $pengirimanSebelumnya->claim : 0;
+
+
+    // Cek apakah semua barang dari SPK sudah dikirim
+    $semuaWarnaSudahDikirim = $warnaSpk->every(function ($warnaItem) use ($sudahDikirimPerWarna, $validated) {
+        $warnaNama = $warnaItem->nama_warna;
+        $sudahDikirim = $sudahDikirimPerWarna[$warnaNama] ?? 0;
+
+        // Cari data yang sedang dikirim sekarang untuk warna ini
+        $dikirimSekarang = collect($validated['warna'])
+            ->firstWhere('warna', $warnaNama)['jumlah_dikirim'] ?? 0;
+
+        return ($sudahDikirim + $dikirimSekarang) >= $warnaItem->qty;
+    });
+
+    if ($semuaWarnaSudahDikirim) {
+        $spk->setStatus('Completed');
+        \Log::info("SPK ID {$spk->id_spk} diupdate menjadi COMPLETED karena semua barang sudah dikirim.");
+    }
 
 
     $updated = $pengiriman->update([

@@ -77,14 +77,25 @@ $urgentProducts = SpkCmt::join('produk', 'spk_cmt.id_produk', '=', 'produk.id')
     $spk->transform(function ($item) {
         $item->sisa_hari = $item->sisa_hari;
         $item->status_with_color = $item->status_with_color;
+        $item->total_barang_dikirim = $item->pengiriman->sum('total_barang_dikirim');
         $item->nama_produk = $item->produk->nama_produk ?? null;
         $item->kategori_produk = $item->produk->kategori_produk ?? null;
         $item->gambar_produk = $item->produk->gambar_produk ?? null;
         $item->nama_penjahit = $item->penjahit->nama_penjahit ?? null;
-        $item->total_barang_dikirim = $item->pengiriman ? $item->pengiriman->sum('total_barang_dikirim') : 0;
-
+    
+        // ✅ Tambahkan ini:
+        $item->pengiriman->transform(function ($pengiriman) {
+            $pengiriman->sisa_barang_per_warna = $pengiriman->warna
+                ->groupBy('warna')
+                ->map(function ($items) {
+                    return $items->sum('sisa_barang_per_warna');
+                });
+            return $pengiriman;
+        });
+    
         return $item;
     });
+    
 
    return response()->json([
         'spk' => $spk,
