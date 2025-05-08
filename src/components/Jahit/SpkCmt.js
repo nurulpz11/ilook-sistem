@@ -1208,8 +1208,11 @@ return (
                   >
                     {
                       spk.pengiriman?.length > 0
-                        ? [...spk.pengiriman].sort((a, b) => a.id_pengiriman - b.id_pengiriman).at(-1).sisa_barang
-                        : '-'
+                        ? [...spk.pengiriman]
+                        .sort((a, b) => a.id_pengiriman - b.id_pengiriman)
+                        .at(-1).sisa_barang
+                        : (spk.jumlah_produk || 0).toLocaleString('id-ID')
+
                     }
 
                   
