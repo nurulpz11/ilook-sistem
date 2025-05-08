@@ -78,7 +78,7 @@ class SpkCmt extends Model
 
     public function pengiriman()
     {
-        return $this->hasMany(Pengiriman::class, 'id_spk', 'id_spk');
+        return $this->hasMany(Pengiriman::class, 'id_spk', 'id_spk')->orderByDesc('tanggal_pengiriman');
     }
 
     public function getWaktuPengerjaanAttribute()
