@@ -202,14 +202,17 @@ public function updatePetugasAtas(Request $request, $id_pengiriman)
     
         $stokAwal = $warnaDataSpk->qty;
         $totalSudahDikirim = $sudahDikirimPerWarna[$warnaSpkItem] ?? 0;
-        $sisaBarang = max(0, $stokAwal - ($totalSudahDikirim + $jumlahDikirim));
-        \Log::info("Warna: $warnaSpkItem | Stok Awal: $stokAwal | Total Sudah Dikirim: $totalSudahDikirim | Jumlah Dikirim: $jumlahDikirim | Sisa Barang: $sisaBarang");
+        
+        $totalSetelahDikirim = $totalSudahDikirim + $jumlahDikirim;
 
-        if ($sisaBarang < 0) {
+        if ($totalSetelahDikirim > $stokAwal) {
             return response()->json([
-                'error' => "Jumlah barang dikirim untuk warna $warnaSpkItem melebihi stok yang tersedia."
+                'error' => "Jumlah total dikirim untuk warna $warnaSpkItem melebihi stok SPK. Maksimal: $stokAwal, Sudah dikirim: $totalSudahDikirim, Sekarang: $jumlahDikirim"
             ], 400);
         }
+        
+        $sisaBarang = $stokAwal - $totalSetelahDikirim;
+        
     
         PengirimanWarna::updateOrCreate(
             ['id_pengiriman' => $pengiriman->id_pengiriman, 'warna' => $warnaSpkItem],
