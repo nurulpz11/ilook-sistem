@@ -1205,9 +1205,12 @@ return (
                onClick={() => handlePengirimanDetailClick(spk, "sisa_barang")}
                   className="btn-pengiriman-detail1"
                   >
-                     {spk.pengiriman?.length > 0
-                  ? spk.pengiriman[spk.pengiriman.length - 1].sisa_barang // Ambil sisa_barang dari pengiriman terakhir
-                  : '-'}
+                    {
+                      spk.pengiriman?.length > 0
+                        ? [...spk.pengiriman].sort((a, b) => a.id_pengiriman - b.id_pengiriman).at(-1).sisa_barang
+                        : '-'
+                    }
+
                   
                   </button>
               </td>

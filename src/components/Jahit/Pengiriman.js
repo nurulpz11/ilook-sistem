@@ -23,7 +23,7 @@ const Pengiriman = () => {
     const [selectedStatusVerifikasi, setSelectedStatusVerifikasi] = useState("");
     const [warnaData, setWarnaData] = useState([]);
     const [showPetugasAtasPopup, setShowPetugasAtasPopup] = useState(false);
-
+    
     const [newPengiriman, setNewPengiriman] = useState({
         tanggal_pengiriman: "",
         total_barang_dikirim: "",
@@ -254,11 +254,12 @@ const fetchWarnaBySpk = async (id_spk) => {
       </div>
             <div className="table-container">
             <div className="filter-header1">
-                {userRole === "staff_bawah" && (
-                    <button onClick={() => setShowForm(true)}>
-                        Tambah
-                    </button>
-                )}
+            {userRole && userRole === "staff_bawah" && (
+    <button onClick={() => setShowForm(true)}>
+        Tambah
+    </button>
+)}
+
                 <div className="search-bar1">
                 <input
                     type="text"
