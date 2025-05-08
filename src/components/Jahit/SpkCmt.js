@@ -1118,7 +1118,7 @@ return (
             onChange={(e) => setSelectedKategori(e.target.value)}
               className="filter-select1"
             >
-              <option value="">All Kategori</option>
+              <option value="">All Status Produk</option>
               {kategoriList.map((kategori, index) => (
                 <option key={index} value={kategori}>
                   {kategori}
@@ -1163,7 +1163,7 @@ return (
             <th>Jumlah DIkirim</th>
             <th>Sisa Barang</th>
             <th>Status</th>
-            <th>Kategori PRODUK</th>
+            <th>Status Produk</th>
             <th>Aksi</th>
             <th>Download</th>
           </tr>
@@ -1189,13 +1189,14 @@ return (
 
 
               <td data-label="Waktu Pengerjaan : ">{spk.waktu_pengerjaan}</td> 
-              <td data-label= "Jumlah Produk : ">{spk.jumlah_produk}</td>
+              <td data-label= "Jumlah Produk : ">{(spk.jumlah_produk || 0).toLocaleString('id-ID')}</td>
               <td data-label= "Jumlah Kirim: ">
                 <button
                 onClick={() => handlePengirimanDetailClick(spk, "jumlah_kirim")}
                   className="btn-pengiriman-detail1"
                 >
-                  {spk.total_barang_dikirim || 0}
+                 {(spk.total_barang_dikirim || 0).toLocaleString('id-ID')}
+
                 </button>
               </td>
 
