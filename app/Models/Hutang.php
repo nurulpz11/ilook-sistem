@@ -20,6 +20,7 @@ class Hutang extends Model
         'potongan_per_minggu',
         'is_potongan_persen', 
         'persentase_potongan',
+        'bukti_transfer',
     ];
 
     const JENIS_HUTANG = [

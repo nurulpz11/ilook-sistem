@@ -19,6 +19,7 @@ class HistoryHutang extends Model
         'perubahan_hutang',
         'jenis_perubahan',
         'tanggal_perubahan',
+        'bukti_transfer',
     ];
 
     // Relasi ke Hutang
