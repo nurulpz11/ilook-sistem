@@ -23,6 +23,7 @@ const Hutang = () => {
     potongan_per_minggu: "",
     is_potongan_persen: false,
     persentase_potongan: null,
+    bukti_transfer: null,
 
 
   });
@@ -87,20 +88,82 @@ useEffect(() => {
 
 
 const handleFormSubmit = async (e) => {
-  e.preventDefault(); // Mencegah refresh halaman
+  e.preventDefault();
+
+  const formData = new FormData();
+  formData.append("id_penjahit", newHutang.id_penjahit);
+  formData.append("jumlah_hutang", newHutang.jumlah_hutang);
+  formData.append("jenis_hutang", newHutang.jenis_hutang || "overtime");
+  formData.append("is_potongan_persen", newHutang.is_potongan_persen ? "1" : "0"); 
+
+  if (newHutang.is_potongan_persen) {
+    formData.append("persentase_potongan", newHutang.persentase_potongan);
+  } else {
+    formData.append("potongan_per_minggu", newHutang.potongan_per_minggu);
+  }
+
+  if (newHutang.bukti_transfer) {
+    formData.append("bukti_transfer", newHutang.bukti_transfer);
+  }
 
   try {
-    const response = await API.post("/hutang/tambah", newHutang, {
+    const response = await API.post("/hutang/tambah", formData, {
       headers: {
-          "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data",
       },
-  });
-  
+    });
+
+    alert(response.data.message);
+
+    setHutangs([...hutangs, response.data.data]); // gunakan response.data.data
+    setShowForm(false);
+
+    setNewHutang({
+      id_penjahit: "",
+      jumlah_hutang: "",
+      jenis_hutang: "overtime",
+      potongan_per_minggu: "",
+      is_potongan_persen: false,
+      persentase_potongan: null,
+      bukti_transfer: null,
+    });
+  } catch (error) {
+    console.error("Error:", error.response?.data?.message || error.message);
+    alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data hutang.");
+  }
+};
+
+
+
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault(); // Mencegah refresh halaman
+
+    // Membuat FormData untuk mengirimkan data bersama file
+    const formData = new FormData();
+    formData.append('perubahan_hutang', newHutang.jumlah_hutang);
+
+    // Jika ada bukti transfer, tambahkan ke FormData
+    if (newHutang.bukti_transfer) {
+      formData.append('bukti_transfer', newHutang.bukti_transfer);
+    }
+
+    try {
+      const response = await API.post(`/hutang/tambah/${selectedHutang.id_hutang}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data", // Pastikan menggunakan multipart untuk upload file
+        },
+      });
 
       alert(response.data.message); // Tampilkan pesan sukses
 
       // Perbarui daftar hutang dengan data baru
-      setHutangs([...hutangs, response.data]);
+      const updatedHutangs = hutangs.map(hutang =>
+        hutang.id_hutang === selectedHutang.id_hutang
+          ? { ...hutang, jumlah_hutang: hutang.jumlah_hutang + parseFloat(newHutang.jumlah_hutang) }
+          : hutang
+      );
+
+      setHutangs(updatedHutangs);
       setShowForm(false); // Tutup form modal
 
       // Reset form input
@@ -109,59 +172,16 @@ const handleFormSubmit = async (e) => {
         jumlah_hutang: "",
         jenis_hutang: "",
         potongan_per_minggu: "",
-        is_potongan_persen: false,
-        persentase_potongan: null,
+        bukti_transfer: null, // Reset bukti transfer
       });
-      
-  } catch (error) {
+
+    } catch (error) {
       console.error("Error:", error.response?.data?.message || error.message);
 
       // Tampilkan pesan error dari backend jika ada
       alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data hutang.");
-  }
-};
-
-
-    const handlePaymentSubmit = async (e) => {
-      e.preventDefault(); // Mencegah refresh halaman
-
-      try {
-        const response = await API.post(`/hutang/tambah/${selectedHutang.id_hutang}`, 
-          { perubahan_hutang: newHutang.jumlah_hutang }, // Kirim data perubahan_hutang
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        alert(response.data.message); // Tampilkan pesan sukses
-
-        // Perbarui daftar hutang dengan data baru
-        const updatedHutangs = hutangs.map(hutang =>
-          hutang.id_hutang === selectedHutang.id_hutang
-            ? { ...hutang, jumlah_hutang: hutang.jumlah_hutang + parseFloat(newHutang.jumlah_hutang) }
-            : hutang
-        );
-
-        setHutangs(updatedHutangs);
-        setShowForm(false); // Tutup form modal
-
-        // Reset form input
-        setNewHutang({
-          id_penjahit: "",
-          jumlah_hutang: "",
-          jenis_hutang: "",
-          potongan_per_minggu: "",
-        });
-
-      } catch (error) {
-        console.error("Error:", error.response?.data?.message || error.message);
-
-        // Tampilkan pesan error dari backend jika ada
-        alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data hutang.");
-      }
-    };
+    }
+  };
 
 
 
@@ -170,7 +190,7 @@ const handleFormSubmit = async (e) => {
     setSelectedHutang(hutang); // Set hutang yang dipilih untuk pembayaran
   };
 
- 
+
   const fetchHistory = async (id_hutang, jenis_perubahan) => {
     try {
       console.log("Fetching history for hutang ID:", id_hutang, "with filter:", jenis_perubahan);
@@ -465,6 +485,21 @@ const handleFormSubmit = async (e) => {
           </div>
         )}
 
+        {/* Bukti Transfer */}
+        <div className="form-group-hutang">
+          <label>Upload Bukti Transfer (Opsional)</label>
+          <input
+            type="file"
+            accept=".jpg,.jpeg,.png,.pdf"
+            onChange={(e) =>
+              setNewHutang({
+                ...newHutang,
+                bukti_transfer: e.target.files[0],
+              })
+            }
+          />
+        </div>
+
         <div className="form-actions-hutang">
           <button type="submit" className="btn-hutang btn-submit-hutang">
             Simpan
@@ -519,6 +554,7 @@ const handleFormSubmit = async (e) => {
                       <th>Tanggal Perubahan</th>
                       <th>Jenis Perubahan</th>
                       <th>Nominal</th>
+                      <th>Bukti Transfer</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -528,7 +564,20 @@ const handleFormSubmit = async (e) => {
                           <td>{history.tanggal_perubahan}</td>
                           <td>{history.jenis_perubahan}</td>
                           <td>Rp {history.perubahan_hutang || 0}</td>
-                        </tr>
+                          <td>
+                      {history.bukti_transfer ? (
+                        <a 
+                          href={`${process.env.REACT_APP_FILE_URL}/storage/${history.bukti_transfer}`} 
+                          rel="noopener noreferrer"
+                        >
+                          Lihat Bukti
+                        </a>
+                      ) : (
+                        "Tidak ada"
+                      )}
+                    </td>
+
+                                          </tr>
                       ))
                     ) : (
                       <tr>
@@ -570,7 +619,17 @@ const handleFormSubmit = async (e) => {
                 required
               />
             </div>
-             
+            <div className="form-group">
+              <label>Bukti Transfer</label>
+              <input
+                type="file"
+                onChange={(e) =>
+                  setNewHutang({ ...newHutang, bukti_transfer: e.target.files[0] })
+                }
+                accept="image/*, .pdf"
+              />
+            </div>
+
               <div className="form-actions">
                 <button type="submit" className="btn btn-submit">
                   Simpan Pembayaran
