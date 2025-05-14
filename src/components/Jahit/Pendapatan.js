@@ -20,7 +20,8 @@ const Pendapatan = () => {
   const [kurangiCashbon, setKurangiCashbon] = useState(false);
   const [aksesorisDipilih, setAksesorisDipilih] = useState([]);
   const [detailAksesoris, setDetailAksesoris] = useState([]); // buat nampung semua aksesoris
- 
+ const [buktiTransfer, setBuktiTransfer] = useState(null);
+
   const [newPendapatan, setNewPendapatan] = useState({
     id_pendapatan:"",
     id_penjahit: "",
@@ -34,6 +35,8 @@ const Pendapatan = () => {
     total_cashbon: 0,
     total_hutang: 0,
     total_transfer: 0,
+    bukti_transfer: null,
+
   });
 
 
@@ -146,33 +149,46 @@ const Pendapatan = () => {
   
   
   const handleTambahPendapatan = async (e) => {
-    e.preventDefault();
-  
-    try {
-      const response = await API.post('/bayar-pendapatan', {
-        id_penjahit: selectedPenjahit.id_penjahit,
-        kurangi_hutang: Boolean(kurangiHutang),
-        kurangi_cashbon: Boolean(kurangiCashbon),
-        detail_aksesoris_ids: aksesorisDipilih.length > 0 ? aksesorisDipilih : null,
-      });
-  
-      if (response.data.success) {
-        alert('Pendapatan berhasil ditambahkan!');
-        setShowForm(false); // nutup form/modal kalau pakai
-        // Bisa tambahin fetchData() buat refresh data
-      } else {
-        alert(`Gagal: ${response.data.message}`);
-      }
-    } catch (error) {
-      console.error('Error saat tambah pendapatan:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        alert(`Error: ${error.response.data.message}`);
-      } else {
-        alert('Terjadi kesalahan saat menambahkan pendapatan.');
-      }
+  e.preventDefault();
+
+  try {
+    const formData = new FormData();
+    formData.append('id_penjahit', selectedPenjahit.id_penjahit);
+    formData.append('kurangi_hutang', kurangiHutang ? '1' : '0');
+    formData.append('kurangi_cashbon', kurangiCashbon ? '1' : '0');
+
+    if (buktiTransfer) {
+      formData.append('bukti_transfer', buktiTransfer);
     }
-  };
-  
+
+    if (aksesorisDipilih.length > 0) {
+      aksesorisDipilih.forEach((id, index) => {
+        formData.append(`detail_aksesoris_ids[${index}]`, id);
+      });
+    }
+
+    const response = await API.post('/bayar-pendapatan', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (response.data.success) {
+      alert('Pendapatan berhasil ditambahkan!');
+      setShowForm(false);
+    } else {
+      alert(`Gagal: ${response.data.message}`);
+    }
+  } catch (error) {
+    console.error('Error saat tambah pendapatan:', error);
+    if (error.response?.data?.message) {
+      alert(`Error: ${error.response.data.message}`);
+    } else {
+      alert('Terjadi kesalahan saat menambahkan pendapatan.');
+    }
+  }
+};
+
 
  
 
@@ -522,6 +538,16 @@ const handleOpenForm = (penjahit) => {
             readOnly
           />
         </div>
+        
+        <div className="form-group">
+          <label>Upload Bukti Transfer:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setBuktiTransfer(e.target.files[0])}
+          />
+        </div>
+
 
         <div className="form-actions-hutang">
           <button type="submit"  className="btn-hutang btn-submit-hutang">Simpan</button>

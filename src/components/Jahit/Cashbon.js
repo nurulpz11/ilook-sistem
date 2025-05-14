@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaPlus, FaTrash, FaSave, FaTimes, FaRegEye, FaClock,FaInfoCircle,FaClipboard , FaList,FaMoneyBillWave  } from 'react-icons/fa';
+import { FaPlus,FaInfoCircle,} from 'react-icons/fa';
 import "./Penjahit.css";
 import API from "../../api"; 
 
@@ -22,6 +22,8 @@ const Cashbon = () => {
     status_pembayaran: "",
     tanggal_jatuh_tempo: "",
     tanggal_cashboan: "",
+     bukti_transfer: null,
+
   });
 
   const [selectedCashbon, setSelectedCashbon] = useState(null); 
@@ -104,96 +106,108 @@ const Cashbon = () => {
     
   
   // Handle submit form
-  const handleFormSubmit= async (e) => {
-    e.preventDefault(); // Mencegah refresh halaman
+ const handleFormSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-        const response = await API.post("/cashboan/tambah", JSON.stringify(newCashbon), {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-  
-        alert(response.data.message); // Tampilkan pesan sukses
-  
-        // Perbarui daftar hutang dengan data baru
-        setCashbons([...cashbons, response.data.data]);
-        setShowForm(false); // Tutup form modal
-  
-        // Reset form input
-        setNewCashbon({
-            id_penjahit: "",
-            jumlah_cashboan: "",
-            potongan_per_minggu: "",
-          });
-        } catch (error) {
-            console.error("Error:", error.response?.data?.message || error.message);
+  const formData = new FormData();
+  formData.append("id_penjahit", newCashbon.id_penjahit);
+  formData.append("jumlah_cashboan", newCashbon.jumlah_cashboan);
+
+  if (newCashbon.bukti_transfer) {
+    formData.append("bukti_transfer", newCashbon.bukti_transfer);
+  }
+
+  try {
+    const response = await API.post("/cashboan/tambah", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    alert(response.data.message);
+
+    // Update list cashboan
+    setCashbons([...cashbons, response.data.data]);
+    setShowForm(false); // Tutup form modal
+
+    // Reset form input
+    setNewCashbon({
+      id_penjahit: "",
+      jumlah_cashboan: "",
+      potongan_per_minggu: "",
+      bukti_transfer: null,
+    });
+  } catch (error) {
+    console.error("Error:", error.response?.data?.message || error.message);
+    alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan cashboan.");
+  }
+};
+
       
-            // Tampilkan pesan error dari backend jika ada
-            alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data hutang.");
-        }
-      };
+const handlePaymentSubmit = async (e) => {
+  e.preventDefault(); // Mencegah refresh halaman
+
+  // Membuat FormData untuk mengirimkan data dan file
+  const formData = new FormData();
+  formData.append('perubahan_cashboan', newCashbon.jumlah_cashboan);
+
+  // Jika ada bukti transfer, tambahkan ke FormData
+  if (newCashbon.bukti_transfer) {
+    formData.append('bukti_transfer', newCashbon.bukti_transfer);
+  }
+
+  try {
+    const response = await API.post(`/cashboan/tambah/${selectedCashbon.id_cashboan}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data", // Wajib untuk FormData dengan file
+      },
+    });
+
+    alert(response.data.message); // Tampilkan pesan sukses
+
+    // Perbarui daftar cashbon
+    const updatedCashbons = cashbons.map(cashbon =>
+      cashbon.id_cashboan === selectedCashbon.id_cashboan
+        ? {
+            ...cashbon,
+            jumlah_cashboan: cashbon.jumlah_cashboan + parseFloat(newCashbon.jumlah_cashboan),
+          }
+        : cashbon
+    );
+
+    setCashbons(updatedCashbons);
+    setShowForm(false); // Tutup form modal
+
+    // Reset form input
+    setNewCashbon({
+      id_penjahit: "",
+      jumlah_cashboan: "",
+      potongan_per_minggu: "",
+      bukti_transfer: null,
+    });
+
+  } catch (error) {
+    console.error("Error:", error.response?.data?.message || error.message);
+    alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data cashboan.");
+  }
+};
+
+
       
-      const handlePaymentSubmit = async (e) => {
-        e.preventDefault(); // Mencegah refresh halaman
-      
-        console.log("Selected Cashbon:", selectedCashbon); // Debugging untuk melihat data yang dipilih
-        console.log("ID Cashbon yang dipilih:", selectedCashbon?.id_cashboan); 
-        console.log("Jumlah yang akan ditambahkan:", newCashbon?.jumlah_cashboan);
-        try {
-          const response = await API.post(`/cashboan/tambah/${selectedCashbon.id_cashboan}`, 
-           
-            { perubahan_cashboan: newCashbon.jumlah_cashboan }, 
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          
-      
-          alert(response.data.message); // Tampilkan pesan sukses
-      
-          // Perbarui daftar hutang dengan data baru
-          const updatedCashbons = cashbons.map(cashbon =>
-            cashbon.id_cashboan === selectedCashbon.id_cashboan
-              ? { ...cashbon, jumlah_cashboan: cashbon.jumlah_cashboan + parseFloat(newCashbon.jumlah_cashboan) }
-              : cashbon
-          );
-      
-          setCashbons(updatedCashbons);
-          setShowForm(false); // Tutup form modal
-      
-          // Reset form input
-          setNewCashbon({
-            id_penjahit: "",
-            jumlah_cashboan: "",
-            jenis_hutang: "",
-            potongan_per_minggu: "",
-          });
-      
-        } catch (error) {
-          console.error("Error:", error.response?.data?.message || error.message);
-      
-          // Tampilkan pesan error dari backend jika ada
-          alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan data cashboan.");
-        }
-      };
-      
-      const handleDetailClick = (cashbon) => {
+const handleDetailClick = (cashbon) => {
         setSelectedDetailCashbon(cashbon); // Simpan data hutang yang dipilih
         fetchHistory(cashbon.id_cashboan, selectedJenisPerubahan); // Ambil log history sesuai filter
       };
       
   
-    useEffect(() => {
+ useEffect(() => {
       if (selectedDetailCashbon) {
         fetchHistory(selectedDetailCashbon.id_cashboan, selectedJenisPerubahan);
       }
     }, [selectedDetailCashbon, selectedJenisPerubahan]); // ✅ Tambahkan selectedDetailHutang
     
   
-  const getFilteredPenjahit = async (selectedId, page = 1) => {
+const getFilteredPenjahit = async (selectedId, page = 1) => {
     try {
         const response = await API.get(`/cashboan`, {
             params: { penjahit: selectedId, page: page }
@@ -212,7 +226,7 @@ const Cashbon = () => {
     }
 };
   
-  const formatTanggal = (tanggal) => {
+ const formatTanggal = (tanggal) => {
     const date = new Date(tanggal);
     return new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
@@ -221,7 +235,7 @@ const Cashbon = () => {
     }).format(date);
   };
 
-  const getStatusColor = (status_pembayaran) => {
+ const getStatusColor = (status_pembayaran) => {
     switch (status_pembayaran) {
       case "belum lunas":
         return "#DCA5A0"; // Kategori A: hijau
@@ -451,9 +465,21 @@ const Cashbon = () => {
                 />
               </div>
 
-           
-             
+               <div className="form-group-hutang">
+                <label>Upload Bukti Transfer (Opsional)</label>
+                <input
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  onChange={(e) =>
+                    setNewCashbon({
+                      ...newCashbon,
+                      bukti_transfer: e.target.files[0],
+                    })
+                  }
+                />
+              </div>
 
+           
              
               <div className="form-actions">
                 <button type="submit" className="btn btn-submit">
@@ -475,7 +501,7 @@ const Cashbon = () => {
      {selectedCashbon && (
         <div className="modal">
           <div className="modal-content">
-            <h2>Penambahan Hutang (ID: {selectedCashbon.id_cashboan})</h2>
+            <h2>Penambahan Cashboan (ID: {selectedCashbon.id_cashboan})</h2>
             <form onSubmit={handlePaymentSubmit} className="modern-form">
             <div className="form-group">
               <label>Jumlah Tambah Casbon</label>
@@ -489,6 +515,17 @@ const Cashbon = () => {
               />
             </div>
              
+             <div className="form-group">
+              <label>Bukti Transfer</label>
+              <input
+                type="file"
+                onChange={(e) =>
+                  setNewCashbon({ ...newCashbon, bukti_transfer: e.target.files[0] })
+                }
+                accept="image/*, .pdf"
+              />
+            </div>
+
               <div className="form-actions">
                 <button type="submit" className="btn btn-submit">
                   Simpan Pembayaran
