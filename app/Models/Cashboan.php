@@ -19,6 +19,7 @@ class Cashboan extends Model
         'tanggal_jatuh_tempo',
         'tanggal_cashboan',
         'potongan_per_minggu',
+        'bukti_transfer'
     ];
 
     // Relasi ke tabel SPK

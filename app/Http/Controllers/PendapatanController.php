@@ -212,6 +212,7 @@ public function simulasiPendapatan(Request $request)
         'kurangi_cashbon' => 'required|boolean',
         'detail_aksesoris_ids' => 'nullable|array',
         'detail_aksesoris_ids.*' => 'exists:detail_pesanan_aksesoris,id',
+
     ]);
 
     $periodeAwal = now()->startOfWeek();
@@ -309,15 +310,20 @@ public function tambahPendapatan(Request $request)
         'kurangi_cashbon' => 'required|boolean',
         'detail_aksesoris_ids' => 'nullable|array',
         'detail_aksesoris_ids.*' => 'exists:detail_pesanan_aksesoris,id',
+        'bukti_transfer' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:200048',
     ]);
     
+$path = null;
+if ($request->hasFile('bukti_transfer')) {
+    $path = $request->file('bukti_transfer')->store('bukti_transfer_pendapatan', 'public');
+}
 
     $periodeAwal = now()->startOfWeek();
     $periodeAkhir = now()->endOfWeek();
 
-        if (Pendapatan::where('id_penjahit', $request->id_penjahit)
+    if (Pendapatan::where('id_penjahit', $request->id_penjahit)
         ->whereBetween('created_at', [$periodeAwal, $periodeAkhir])->exists()) {
-        return response()->json([
+     return response()->json([
             'success' => false,
             'message' => 'Pendapatan minggu ini sudah dihitung.',
         ], 422);
@@ -354,6 +360,7 @@ public function tambahPendapatan(Request $request)
                 'tanggal_perubahan' => now(),
                 'jumlah_hutang' => $hutang->jumlah_hutang,
                 'perubahan_hutang' => $penguranganHutang,
+                'bukti_transfer' => $path,
             ]);
 
            
@@ -381,6 +388,7 @@ public function tambahPendapatan(Request $request)
                 'tanggal_perubahan' => now(),
                 'jumlah_cashboan' => $cashbon->jumlah_cashboan,
                 'perubahan_cashboan' => $penguranganCashbon,
+                'bukti_transfer' => $path,
             ]);
             
     
@@ -435,6 +443,7 @@ public function tambahPendapatan(Request $request)
         'total_cashbon' => $potonganCashbon,
         'potongan_aksesoris' => $potonganAksesoris,
         'status_pembayaran' => 'sudah dibayar',
+        'bukti_transfer' => $path,
     ]);
 
     if ($request->detail_aksesoris_ids) {

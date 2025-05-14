@@ -19,7 +19,8 @@ class HistoryCashboan extends Model
         'perubahan_cashboan',
         'jenis_perubahan',
         'tanggal_perubahan',
-        'potongan_per_minggu'
+        'potongan_per_minggu',
+        'bukti_transfer',
     ];
 
     // Relasi ke Hutang

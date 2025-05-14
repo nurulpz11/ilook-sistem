@@ -68,17 +68,28 @@ class CashboanController extends Controller
         $request->validate([
             'id_penjahit' => 'required|exists:penjahit_cmt,id_penjahit',
             'jumlah_cashboan' => 'required|numeric|min:0',
+            'bukti_transfer' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20048', 
             // Hapus validasi 'potongan_per_minggu' karena akan di-generate otomatis
         ]);
     
         $jumlahCashboan = $request->jumlah_cashboan;
-    
+
+
+        // Simpan file
+        if ($request->hasFile('bukti_transfer')) {
+            $path = $request->file('bukti_transfer')->store('bukti_transfer_cashboan', 'public'); // Ganti dengan folder 'bukti_transfer_cashboan'
+            $validated['bukti_transfer'] = $path;
+        } else {
+            $validated['bukti_transfer'] = null;
+        }
+
         $cashboan = Cashboan::create([
             'id_penjahit' => $request->id_penjahit,
             'jumlah_cashboan' => $jumlahCashboan,
             'status_pembayaran' => 'belum lunas',
             'tanggal_cashboan' => now(),
             'potongan_per_minggu' => $jumlahCashboan, // samakan dengan jumlah_cashboan
+            'bukti_transfer' => $path,
         ]);
     
         HistoryCashboan::create([
@@ -87,6 +98,7 @@ class CashboanController extends Controller
             'tanggal_perubahan' => now(),
             'jumlah_cashboan' => $cashboan->jumlah_cashboan,
             'perubahan_cashboan' => $jumlahCashboan,
+            'bukti_transfer' => $path,
         ]);
     
         return response()->json([
@@ -101,6 +113,8 @@ class CashboanController extends Controller
 {
     $request->validate([
         'perubahan_cashboan' => 'required|numeric|min:0', 
+        'bukti_transfer' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20048',
+        'bukti_transfer' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20048', 
     ]);
 
     // Ambil cashboan yang sudah ada
@@ -108,6 +122,15 @@ class CashboanController extends Controller
 
     // Update jumlah cashboan dengan nilai yang ditambahkan
     $cashboan->jumlah_cashboan += $request->perubahan_cashboan;
+
+    // Simpan file
+    if ($request->hasFile('bukti_transfer')) {
+        $path = $request->file('bukti_transfer')->store('bukti_transfer_cashboan', 'public'); // Ganti dengan folder 'bukti_transfer_cashboan'
+        $validated['bukti_transfer'] = $path;
+    } else {
+        $validated['bukti_transfer'] = null;
+    }
+
     $cashboan->save();
 
     // Simpan perubahan ke history cashboan
@@ -117,6 +140,7 @@ class CashboanController extends Controller
         'tanggal_perubahan' => now(),
         'jumlah_cashboan' => $cashboan->jumlah_cashboan, 
         'perubahan_cashboan' => $request->perubahan_cashboan, 
+        'bukti_transfer' => $path ?? null, 
     ]);
 
     return response()->json(['message' => 'Cashboan berhasil ditambahkan']);

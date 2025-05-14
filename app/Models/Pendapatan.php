@@ -24,7 +24,8 @@ class Pendapatan extends Model
         'handtag',
         'transportasi',
         'total_transfer',
-        'status_pembayaran'
+        'status_pembayaran',
+        'bukti_transfer'
     ];
 
     // Relasi ke Penjahit
