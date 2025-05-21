@@ -27,5 +27,10 @@ class Produk extends Model
     {
         return ['Gamis', 'Kaos', 'Celana']; 
     }
+    public function markeranProduk()
+    {
+        return $this->hasMany(MarkeranProduk::class);
+    }
+
     
 }

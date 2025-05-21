@@ -25,6 +25,11 @@ use App\Http\Controllers\PembelianBController;
 use App\Http\Controllers\StokAksesorisController;
 use App\Http\Controllers\PetugasCController;
 use App\Http\Controllers\PetugasDVerifController;
+use App\Http\Controllers\SpkCuttingController;
+use App\Http\Controllers\TukangCuttingController;
+use App\Http\Controllers\HasilCuttingController;
+use App\Http\Controllers\MarkeranProdukController;
+
 
 
 Route::get('/spkcmt', [SpkCmtController::class, 'index']); 
@@ -152,7 +157,10 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::get('/detail-pesanan-aksesoris', [PetugasDVerifController::class, 'getDetailPesananAksesoris']);
 
 
-   
+        Route::apiResource('spk_cutting', SpkCuttingController::class);
+        Route::apiResource('tukang_cutting', TukangCuttingController::class);
+        Route::apiResource('hasil_cutting', HasilCuttingController::class);
+        Route::apiResource('markeran_produk', MarkeranProdukController::class);
     });
 
    
