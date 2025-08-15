@@ -14,6 +14,7 @@ class SpkCuttingBagian extends Model
     protected $fillable = [
         'spk_cutting_id',
         'nama_bagian',
+       
     ];
 
     public function spkCutting()

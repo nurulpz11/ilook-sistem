@@ -15,6 +15,7 @@ class SpkCuttingBahan extends Model
         'spk_cutting_bagian_id',
         'nama_bahan',
         'qty',
+        'berat',
     ];
 
     public function bagian()

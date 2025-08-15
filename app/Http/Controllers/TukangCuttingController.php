@@ -19,6 +19,10 @@ class TukangCuttingController extends Controller
     {
         $validated = $request->validate([
             'nama_tukang_cutting' => 'required|string|max:255',
+            'kontak' => 'nullable|string|max:100',
+            'bank' => 'nullable|string|max:100',
+            'no_rekening' => 'nullable|string|max:100',
+            'alamat' => 'nullable|string|max:255',
         ]);
 
         $tukang = TukangCutting::create($validated);
@@ -29,13 +33,13 @@ class TukangCuttingController extends Controller
         ], 201);
     }
 
-    // Menampilkan detail tukang cutting tertentu
+   
     public function show(TukangCutting $tukangCutting)
     {
         return response()->json($tukangCutting);
     }
 
-    // Mengupdate tukang cutting
+   
     public function update(Request $request, TukangCutting $tukangCutting)
     {
         $validated = $request->validate([
@@ -50,7 +54,7 @@ class TukangCuttingController extends Controller
         ]);
     }
 
-    // Menghapus tukang cutting
+    
     public function destroy(TukangCutting $tukangCutting)
     {
         $tukangCutting->delete();

@@ -114,7 +114,6 @@ class CashboanController extends Controller
     $request->validate([
         'perubahan_cashboan' => 'required|numeric|min:0', 
         'bukti_transfer' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20048',
-        'bukti_transfer' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20048', 
     ]);
 
     // Ambil cashboan yang sudah ada

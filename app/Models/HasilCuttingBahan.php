@@ -13,6 +13,7 @@ class HasilCuttingBahan extends Model
     protected $fillable = [
         'hasil_cutting_id',
         'spk_cutting_bahan_id',
+        'spk_cutting_bagian_id',
         'berat',
         'hasil',
     ];
@@ -26,5 +27,10 @@ class HasilCuttingBahan extends Model
     {
         return $this->belongsTo(SpkCuttingBahan::class);
     }
-   
+   public function pendapatan_cutting()
+    {
+        return $this->belongsToMany(PendapatanCutting::class, 'hasil_pendapatan_cutting');
+    }
+  
+
 }

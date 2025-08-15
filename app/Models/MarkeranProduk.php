@@ -11,7 +11,7 @@ class MarkeranProduk extends Model
     protected $table = 'markeran_produk' ;
 
     protected $fillable = [
-         'produk_id',
+        'produk_id',
         'nama_komponen',
         'total_panjang',
         'jumlah_hasil',

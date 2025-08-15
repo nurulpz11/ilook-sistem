@@ -1,34 +1,45 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SpkCmtController;
-use App\Http\Controllers\PenjahitController;
-use App\Http\Controllers\LaporanCmtController;
-use App\Http\Controllers\WarnaController;
-use App\Http\Controllers\PengirimanController;
-use App\Http\Controllers\CashboanController;
-use App\Http\Controllers\LogPembayaranCashbonController;
-use App\Http\Controllers\HutangController;
-use App\Http\Controllers\LogPembayaranHutangController;
-use App\Http\Controllers\PendapatanController;
+    use Illuminate\Http\Request;
+    use Illuminate\Support\Facades\Route;
+    use App\Http\Controllers\AuthController;
+    use App\Http\Controllers\SpkCmtController;
+    use App\Http\Controllers\PenjahitController;
+    use App\Http\Controllers\LaporanCmtController;
+    use App\Http\Controllers\WarnaController;
+    use App\Http\Controllers\PengirimanController;
+    use App\Http\Controllers\CashboanController;
+    use App\Http\Controllers\LogPembayaranCashbonController;
+    use App\Http\Controllers\HutangController;
+    use App\Http\Controllers\LogPembayaranHutangController;
+    use App\Http\Controllers\PendapatanController;
 
-use App\Http\Controllers\SpkChatController;
-use App\Http\Controllers\SpkChatInvite;
-use App\Http\Controllers\StaffController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\ProdukController;
-use App\Http\Controllers\AksesorisController;
-use App\Http\Controllers\PembelianAController;
-use App\Http\Controllers\PembelianBController;
-use App\Http\Controllers\StokAksesorisController;
-use App\Http\Controllers\PetugasCController;
-use App\Http\Controllers\PetugasDVerifController;
-use App\Http\Controllers\SpkCuttingController;
-use App\Http\Controllers\TukangCuttingController;
-use App\Http\Controllers\HasilCuttingController;
-use App\Http\Controllers\MarkeranProdukController;
+    use App\Http\Controllers\SpkChatController;
+    use App\Http\Controllers\SpkChatInvite;
+    use App\Http\Controllers\StaffController;
+    use App\Http\Controllers\NotificationController;
+    use App\Http\Controllers\ProdukController;
+    use App\Http\Controllers\AksesorisController;
+    use App\Http\Controllers\PembelianAController;
+    use App\Http\Controllers\PembelianBController;
+    use App\Http\Controllers\StokAksesorisController;
+    use App\Http\Controllers\PetugasCController;
+    use App\Http\Controllers\PetugasDVerifController;
+    use App\Http\Controllers\SpkCuttingController;
+    use App\Http\Controllers\TukangCuttingController;
+    use App\Http\Controllers\HasilCuttingController;
+    use App\Http\Controllers\MarkeranProdukController;
+    use App\Http\Controllers\HutangCuttingController;
+    use App\Http\Controllers\CashboanCuttingController;
+    use App\Http\Controllers\PendapatanCuttingController;
+    use App\Http\Controllers\TukangJasaController;
+    use App\Http\Controllers\SpkJasaController;
+    use App\Http\Controllers\HasilJasaController;
+    use App\Http\Controllers\HutangJasaController;
+    use App\Http\Controllers\CashboanJasaController;
+    use App\Http\Controllers\PendapatanJasaController;
+
+
 
 
 
@@ -161,6 +172,44 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::apiResource('tukang_cutting', TukangCuttingController::class);
         Route::apiResource('hasil_cutting', HasilCuttingController::class);
         Route::apiResource('markeran_produk', MarkeranProdukController::class);
+        Route::get('/spk_cutting/{id}', [SpkCuttingController::class, 'show']);
+
+        Route::post('/hutang/tambah_cutting', [HutangCuttingController::class, 'tambahHutangCutting']);
+        Route::get('/hutang_cutting', [HutangCuttingController::class, 'index']);
+        Route::post('/hutang_cutting/tambah/{id}', [HutangCuttingController::class, 'tambahHutangLama']);
+        Route::get('/history_cutting/{id}', [HutangCuttingController::class, 'getHistoryByHutangId']);
+
+
+        Route::post('/cashboan/tambah_cutting', [CashboanCuttingController::class, 'tambahCashboanCutting']);
+        Route::get('/cashboan_cutting', [CashboanCuttingController::class, 'index']);
+        Route::post('/cashboan_cutting/tambah/{id}', [CashboanCuttingController::class, 'tambahCashboanLama']);
+        Route::get('/history_cashboan_cutting/{id}', [CashboanCuttingController::class, 'getHistoryByCashboanId']);
+
+        Route::get('/pendapatan/mingguan/cutting', [PendapatanCuttingController::class, 'getPendapatanMingguIni']);
+        Route::post('/pendapatan/simulasi/cutting', [PendapatanCuttingController::class, 'simulasiPendapatanCutting']);
+        Route::post('/pendapatan/cutting', [PendapatanCuttingController::class, 'tambahPendapatanCutting']);
+        Route::get('/pendapatan/cutting', [PendapatanCuttingController::class, 'index']);
+        Route::get('pendapatan/{id}/cutting', [PendapatanCuttingController::class, 'showPengiriman']);
+   
+
+        Route::apiResource('tukang-jasa', TukangJasaController::class);
+
+        Route::apiResource('SpkJasa', SpkJasaController::class);
+        Route::apiResource('HasilJasa', HasilJasaController::class);
+        Route::post('/hutang/tambah_jasa', [HutangJasaController::class, 'tambahHutangJasa']);
+        Route::post('/cashboan/tambah_jasa', [CashboanJasaController::class, 'tambahCashboanJasa']);
+        Route::get('/cashboan_jasa', [CashboanJasaController::class, 'index']);
+        Route::get('/hutang_jasa', [HutangJasaController::class, 'index']);
+        Route::post('/hutang_jasa/tambah/{id}', [HutangJasaController::class, 'tambahHutangLama']);
+        Route::post('/cashboan_jasa/tambah/{id}', [CashboanJasaController::class, 'tambahCashboanLama']);
+        Route::get('/history_jasa/{id}', [HutangJasaController::class, 'getHistoryByHutangId']);
+        Route::get('/history_cashboan_jasa/{id}', [CashboanJasaController::class, 'getHistoryByCashboanId']);
+    
+        Route::get('/pendapatan/mingguan/jasa', [PendapatanJasaController::class, 'getPendapatanMingguIni']);
+        Route::post('/pendapatan/simulasi/jasa', [PendapatanJasaController::class, 'simulasiPendapatanCutting']);
+        Route::post('/pendapatan/jasa', [PendapatanJasaController::class, 'tambahPendapatanJasa']);
+        Route::get('pendapatan/{id}/jasa', [PendapatanJasaController::class, 'showPengiriman']);
+   
     });
 
    

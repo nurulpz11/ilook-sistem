@@ -12,10 +12,12 @@ class HasilCutting extends Model
 
      protected $fillable = [
         'spk_cutting_id',
-        'nomor_seri',
         'foto_komponen',
         'jumlah_komponen',
         'status_perbandingan_agregat',
+        'total_bayar',
+        'spk_cutting_bagian_id',
+        'total_hasil_pendapatan',
     ];
 
     public function spkCutting()
@@ -30,7 +32,7 @@ class HasilCutting extends Model
   
     public function bahan()
     {
-        return $this->hasMany(HasilCuttingBahan::class);
+        return $this->hasMany(HasilCuttingBahan::class, 'hasil_cutting_id');
     }
 
 

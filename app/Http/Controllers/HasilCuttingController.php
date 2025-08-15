@@ -18,67 +18,143 @@ use Illuminate\Support\Facades\Storage;
 
 class HasilCuttingController extends Controller
 {
-    public function index()
-    {
-        $data = HasilCutting::with('spkCutting.produk', 'spkCutting.tukangCutting', 'markeran')->get()->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'spk_cutting_id' => $item->spk_cutting_id,
-                'nomor_seri' => $item->nomor_seri,
-                'foto_komponen' => $item->foto_komponen,
-                'jumlah_komponen' => $item->jumlah_komponen,
-                'updated_at' => $item->updated_at,
-                'created_at' => $item->created_at,
-                'nama_produk' => $item->spkCutting->produk->nama_produk ?? null,
-                'produk_id' => $item->spkCutting->produk->id ?? null,
-                'gambar_produk' => $item->spkCutting->produk->gambar_produk ?? null,
-                'nama_tukang_cutting' => $item->spkCutting->tukangCutting->nama_tukang_cutting ?? null,
-                'markeran' => $item->markeran->map(function ($m) {
-                        return [
-                            'id' => $m->id,
-                            'nama_komponen' => $m->nama_komponen,
-                            'total_panjang' => $m->total_panjang,
-                            'jumlah_hasil' => $m->jumlah_hasil,
-                            'berat_per_pcs' => $m->berat_per_pcs,
-                            'status_perbandingan' =>  $m->status_perbandingan,
-                        ];
-                    }),
-                ];
-            });
+   public function index()
+{
+    $data = HasilCutting::with([
+        'spkCutting.produk',
+        'spkCutting.tukangCutting',
+        'markeran',
+        'bahan.spkCuttingBahan.bagian'
+    ])->get()->map(function ($item) {
 
-        return response()->json($data);
-    }
+        // Group bahan by nama_bagian
+        $groupedBahan = [];
+
+        foreach ($item->bahan as $b) {
+            $namaBagian = $b->spkCuttingBahan->bagian->nama_bagian ?? 'Unknown Bagian';
+
+            if (!isset($groupedBahan[$namaBagian])) {
+                $groupedBahan[$namaBagian] = [];
+            }
+
+            $groupedBahan[$namaBagian][] = [
+                'id' => $b->id,
+                'spk_cutting_bahan_id' => $b->spk_cutting_bahan_id,
+                'nama_bahan' => $b->spkCuttingBahan->nama_bahan ?? null,
+                'qty' => $b->spkCuttingBahan->qty ?? null,
+                'berat' => $b->berat,
+                'hasil' => $b->hasil,
+            ];
+        }
+
+        // Ubah array assosiatif jadi array objek agar JSON lebih rapi
+        $bahanByBagian = [];
+        foreach ($groupedBahan as $namaBagian => $bahanList) {
+            $bahanByBagian[] = [
+                'nama_bagian' => $namaBagian,
+                'bahan' => $bahanList,
+            ];
+        }
+
+        return [
+            // data lain tetap ada
+            'id' => $item->id,
+            'spk_cutting_id' => $item->spk_cutting_id,
+            'id_spk_cutting_id' => $item->spkCutting->id_spk_cutting_id ?? null,
+            'foto_komponen' => $item->foto_komponen,
+            'jumlah_komponen' => $item->jumlah_komponen,
+            'updated_at' => $item->updated_at,
+            'created_at' => $item->created_at,
+            'nama_produk' => $item->spkCutting->produk->nama_produk ?? null,
+            'produk_id' => $item->spkCutting->produk->id ?? null,
+            'gambar_produk' => $item->spkCutting->produk->gambar_produk ?? null,
+            'nama_tukang_cutting' => $item->spkCutting->tukangCutting->nama_tukang_cutting ?? null,
+            'status_perbandingan_agregat' => $item->status_perbandingan_agregat,
+            'total_hasil_pendapatan' => $item->total_hasil_pendapatan, 
+            'markeran' => $item->markeran->map(function ($m) use ($item) {
+                $standar = MarkeranProduk::where('produk_id', $item->spkCutting->produk_id ?? null)
+                            ->where('nama_komponen', $m->nama_komponen)
+                            ->first();
+
+                return [
+                    'nama_komponen' => $m->nama_komponen,
+                    'hasil' => [
+                        'total_panjang' => $m->total_panjang,
+                        'jumlah_hasil' => $m->jumlah_hasil,
+                        'berat_per_pcs' => $m->berat_per_pcs,
+                    ],
+                    'standar' => $standar ? [
+                        'total_panjang' => $standar->total_panjang,
+                        'jumlah_hasil' => $standar->jumlah_hasil,
+                        'berat_per_pcs' => $standar->berat_per_pcs,
+                    ] : null,
+                    'status_perbandingan' => $m->status_perbandingan,
+                ];
+            }),
+            'bahan_by_bagian' => $bahanByBagian, // ini bagian yang diubah
+        ];
+    });
+
+    return response()->json($data);
+}
+
 
 
     public function store(Request $request)
     {
     try {
-        $validated = $request->validate([
+          $validated = $request->validate([
             'spk_cutting_id' => 'required|exists:spk_cutting,id',
-            'nomor_seri' => 'required|string|max:255',
-            'foto_komponen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
+           'foto_komponen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:150000',
             'jumlah_komponen' => 'required|integer|min:1|max:255',
+            'spk_cutting_bagian_id' => 'required|exists:spk_cutting_bagian,id',
             'hasil_markeran' => 'nullable|array',
             'hasil_markeran.*.nama_komponen' => 'required|string',
             'hasil_markeran.*.total_panjang' => 'required|numeric|min:0',
             'hasil_markeran.*.jumlah_hasil' => 'required|integer|min:1',
-            
             'hasil_bahan' => 'nullable|array',
+            'hasil_bahan.*.spk_cutting_bagian_id' => 'required|exists:spk_cutting_bagian,id',
             'hasil_bahan.*.spk_cutting_bahan_id' => 'required|exists:spk_cutting_bahan,id',
             'hasil_bahan.*.berat' => 'nullable|numeric|min:0',
             'hasil_bahan.*.hasil' => 'nullable|integer|min:0',
         ]);
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        \Log::error('Validasi gagal di store HasilCuttingController', [
-            'errors' => $e->errors(),
-            'input' => $request->all()
-        ]);
+    // Validasi manual nama_komponen berdasarkan markeran produk
+    $spkCutting = SpkCutting::with('produk')->findOrFail($validated['spk_cutting_id']);
+    $produkId = $spkCutting->produk_id;
 
-        return response()->json([
-            'message' => 'Validasi gagal',
-            'errors' => $e->errors(),
-        ], 422);
+    
+ 
+
+
+    $komponenValid = MarkeranProduk::where('produk_id', $produkId)
+        ->pluck('nama_komponen')
+        ->toArray();
+
+    if ($request->has('hasil_markeran')) {
+        foreach ($request->hasil_markeran as $index => $markeran) {
+            if (!in_array($markeran['nama_komponen'], $komponenValid)) {
+                return response()->json([
+                    'message' => "Nama komponen tidak valid pada hasil_markeran index ke-{$index}.",
+                    'errors' => [
+                        "hasil_markeran.{$index}.nama_komponen" => ["Komponen '{$markeran['nama_komponen']}' tidak ditemukan di markeran produk."],
+                    ],
+                    'komponen_valid' => $komponenValid,
+                ], 422);
+            }
+        }
     }
+
+} catch (\Illuminate\Validation\ValidationException $e) {
+    \Log::error('Validasi gagal di store HasilCuttingController', [
+        'errors' => $e->errors(),
+        'input' => $request->all()
+    ]);
+
+    return response()->json([
+        'message' => 'Validasi gagal',
+        'errors' => $e->errors(),
+    ], 422);
+}
 
     DB::beginTransaction();
     try {
@@ -88,8 +164,27 @@ class HasilCuttingController extends Controller
             $validated['foto_komponen'] = $path;
         }
 
+        $bagianIdDipilih = $validated['spk_cutting_bagian_id'];
+        $totalHasilPendapatan = 0;
+
+        if ($request->has('hasil_bahan')) {
+            foreach ($request->hasil_bahan as $bahan) {
+                if ($bahan['spk_cutting_bagian_id'] == $bagianIdDipilih) {
+                    $totalHasilPendapatan += $bahan['hasil'] ?? 0;
+                }
+            }
+        }
+
+        $validated['total_hasil_pendapatan'] = $totalHasilPendapatan;
+
+         // Hitung total bayar berdasarkan harga per pcs
+        $hargaPerPcs = $spkCutting->harga_per_pcs ?? 0;
+        $validated['total_bayar'] = $totalHasilPendapatan * $hargaPerPcs;
+
         // Simpan hasil cutting
         $hasil = HasilCutting::create($validated);
+
+        $hasil->spkCutting()->update(['status_cutting' => 'selesai']);
 
         $statusList = [];
 
@@ -154,7 +249,7 @@ class HasilCuttingController extends Controller
             $hasil->update([
                 'status_perbandingan_agregat' => $statusAgregat
             ]);
-        }
+        } 
         // Simpan hasil bahan jika ada
         if ($request->has('hasil_bahan')) {
             foreach ($request->hasil_bahan as $index => $bahan) {
@@ -162,6 +257,7 @@ class HasilCuttingController extends Controller
                     HasilCuttingBahan::create([
                         'hasil_cutting_id' => $hasil->id,
                         'spk_cutting_bahan_id' => $bahan['spk_cutting_bahan_id'],
+                        'spk_cutting_bagian_id' => $bahan['spk_cutting_bagian_id'],
                         'berat' => $bahan['berat'] ?? null,
                         'hasil' => $bahan['hasil'] ?? null,
                     ]);
@@ -184,13 +280,16 @@ class HasilCuttingController extends Controller
             DB::rollBack();
 
            return response()->json([
-        'message' => 'Gagal menyimpan data',
-        'error' => $e->getMessage(),
-        'trace' => $e->getTraceAsString(),
-        'input_hasil_bahan' => $request->hasil_bahan // debug input
-    ], 500);
+            'message' => 'Gagal menyimpan data',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'input_hasil_bahan' => $request->hasil_bahan 
+            ], 500);
 
         }
 
     }
+
+
+    
 }
