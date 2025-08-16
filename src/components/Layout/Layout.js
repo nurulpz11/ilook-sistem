@@ -6,6 +6,8 @@ import { FaBars, FaTimes, FaHome, FaCogs, FaChevronDown, FaChevronUp, FaFolder }
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCmtOpen, setIsCmtOpen] = useState(false);
+  const [isCuttingOpen, setIsCuttingOpen] = useState(false);
+  const [isJasaOpen, setIsJasaOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("home"); // Tambahkan state untuk menu aktif
   const [role, setRole] = useState(""); // State untuk menyimpan role user
   const [isAksesorisOpen, setIsAksesorisOpen] = useState(false);
@@ -17,6 +19,12 @@ const Layout = () => {
 
   const toggleCmtMenu = () => {
     setIsCmtOpen(!isCmtOpen);
+  };
+    const toggleCuttingMenu = () => {
+    setIsCuttingOpen(!isCuttingOpen);
+  };
+    const toggleJasaMenu = () => {
+    setIsJasaOpen(!isJasaOpen);
   };
 
   const handleMenuClick = (menu) => {
@@ -222,7 +230,110 @@ const Layout = () => {
                   )}
                 </ul>
               )}
+
+              
             </li>
+          <li>
+              <div onClick={toggleCuttingMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "cutting" ? "active" : ""}`}>
+                <FaCogs className="icon" /> CUTTING
+                <span className={`arrow ${isCuttingOpen ? "open" : ""}`}>{isCuttingOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+              </div>
+              {isCuttingOpen && (
+                <ul className="dropdown-menu">
+                 
+                 
+                  <li>
+                    <Link to="tukangCutting" className={`dropdown-link ${activeMenu === "tukangCutting" ? "active" : ""}`} onClick={() => handleMenuClick("tukangCutting")}>
+                     Tukang Cutting
+                    </Link>
+                  </li>
+                  
+                  <li>
+                    <Link to="markeran" className={`dropdown-link ${activeMenu === "markeran" ? "active" : ""}`} onClick={() => handleMenuClick("markeran")}>
+                      Markeran Produk
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="spkcutting" className={`dropdown-link ${activeMenu === "spkcutting" ? "active" : ""}`} onClick={() => handleMenuClick("spkcutting")}>
+                      SPK 
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="hasilcutting" className={`dropdown-link ${activeMenu === "hasilcutting" ? "active" : ""}`} onClick={() => handleMenuClick("hasilcutting")}>
+                      Hasil 
+                    </Link>
+                  </li>
+                   <li>
+                    <Link to="hutangc" className={`dropdown-link ${activeMenu === "hutangc" ? "active" : ""}`} onClick={() => handleMenuClick("hutangc")}>
+                      Hutang 
+                    </Link>
+                  </li>
+                    <li>
+                    <Link to="cashboanc" className={`dropdown-link ${activeMenu === "cashboanc" ? "active" : ""}`} onClick={() => handleMenuClick("cashboanc")}>
+                      Cashboan 
+                    </Link>
+                  </li>
+                  
+                   <li>
+                    <Link to="pendapatancutting" className={`dropdown-link ${activeMenu === "pendapatancutting" ? "active" : ""}`} onClick={() => handleMenuClick("pendapatancutting")}>
+                      Pendapatan 
+                    </Link>
+                  </li>
+                    <li>
+                    <Link to="pendapatanhistory" className={`dropdown-link ${activeMenu === "pendapatanhistory" ? "active" : ""}`} onClick={() => handleMenuClick("pendapatanhistory")}>
+                      History Pendapatan
+                    </Link>
+                  </li>
+                </ul>
+              )}            
+          </li>   
+
+           <li>
+              <div onClick={toggleJasaMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "jasa" ? "active" : ""}`}>
+                <FaCogs className="icon" /> JASA
+                <span className={`arrow ${isJasaOpen ? "open" : ""}`}>{isJasaOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+              </div>
+              {isJasaOpen && (
+                <ul className="dropdown-menu">
+                  <li>
+                    <Link to="tukangJasa" className={`dropdown-link ${activeMenu === "tukangJasa" ? "active" : ""}`} onClick={() => handleMenuClick("tukangJasa")}>
+                      Tukang Jasa
+                    </Link>
+                  </li>
+                  
+                  <li>
+                    <Link to="spkjasa" className={`dropdown-link ${activeMenu === "spkjasa" ? "active" : ""}`} onClick={() => handleMenuClick("spkjasa")}>
+                      Spk Jasa
+                    </Link>
+                  </li>
+
+                    <li>
+                    <Link to="hasiljasa" className={`dropdown-link ${activeMenu === "hasiljasa" ? "active" : ""}`} onClick={() => handleMenuClick("hasiljasa")}>
+                       Hasil Jasa
+                    </Link>
+                  </li>
+
+                   <li>
+                    <Link to="cashboanjasa" className={`dropdown-link ${activeMenu === "cashboanjasa" ? "active" : ""}`} onClick={() => handleMenuClick("cashboanjasa")}>
+                      Cashboan
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link to="hutangjasa" className={`dropdown-link ${activeMenu === "hutangjasa" ? "active" : ""}`} onClick={() => handleMenuClick("hutangjasa")}>
+                      Hutang
+                    </Link>
+                  </li>
+
+                    <li>
+                    <Link to="pendapatanjasa" className={`dropdown-link ${activeMenu === "pendapatanjasa" ? "active" : ""}`} onClick={() => handleMenuClick("pendapatanjasa")}>
+                      Pendapatan
+                    </Link>
+                  </li>
+                
+                </ul>
+              )}            
+          </li>   
           </ul>
         </nav>
       </aside>

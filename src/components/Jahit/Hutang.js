@@ -319,8 +319,6 @@ const handleFormSubmit = async (e) => {
                       {hutang.persentase_potongan || 0}%
                     </td>
 
-
-               
                   <td data-label=" ">
                     <span
                       style={{
@@ -639,7 +637,7 @@ const handleFormSubmit = async (e) => {
                   className="btn btn-submit"
                   onClick={() => setSelectedHutang(null)}
                 >
-                  Batal
+                  Batal jika 
                 </button>
               </div>
             </form>

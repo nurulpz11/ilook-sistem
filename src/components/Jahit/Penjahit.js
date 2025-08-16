@@ -21,7 +21,7 @@ const Penjahit = () => {
     bank: "",
     mesin: [], 
     ktp: null,
-  }); // State untuk form data penjahit baru
+  }); 
   const [successMessage, setSuccessMessage] = useState("");
   // Fetch data penjahit
 

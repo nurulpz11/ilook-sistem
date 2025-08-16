@@ -12,6 +12,7 @@ const Cashbon = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [penjahitList, setPenjahitList] = useState([]);
+  const [selectedCashbon, setSelectedCashbon] = useState(null); 
   const [error, setError] = useState("");
   const [selectedJenisPerubahan, setSelectedJenisPerubahan] = useState(""); 
   const [logHistory, setLogHistory] = useState([]); // Untuk menyimpan log pembayaran
@@ -26,7 +27,7 @@ const Cashbon = () => {
 
   });
 
-  const [selectedCashbon, setSelectedCashbon] = useState(null); 
+
   const [logPembayaran, setLogPembayaran] = useState({
       jumlah_dibayar: "",
       tanggal_bayar: "",
