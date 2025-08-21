@@ -267,10 +267,13 @@ const handleJenisChange = (e) => {
                     )}
                   </td>
               <td data-label="Gambar Produk">
-            <img src={produk.gambar_produk} alt="Gambar Produk" />
+            <img src={`${process.env.REACT_APP_FILE_URL}${produk.gambar_produk}`} alt="Gambar Produk" />
+
           </td>
 
-                
+             
+
+
               <td data-label="">
                   <div className="action-card">  
                     <button 
