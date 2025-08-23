@@ -43,7 +43,7 @@ class ProdukController extends Controller
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
             'kategori_produk' => 'required|string|max:255',
-            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:25000',
             'jenis_produk' => 'required|string|max:255',
 
         ]);
@@ -51,10 +51,12 @@ class ProdukController extends Controller
         // Jika ada file gambar, unggah dan simpan path-nya
         if ($request->hasFile('gambar_produk')) {
             $file = $request->file('gambar_produk');
-            $fileName = time() . '_' . $file->getClientOriginalName();
+            // Bersihkan nama file dari karakter aneh
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $file->getClientOriginalName());
             $filePath = $file->storeAs('public/images', $fileName);
             $validated['gambar_produk'] = 'images/' . $fileName;
         }
+
     
         $produk = Produk::create($validated);
     
