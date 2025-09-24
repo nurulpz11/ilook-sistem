@@ -316,8 +316,8 @@ const handleFormSubmit = async (e) => {
                       Rp.{new Intl.NumberFormat("id-ID").format(hutang.potongan_per_minggu)}
                     </td>
                     <td data-label="POTONGAN PER PERSENT : ">
-                      {hutang.persentase_potongan || 0}%
-                    </td>
+                      {hutang.persentase_potongan || 0}% 
+                    </td>  
 
                   <td data-label=" ">
                     <span

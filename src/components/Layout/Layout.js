@@ -334,6 +334,35 @@ const Layout = () => {
                 </ul>
               )}            
           </li>   
+
+
+
+ <li>
+              <div onClick={toggleJasaMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "jasa" ? "active" : ""}`}>
+                <FaCogs className="icon" /> JASA
+                <span className={`arrow ${isJasaOpen ? "open" : ""}`}>{isJasaOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+              </div>
+              {isJasaOpen && (
+                <ul className="dropdown-menu">
+                  <li>
+                    <Link to="tukangJasa" className={`dropdown-link ${activeMenu === "tukangJasa" ? "active" : ""}`} onClick={() => handleMenuClick("tukangJasa")}>
+                      Tukang Jasa
+                    </Link>
+                  </li>
+                  
+                
+
+                    <li>
+                    <Link to="pendapatanjasa" className={`dropdown-link ${activeMenu === "pendapatanjasa" ? "active" : ""}`} onClick={() => handleMenuClick("pendapatanjasa")}>
+                      Pendapatan
+                    </Link>
+                  </li>
+                
+                </ul>
+              )}            
+          </li>   
+
+
           </ul>
         </nav>
       </aside>

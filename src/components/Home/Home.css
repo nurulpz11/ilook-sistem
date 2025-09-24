@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Roboto', sans-serif; 
   background-color: #f4f4f9;
   color: #333;
 }
@@ -27,7 +27,7 @@ body {
 .dashboard-title {
   font-size: 2.5rem;
   font-weight: 530;
-  color: #426372;
+  color: #365463;
   margin: 0;
 }
 .user-profile {
@@ -55,16 +55,14 @@ body {
   gap: 20px; /* Jarak antar elemen */
 }
 .card-container {
-  display: flex;
-  flex-wrap: wrap; /* Agar kartu beralih ke baris baru jika tidak cukup ruang */
-  gap: 30px;
-  height:200px;
-  width: 55%;
-  max-width: 100%;
+display: flex;
+  flex-wrap: wrap; 
+  gap: 20px;
+  width: 60%; /* full, biar ikut layar */
   background: #ffffff;
-  justify-content: center; /* Posisi horizontal di tengah */
+  justify-content: center;
   align-items: center;
-  padding: 0 20px;
+  padding: 20px;
   border-radius: 15px;
 }
 .card {
@@ -105,52 +103,6 @@ body {
   justify-content: center;
   color: #fff;
   font-size: 24px;
-  margin-right: 10px;
-}
-
-.card-content {
-  flex: 1;
-}
-
-.value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 10px 0 0;
-}
-.charts-wrapper {
-  flex-wrap: wrap;
-  display: flex;
-  gap: 20px; /* Jarak antara donut chart dan pie chart */
-  justify-content: flex-start; /* Pusatkan elemen secara horizontal */
-  align-items: flex-start; /* Pastikan elemen sejajar di bagian atas */
-  margin-top: 20px; /* Tambahkan margin untuk jarak dari elemen lain */
-}
-
-.chart-container {
-  max-width: 500px; 
-  min-width: 280px;
-  margin: 0; /* Pastikan tidak ada margin di sekitar chart-container */
-  padding: 10px 10px; 
-}
-
-.chart-card {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 100%;
-
-}
-
-.card-title {
-  font-size: 22px;
-  font-weight: bold;
-  color: #414040;
-  margin-bottom: 10px;
-  margin-top: 10px;
  
 }
 .chart-title {
@@ -160,7 +112,7 @@ body {
   margin-bottom: 10px;
   margin-top: 10px;
   text-align: center;
-}
+}sistem analisa
 
 .chart-content {
   display: flex;
@@ -234,7 +186,7 @@ body {
   margin-top: 10px;
 }
 
-.stat-card {
+ .stat-card {
   background: #ffffff;
   border-radius: 12px;
   padding: 10px;
@@ -266,14 +218,14 @@ body {
 
 .stat-header h3 {
   font-size: 18px;
-  color: #333;
+  color: #333; 
 }
 
 .stat-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;                                                                   
   gap: 10px;
-}
+}    
 
 .stat-item {
   display: flex;
@@ -287,13 +239,12 @@ body {
 
 .stat-card.urgent .stat-item {
   background: #ffe6e6;
-  color: #e74c3c;
+  color:   #a8483e;
 }
 
 .empty-text {
   color: #999;
   font-style: italic;
   text-align: center;
-}
-
+}  
 
