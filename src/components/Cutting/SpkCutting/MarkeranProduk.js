@@ -8,13 +8,14 @@ const MarkeranProduk = () => {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false); 
     const [searchTerm, setSearchTerm] = useState("");
-    const [markeranProdukList, setMarkeranProdukList] = useState([{
-    produk_id: "",
-    nama_komponen: "",
-    total_panjang: "",
-    jumlah_hasil: "",
-  },
-]);
+    const [produkList, setProdukList] = useState([]); 
+
+   const [selectedProdukId, setSelectedProdukId] = useState(""); // dipilih sekali di atas
+  const [markeranProdukList, setMarkeranProdukList] = useState([
+    { nama_komponen: "", total_panjang: "", jumlah_hasil: "" }
+  ]);
+
+
 
 
 useEffect(() => {
@@ -32,11 +33,28 @@ useEffect(() => {
     fetchMarkeran();
 }, []);
 
- const handleFormSubmit = async (e) => {
-  e.preventDefault(); // Mencegah reload halaman
+useEffect(() => {
+    const fetchProduk = async () => {
+      try {
+        const response = await API.get('/produk'); // pastikan endpoint ini benar
+        setProdukList(response.data.data);
+      } catch (error) {
+        console.error("Gagal mengambil data produk:", error);
+      }
+    };
+    fetchProduk();
+  }, []);
+
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
 
   try {
-    const response = await API.post("/markeran_produk", markeranProdukList, {
+    const payload = {
+      produk_id: selectedProdukId,   // ini produk yang dipilih sekali saja
+      komponen: markeranProdukList,  // array berisi komponen
+    };
+
+    const response = await API.post("/markeran_produk", payload, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -45,10 +63,10 @@ useEffect(() => {
     console.log("Response:", response);
     alert("Semua markeran berhasil disimpan!");
 
-    // Reset list setelah submit
-    setMarkeranProdukList([]);
+    // Reset setelah submit
+    setSelectedProdukId("");
+    setMarkeranProdukList([{ nama_komponen: "", total_panjang: "", jumlah_hasil: "" }]);
 
-    // Kalau pakai modal atau form tambahan, bisa juga ditutup di sini
     setShowForm(false);
 
   } catch (error) {
@@ -56,6 +74,7 @@ useEffect(() => {
     alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan markeran.");
   }
 };
+
 
 const handleAddRow = () => {
   setMarkeranProdukList([...markeranProdukList, {
@@ -80,7 +99,7 @@ const handleInputChange = (index, field, value) => {
   return (
  <div>
      <div className="penjahit-container">
-      <h1>Data markeran Produk</h1>
+      <h1>Data Markeran Produk</h1>
     </div>
 
     <div className="table-container">
@@ -107,9 +126,9 @@ const handleInputChange = (index, field, value) => {
             <th>ID Produk</th>
             <th>Nama Produk</th>
             <th>Nama Komponen</th>
-            <th>Total Panjang</th>
-            <th>Jumlah Hasil</th>
-            <th>Berat per pcs</th>
+            <th>BERAT/PANJANG</th>
+            <th>HASIL JADI</th>
+            <th>HASIL JADI/PCS</th>
             </tr>
         </thead>
         <tbody>
@@ -134,60 +153,69 @@ const handleInputChange = (index, field, value) => {
     </table>
 </div>
 
-{showForm && (
+ {showForm && (
   <div className="modal">
     <div className="modal-content">
       <h2>Tambah Markeran Produk</h2>
       <form onSubmit={handleFormSubmit} className="modern-form">
 
+        {/* Produk dipilih sekali di atas */}
+        <div className="form-group">
+          <label>Produk:</label>
+          <select
+            value={selectedProdukId}
+            onChange={(e) => setSelectedProdukId(e.target.value)}
+            required
+          >
+            <option value="">-- Pilih Produk --</option>
+            {produkList.map((produk) => (
+              <option key={produk.id} value={produk.id}>
+                {produk.id} - {produk.nama_produk}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Input komponen */}
         {markeranProdukList.map((item, index) => (
           <div className="markeran-group" key={index}>
             <h4>Komponen #{index + 1}</h4>
 
             <div className="form-group">
-              <label>Produk ID:</label>
-              <input
-                type="number"
-                name="produk_id"
-                value={item.produk_id}
-                onChange={(e) => handleInputChange(index, 'produk_id', e.target.value)}
-                placeholder="Masukkan ID Produk"
-                required
-              />
-            </div>
-
-            <div className="form-group">
               <label>Nama Komponen:</label>
               <input
                 type="text"
-                name="nama_komponen"
                 value={item.nama_komponen}
-                onChange={(e) => handleInputChange(index, 'nama_komponen', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange(index, "nama_komponen", e.target.value)
+                }
                 placeholder="Misal: Lengan, Badan"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Total Panjang (m):</label>
+              <label>Berat/Panjang (m):</label>
               <input
                 type="number"
                 step="0.01"
-                name="total_panjang"
                 value={item.total_panjang}
-                onChange={(e) => handleInputChange(index, 'total_panjang', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange(index, "total_panjang", e.target.value)
+                }
                 placeholder="Contoh: 2.5"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Jumlah Hasil:</label>
+              <label>Hasil Jadi:</label>
               <input
                 type="number"
-                name="jumlah_hasil"
                 value={item.jumlah_hasil}
-                onChange={(e) => handleInputChange(index, 'jumlah_hasil', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange(index, "jumlah_hasil", e.target.value)
+                }
                 placeholder="Contoh: 10"
                 required
               />
@@ -204,7 +232,11 @@ const handleInputChange = (index, field, value) => {
           </div>
         ))}
 
-        <button type="button" className="btn btn-secondary" onClick={handleAddRow}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={handleAddRow}
+        >
           + Tambah Komponen
         </button>
 
@@ -224,6 +256,7 @@ const handleInputChange = (index, field, value) => {
     </div>
   </div>
 )}
+
 
 </div>
 </div>

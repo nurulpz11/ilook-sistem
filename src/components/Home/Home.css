@@ -1,12 +1,12 @@
 body {
   margin: 0;
-  font-family: 'Roboto', sans-serif; 
+  font-family: 'Roboto', sans-serif;
   background-color: #f4f4f9;
   color: #333;
 }
 
 .dashboard-container {
- 
+
   justify-content: space-between; /* Pisahkan elemen ke kiri dan kanan */
   align-items: center; /* Ratakan elemen secara vertikal */
   padding: 20px 20px;
@@ -14,7 +14,7 @@ body {
   border-radius: 10px;
   border-bottom: 1px solid #e9ecef;
   margin-top: 10px;
-  height: 100vh; 
+  height: 100vh;
 }
 
 .dashboard-header {
@@ -33,15 +33,15 @@ body {
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 10px; 
+  gap: 10px;
 }
 
 .user-profile img {
-  width: 37px;  
+  width: 37px;
   height: 37px;
-  border-radius: 50%; 
-  object-fit: cover; 
-  border: 2px solid #426372; 
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #426372;
 }
 .dashboard-subtitle {
   font-size: 1rem;
@@ -56,7 +56,7 @@ body {
 }
 .card-container {
 display: flex;
-  flex-wrap: wrap; 
+  flex-wrap: wrap;
   gap: 20px;
   width: 60%; /* full, biar ikut layar */
   background: #ffffff;
@@ -103,7 +103,7 @@ display: flex;
   justify-content: center;
   color: #fff;
   font-size: 24px;
- 
+
 }
 .chart-title {
   font-size: 1.5rem;
@@ -128,8 +128,8 @@ display: flex;
 }
 .chart-wrapper {
   flex: 1;
-  
- 
+
+
 }
 
 .chart-info {
@@ -218,14 +218,14 @@ display: flex;
 
 .stat-header h3 {
   font-size: 18px;
-  color: #333; 
+  color: #333;
 }
 
 .stat-content {
   display: flex;
-  flex-direction: column;                                                                   
+  flex-direction: column;
   gap: 10px;
-}    
+}
 
 .stat-item {
   display: flex;
@@ -246,5 +246,4 @@ display: flex;
   color: #999;
   font-style: italic;
   text-align: center;
-}  
-
+}

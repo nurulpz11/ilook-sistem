@@ -99,7 +99,7 @@ const filteredTukangCutting = tukangCutting.filter((item) =>
   return (
    <div>
      <div className="penjahit-container">
-      <h1>Data Cutting</h1>
+      <h1>Data Tukang Cutting</h1>
     </div>
 
     <div className="table-container">

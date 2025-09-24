@@ -347,23 +347,7 @@ const filteredHasil = hasilCuttingList.filter((h) =>
           </select>
         </div>
 
-        {/* Pilih Bagian Utama */}
-        <div className="form-group">
-          <label>Bagian Utama:</label>
-          <select
-            name="spk_cutting_bagian_id"
-            value={hasilCutting.spk_cutting_bagian_id}
-            onChange={handleInputChange}
-            required
-          >
-            <option value="">Pilih Bagian</option>
-            {bagianList.map((bagian) => (
-              <option key={bagian.id} value={bagian.id}>
-                {bagian.nama_bagian}
-              </option>
-            ))}
-          </select>
-        </div>
+      
 
         {/* Upload Foto Komponen */}
         <div className="form-group">
@@ -436,7 +420,7 @@ const filteredHasil = hasilCuttingList.filter((h) =>
         </button>
 
         {/* Hasil Bahan */}
-        <h3>Hasil Bahan</h3>
+        <h3>Hasil Bagian</h3>
         {hasilCutting.hasil_bahan.map((bahan, index) => (
           <div key={index} className="form-subsection">
             <label>Bagian</label>
@@ -496,6 +480,23 @@ const filteredHasil = hasilCuttingList.filter((h) =>
           Tambah Bahan
         </button>
 
+  {/* Pilih Bagian Utama */}
+        <div className="form-group">
+          <label>Bagian Utama Untuk Acuan Jumlah:</label>
+          <select
+            name="spk_cutting_bagian_id"
+            value={hasilCutting.spk_cutting_bagian_id}
+            onChange={handleInputChange}
+            required
+          >
+            <option value="">Pilih Bagian</option>
+            {bagianList.map((bagian) => (
+              <option key={bagian.id} value={bagian.id}>
+                {bagian.nama_bagian}
+              </option>
+            ))}
+          </select>
+        </div>
         {/* Tombol Aksi */}
         <div className="form-actions">
           <button type="submit" className="btn btn-submit">
