@@ -6,7 +6,7 @@ use App\Models\HutangCutting;
 use App\Models\HistoryHutangCutting;
 use Illuminate\Http\Request;
 
-class HutangCuttingController extends Controller
+class HutangCuttingController extends Controller1
 {
 
     public function index()
@@ -17,7 +17,7 @@ class HutangCuttingController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Daftar Hutang Cutting',
+            'message' => 'Daftar Hutang Cutting', 
             'data' => $hutangs
         ], 200);
     }
