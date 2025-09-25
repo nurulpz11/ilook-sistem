@@ -6,7 +6,7 @@ use App\Models\HutangCutting;
 use App\Models\HistoryHutangCutting;
 use Illuminate\Http\Request;
 
-class HutangCuttingController extends Controller1
+class HutangCuttingController extends Controller
 {
 
     public function index()

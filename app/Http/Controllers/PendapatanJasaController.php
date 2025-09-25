@@ -15,6 +15,15 @@ use Carbon\Carbon;
 
 class PendapatanJasaController extends Controller
 {
+
+     public function index()
+    {
+        $pendapatan = PendapatanJasa::with([
+            'tukangJasa:id,nama',
+
+        ])->get();
+        return response()->json($pendapatan); 
+    }
     public function getPendapatanMingguIni()
     {
         $periodeAwal = now()->startOfWeek();

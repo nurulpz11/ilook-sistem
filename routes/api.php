@@ -209,7 +209,7 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::post('/pendapatan/simulasi/jasa', [PendapatanJasaController::class, 'simulasiPendapatanCutting']);
         Route::post('/pendapatan/jasa', [PendapatanJasaController::class, 'tambahPendapatanJasa']);
         Route::get('pendapatan/{id}/jasa', [PendapatanJasaController::class, 'showPengiriman']);
-   
+      Route::get('/pendapatan/jasa', [PendapatanJasaController::class, 'index']);
     });
 
    
