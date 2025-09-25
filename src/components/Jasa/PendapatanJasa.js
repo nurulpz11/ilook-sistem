@@ -139,10 +139,13 @@ const handleTambahPendapatan = async (e) => {
               
               <th>Nama Tukang Cutting</th>
               <th>Total Pendapatan</th>
-              <th>Total Transfer </th>
-              <th>Status Pembayaran Minggu Ini</th>         
-              <th>Aksi</th>
-              <th></th>
+            
+               <th>Potongan Hutang</th>
+                <th>Potongan Cashboan</th>
+                  <th>Total Transfer </th>
+              <th>Status Pembayaran Minggu Ini</th>       
+          
+          
            
             </tr>
           </thead>
@@ -159,6 +162,13 @@ const handleTambahPendapatan = async (e) => {
                   <td data-label="Total Pendapatan : ">
                   Rp.{new Intl.NumberFormat("id-ID").format(pendapatan.total_pendapatan)}
                     </td>
+                 
+                   <td data-label="Total Transfer: ">
+                  Rp.{new Intl.NumberFormat("id-ID").format(pendapatan.potongan_hutang)}
+                 </td>
+                    <td data-label="Total Transfer: ">
+                  Rp.{new Intl.NumberFormat("id-ID").format(pendapatan.potongan_cashbon)}
+                 </td>
                   <td data-label="Total Transfer: ">
                   Rp.{new Intl.NumberFormat("id-ID").format(pendapatan.total_transfer)}
                  </td>
@@ -174,7 +184,7 @@ const handleTambahPendapatan = async (e) => {
                       )}
                     </div>
                   </td>
-                   <td> </td>
+                  
                 </tr>
               ))}
           </tbody>

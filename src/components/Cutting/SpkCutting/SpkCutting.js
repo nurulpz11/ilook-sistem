@@ -193,7 +193,8 @@ const removeBahan = (bagianIndex, bahanIndex) => {
            <table className="penjahit-table">
              <thead>
                <tr>
-                 <th>Id Spk</th>
+                 <th>Id</th>
+                 <th>SPK Cutting ID</th>
                 <th>Tukang Cutting</th>
                  <th>Nama Produk</th>
                 <th>Deadline</th>
@@ -209,8 +210,9 @@ const removeBahan = (bagianIndex, bahanIndex) => {
                {filteredSpkCutting.map((spk) => (
                  <tr key={spk.id}>
                    <td data-label="Id : ">{spk.id}</td>
+                   <td data-label="Id : ">{spk.id_spk_cutting}</td>
                    <td data-label="tukang cutting : ">{spk.tukang_cutting?.nama_tukang_cutting}</td>
-                   <td data-label="harga jasa : ">{spk.produk.nama_produk}</td>
+                   <td data-label="harga jasa : ">{spk.produk?.nama_produk}</td>
                    <td data-label="harga jasa : ">{spk.tanggal_batas_kirim}</td>
                  <td data-label="Sisa Hari:">
                   {spk.sisa_hari !== null ? spk.sisa_hari + ' hari' : 'Belum ada deadline'}

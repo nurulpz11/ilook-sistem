@@ -330,7 +330,11 @@ const Layout = () => {
                       Pendapatan
                     </Link>
                   </li>
-                
+                <li>
+                    <Link to="pendapatanhistoryjasa" className={`dropdown-link ${activeMenu === "pendapatanhistoryjasa" ? "active" : ""}`} onClick={() => handleMenuClick("pendapatanhistoryjasa")}>
+                      History Pendapatan
+                    </Link>
+                  </li>
                 </ul>
               )}            
           </li>   
@@ -339,27 +343,10 @@ const Layout = () => {
 
  <li>
               <div onClick={toggleJasaMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "jasa" ? "active" : ""}`}>
-                <FaCogs className="icon" /> JASA
+                <FaCogs className="icon" /> Gudang Bahan
                 <span className={`arrow ${isJasaOpen ? "open" : ""}`}>{isJasaOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
               </div>
-              {isJasaOpen && (
-                <ul className="dropdown-menu">
-                  <li>
-                    <Link to="tukangJasa" className={`dropdown-link ${activeMenu === "tukangJasa" ? "active" : ""}`} onClick={() => handleMenuClick("tukangJasa")}>
-                      Tukang Jasa
-                    </Link>
-                  </li>
-                  
-                
-
-                    <li>
-                    <Link to="pendapatanjasa" className={`dropdown-link ${activeMenu === "pendapatanjasa" ? "active" : ""}`} onClick={() => handleMenuClick("pendapatanjasa")}>
-                      Pendapatan
-                    </Link>
-                  </li>
-                
-                </ul>
-              )}            
+              
           </li>   
 
 

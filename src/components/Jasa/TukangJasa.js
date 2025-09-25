@@ -100,7 +100,7 @@ const TukangJasa = () => {
  return (
    <div>
      <div className="penjahit-container">
-      <h1>Data Cutting</h1>
+      <h1>Data Tukang Jasa</h1>
     </div>
 
     <div className="table-container">
@@ -158,13 +158,13 @@ const TukangJasa = () => {
       <h2>Tambah Tukang Jasa</h2>
       <form onSubmit={handleFormSubmit} className="modern-form" encType="multipart/form-data">
         <div className="form-group">
-          <label>Nama tukang:</label>
+          <label>Nama tukang jasa:</label>
           <input
             type="text"
             name="nama"
             value={newTukangJasa.nama}
             onChange={handleInputChange}
-            placeholder="Masukkan nama tukang"
+            placeholder="Masukkan nama tukang jasa"
             required
           />
         </div>

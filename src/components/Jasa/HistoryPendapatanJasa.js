@@ -1,19 +1,18 @@
-import React, { useEffect, useState } from "react";
-import "../../Jahit/Penjahit.css";
-import API from "../../../api"; 
+import React, { useEffect, useState } from "react"
+import "../Jahit/Penjahit.css";
+import API from "../../api"; 
+import { FaPlus, FaInfoCircle,  } from 'react-icons/fa';
 
-const HistoryPendapatanCutting = () => {
+const HistoryPendapatanJasa = () => {
  const [pendapatansCutting, setPendapatansCutting] = useState([]);
  const [loading, setLoading]= useState([]);
  const [error, setError]= useState([]);
-
-
 
  useEffect(() => {
   const fetchPendapatansCutting = async () => {
     try {
       setLoading(true);
-      const response = await API.get('/pendapatan/cutting');
+      const response = await API.get('/pendapatan/jasa');
       console.log("Pendapatans Cutting:", response.data);
       setPendapatansCutting(response.data); // ✅ Perbaikan di sini
     } catch (error){
@@ -25,8 +24,6 @@ const HistoryPendapatanCutting = () => {
 
   fetchPendapatansCutting();
 }, []);
-
-
 
 
 return (
@@ -55,7 +52,7 @@ return (
             {pendapatansCutting.map((pendapatan)=> (
                 <tr key={pendapatan.id}>
                   <td data-label="Id Pendapatan: ">{pendapatan.id}</td>
-                    <td>{pendapatan.tukang_cutting?.nama_tukang_cutting}</td>
+                    <td>{pendapatan.tukang_jasa?.nama}</td>
                   <td data-label="Total Pendapatan: ">{pendapatan.total_pendapatan}</td>
                     <td data-label="Total Pendapatan: ">{pendapatan.total_hutang}</td>
                       <td data-label="Total Pendapatan: ">{pendapatan.total_cashbon}</td>
@@ -74,4 +71,5 @@ return (
          
     )
   }
-export default HistoryPendapatanCutting
+
+export default HistoryPendapatanJasa

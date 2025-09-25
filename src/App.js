@@ -38,6 +38,7 @@ import HasilJasa from "./components/Jasa/HasilJasa";
 import CashboanJasa from "./components/Jasa/CashboanJasa";
 import HutangJasa from "./components/Jasa/HutangJasa";
 import PendapatanJasa from "./components/Jasa/PendapatanJasa";
+import HistoryPendapatanJasa from "./components/Jasa/HistoryPendapatanJasa";
 
 
 const App = () => {
@@ -75,6 +76,7 @@ const App = () => {
           <Route path="hutangc" element={<HutangCutting/>} />
           <Route path="cashboanc" element={<CashboanCutting/>} />
           <Route path="pendapatancutting" element={<PendapatanCutting/>} />
+          <Route path="pendapatanhistory" element={<HistoryPendapatanCutting/>} />
           <Route path="markeran" element={<MarkeranProduk/>}/>
           <Route path="tukangJasa" element={<TukangJasa/>}/>
           <Route path="spkjasa" element={<SpkJasa/>}/>
@@ -82,6 +84,7 @@ const App = () => {
           <Route path="cashboanjasa" element={<CashboanJasa/>}/>
           <Route path="hutangjasa" element={<HutangJasa/>}/>
           <Route path="pendapatanjasa" element={<PendapatanJasa/>}/>
+          <Route path="pendapatanhistoryjasa" element={<HistoryPendapatanJasa/>} />
         </Route>
       </Routes>
     
