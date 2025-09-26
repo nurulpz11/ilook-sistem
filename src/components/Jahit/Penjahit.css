@@ -1979,6 +1979,8 @@ border-color: #356191;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto; /* Biar modal bisa discroll */
+  padding: 20px; /* Supaya ada jarak ketika discroll */
 }
 
 .modal-content-hutang {
@@ -1987,8 +1989,11 @@ border-color: #356191;
   border-radius: 20px;
   width: 600px;
   max-width: 90%;
+  max-height: 90vh;   /* Batasi tinggi maksimal modal */
+  overflow-y: auto;   /* Scroll isi modal */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
+
 
 .form-hutang {
   display: flex;
