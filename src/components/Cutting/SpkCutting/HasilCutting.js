@@ -482,12 +482,12 @@ const filteredHasil = hasilCuttingList.filter((h) =>
           </div>
         ))}
         <button type="button" onClick={addBahan}>
-          Tambah Bahan
+          Tambah Bagian
         </button>
 
   {/* Pilih Bagian Utama */}
         <div className="form-group">
-          <label>Bagian Utama Untuk Acuan Jumlah:</label>
+          <label>Bagian Untuk Acuan Jumlah:</label>
           <select
             name="spk_cutting_bagian_id"
             value={hasilCutting.spk_cutting_bagian_id}
