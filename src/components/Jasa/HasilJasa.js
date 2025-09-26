@@ -121,13 +121,13 @@ useEffect(() => {
                  <th>Nama Produk</th>
                  <th>Jumlah</th>
                  <th>Total Bayar </th>
-                 <th>Tanggal dibuat</th>
+                 <th>Tanggal dikirim</th>
                
                </tr>
              </thead>
              <tbody>
                {filteredHasilJasa.map((hasil) => (
-                 <tr key={hasil.id}>
+                 <tr key={hasil.id}                                                                             >
                    <td data-label="Id : ">{hasil.id}</td>
                   <td data-label="spk cuttinh id : ">{hasil.spk_jasa.id}</td>
                    <td data-label="tukang : ">{hasil.spk_jasa.tukang_jasa?.nama}</td>
@@ -135,7 +135,7 @@ useEffect(() => {
                      <td data-label="spk cutting id : ">{hasil.jumlah_hasil}</td>
                    <td data-label="harga jasa : ">Rp. {hasil.total_pendapatan}</td>
                      <td data-label="htanggal : ">
-                      {new Date(hasil.created_at).toLocaleDateString("id-ID")}
+                      {new Date(hasil.tanggal).toLocaleDateString("id-ID")}
                     </td>
 
                  </tr>

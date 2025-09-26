@@ -16,7 +16,7 @@ const TukangJasa = () => {
     no_rekening: "",
     alamat: "",
     jenis_jasa: "",
-    ktp: null,
+
     
   });
 
@@ -52,10 +52,7 @@ const TukangJasa = () => {
   formData.append("alamat", newTukangJasa.alamat || "");
   formData.append("jenis_jasa", newTukangJasa.jenis_jasa || "");
 
-  // Jika ada file KTP, tambahkan ke FormData
-  if (newTukangJasa.ktp) {
-    formData.append("ktp", newTukangJasa.ktp);
-  }
+ 
 
   try {
     const response = await API.post("/tukang-jasa", formData, {
@@ -79,7 +76,7 @@ const TukangJasa = () => {
       no_rekening: "",
       alamat: "",
       jenis_jasa: "",
-      ktp: null,
+  
     });
 
     setShowForm(false);
@@ -224,17 +221,7 @@ const TukangJasa = () => {
           />
         </div>
 
-        <div className="form-group">
-          <label>Upload KTP (Opsional):</label>
-          <input
-            type="file"
-            name="ktp"
-            accept="image/*"
-            onChange={(e) =>
-              setNewTukangJasa({ ...newTukangJasa, ktp: e.target.files[0] })
-            }
-          />
-        </div>
+      
 
         <div className="form-actions">
           <button type="submit" className="btn btn-submit">
