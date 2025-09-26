@@ -276,7 +276,7 @@ const filteredHasil = hasilCuttingList.filter((h) =>
                  <th>jumlah komponen</th>
                  <th>Status Perbandingan</th>
                   <th>Jumlah </th>
-                  <th>Tanggal dibuat</th>
+                  <th>Tanggal input</th>
                  <th>Hasil Marker</th>
                  <th>Hasil Jenis Bagian</th>
                 

@@ -121,7 +121,7 @@ useEffect(() => {
                  <th>Nama Produk</th>
                  <th>Jumlah</th>
                  <th>Total Bayar </th>
-                 <th>Tanggal dikirim</th>
+                 <th>Tanggal Input</th>
                
                </tr>
              </thead>

@@ -115,7 +115,7 @@ const handleInputChange = (e) => {
   return (
      <div>
        <div className="penjahit-container">
-         <h1>Data SPK Cutting</h1>
+         <h1>Data SPK Jasa</h1>
        </div>
    
 
@@ -147,7 +147,7 @@ const handleInputChange = (e) => {
                  <th>Nama Produk</th>
                  <th>harga per pcs </th>
                  <th>Jumlah</th>
-                 <th>Status</th>
+                
                  <th>Sisa hari</th>
                  <th>Tanggal Dibuat</th>
                
@@ -158,11 +158,11 @@ const handleInputChange = (e) => {
                  <tr key={spk.id}>
                    <td data-label="Id : ">{spk.id}</td>
                    <td data-label="tukang cutting : ">{spk.tukang_jasa?.nama}</td>
-                   <td data-label="spk cuttinh id : ">{spk.spk_cutting_id}</td>
+                   <td data-label="spk cuttinh id : ">{spk.spk_cutting?.id_spk_cutting}</td>
                    <td data-label="nama produk : ">{spk.produk?.nama_produk}</td>
                    <td data-label="harga jasa : ">Rp. {spk.harga_per_pcs}</td>
                   <td data-label="harga jasa : "> {spk.total_hasil_pendapatan}</td>
-                  <td data-label="harga jasa : "> {spk.status_jasa}</td>
+                 
                   <td data-label="harga jasa : "> {spk.sisa_hari}</td>
                     <td data-label="htanggal : ">
                       {new Date(spk.created_at).toLocaleDateString("id-ID")}
