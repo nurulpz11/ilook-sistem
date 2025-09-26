@@ -17,7 +17,6 @@ class TukangJasa extends Model
         'alamat',
         'bank',
         'no_rekening',
-        'ktp',
         'jenis_jasa',
     ];
 
