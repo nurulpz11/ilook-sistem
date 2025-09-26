@@ -121,6 +121,7 @@ useEffect(() => {
                  <th>Nama Produk</th>
                  <th>Jumlah</th>
                  <th>Total Bayar </th>
+                 <th>Tanggal dibuat</th>
                
                </tr>
              </thead>
@@ -133,6 +134,10 @@ useEffect(() => {
                    <td data-label="nama produk : ">{hasil.spk_jasa.produk?.nama_produk}</td>
                      <td data-label="spk cutting id : ">{hasil.jumlah_hasil}</td>
                    <td data-label="harga jasa : ">Rp. {hasil.total_pendapatan}</td>
+                     <td data-label="htanggal : ">
+                      {new Date(hasil.created_at).toLocaleDateString("id-ID")}
+                    </td>
+
                  </tr>
                ))}
               </tbody>

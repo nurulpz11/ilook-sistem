@@ -47,6 +47,7 @@ return (
                 <th>Total Hutang</th>
                 <th>Total Cashboan</th>
                 <th>Total Transfer</th>
+                <th> Tanggal Dibuat</th>
                 
                
               </tr>
@@ -60,6 +61,10 @@ return (
                     <td data-label="Total Pendapatan: ">{pendapatan.total_hutang}</td>
                       <td data-label="Total Pendapatan: ">{pendapatan.total_cashbon}</td>
                   <td data-label="total transfer: ">{pendapatan.total_transfer}</td>
+                    <td data-label="htanggal : ">
+                      {new Date(pendapatan.created_at).toLocaleDateString("id-ID")}
+                    </td>
+
                 </tr>
               ))}
               

@@ -276,6 +276,7 @@ const filteredHasil = hasilCuttingList.filter((h) =>
                  <th>jumlah komponen</th>
                  <th>Status Perbandingan</th>
                   <th>Jumlah </th>
+                  <th>Tanggal dibuat</th>
                  <th>Hasil Marker</th>
                  <th>Hasil Jenis Bagian</th>
                 
@@ -293,6 +294,10 @@ const filteredHasil = hasilCuttingList.filter((h) =>
                    <td data-label="harga jasa : ">{h.jumlah_komponen}</td>
                    <td data-label="Status Perbandingan">{h.status_perbandingan_agregat}</td>
                    <td data-label="Status Perbandingan">{h.total_hasil_pendapatan }</td>
+                     <td data-label="htanggal : ">
+                      {new Date(h.created_at).toLocaleDateString("id-ID")}
+                    </td>
+
                    <td>
                         <div className="action-card">
                          <button 

@@ -202,6 +202,7 @@ const removeBahan = (bagianIndex, bahanIndex) => {
                  <th>harga jasa</th>
                  <th>harga per pcs </th>
                  <th>Status</th>
+                 <th>Tanggal dibuat</th>
                  <th>Aksi</th>
               
                </tr>
@@ -223,6 +224,10 @@ const removeBahan = (bagianIndex, bahanIndex) => {
                   
                  
                    <td data-label="harga jasa : ">{spk.status_cutting}</td>
+                    <td data-label="htanggal : ">
+                      {new Date(spk.created_at).toLocaleDateString("id-ID")}
+                    </td>
+
                    <td>
                      <div className="action-card">
                       <button 

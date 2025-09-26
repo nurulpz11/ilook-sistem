@@ -149,6 +149,7 @@ const handleInputChange = (e) => {
                  <th>Jumlah</th>
                  <th>Status</th>
                  <th>Sisa hari</th>
+                 <th>Tanggal Dibuat</th>
                
                </tr>
              </thead>
@@ -163,6 +164,10 @@ const handleInputChange = (e) => {
                   <td data-label="harga jasa : "> {spk.total_hasil_pendapatan}</td>
                   <td data-label="harga jasa : "> {spk.status_jasa}</td>
                   <td data-label="harga jasa : "> {spk.sisa_hari}</td>
+                    <td data-label="htanggal : ">
+                      {new Date(spk.created_at).toLocaleDateString("id-ID")}
+                    </td>
+
                  </tr> 
                ))}
               </tbody>
