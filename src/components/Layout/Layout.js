@@ -8,6 +8,7 @@ const Layout = () => {
   const [isCmtOpen, setIsCmtOpen] = useState(false);
   const [isCuttingOpen, setIsCuttingOpen] = useState(false);
   const [isJasaOpen, setIsJasaOpen] = useState(false);
+   const [isHppOpen, setIsHppOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("home"); // Tambahkan state untuk menu aktif
   const [role, setRole] = useState(""); // State untuk menyimpan role user
   const [isAksesorisOpen, setIsAksesorisOpen] = useState(false);
@@ -25,6 +26,10 @@ const Layout = () => {
   };
     const toggleJasaMenu = () => {
     setIsJasaOpen(!isJasaOpen);
+  };
+
+      const toggleHppMenu = () => {
+    setIsHppOpen(!isHppOpen);
   };
 
   const handleMenuClick = (menu) => {
@@ -341,13 +346,23 @@ const Layout = () => {
 
 
 
- <li>
-              <div onClick={toggleJasaMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "jasa" ? "active" : ""}`}>
-                <FaCogs className="icon" /> Gudang Bahan
-                <span className={`arrow ${isJasaOpen ? "open" : ""}`}>{isJasaOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+          <li>
+              <div onClick={toggleHppMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "hpp" ? "active" : ""}`}>
+                <FaCogs className="icon" /> Produk
+                <span className={`arrow ${isHppOpen ? "open" : ""}`}>{isHppOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
               </div>
-              
-          </li>   
+              {isHppOpen && (
+                <ul className="dropdown-menu">
+                  <li>
+                    <Link to="hppProduk" className={`dropdown-link ${activeMenu === "hppProduk" ? "active" : ""}`} onClick={() => handleMenuClick("hppProduk")}>
+                      Hpp Produk
+                    </Link>
+                  </li>
+                  
+                  
+                </ul>
+              )}            
+          </li>     
 
 
           </ul>
