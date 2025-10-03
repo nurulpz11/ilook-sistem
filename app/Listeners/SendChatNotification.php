@@ -14,7 +14,7 @@ class SendChatNotification implements ShouldQueue
     
 
     public function handle(ChatSent $event)
-    {
+    {    
         
     }
 }

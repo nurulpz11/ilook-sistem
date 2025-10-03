@@ -15,7 +15,13 @@ class Produk extends Model
         'nama_produk',
         'kategori_produk',
         'gambar_produk',
-        'jenis_produk'
+        'jenis_produk',
+        'harga_jasa_cutting',
+        'harga_jasa_cmt',
+        'harga_jasa_aksesoris',
+        'harga_overhead',
+        'hpp',
+        'status_produk',
 
     ];
 
@@ -31,6 +37,11 @@ class Produk extends Model
     {
         return $this->hasMany(MarkeranProduk::class);
     }
+    public function komponen()
+{
+    return $this->hasMany(ProdukKomponen::class, 'produk_id');
+}
+
 
     
 }
