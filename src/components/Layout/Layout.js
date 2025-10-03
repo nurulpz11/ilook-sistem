@@ -86,11 +86,7 @@ const Layout = () => {
                     </Link>
                   </li>
 
-                  <li>
-                  <Link to="produk" className={`dropdown-link ${activeMenu === "produk" ? "active" : ""}`} onClick={() => handleMenuClick("produk")}>
-                    Produk
-                  </Link>
-                  </li>
+                 
 
                  
                     <li>
