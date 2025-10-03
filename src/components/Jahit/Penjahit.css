@@ -81,8 +81,8 @@ border-color: #356191;
   outline: none;
   transition: all 0.3s ease;
   cursor: pointer;
-  width: 125px;
-  max-width: 125px;
+  width: 127px;
+  max-width: 127px;
   min-width: 90px;
 }
 .filter-select1 option {
@@ -1871,8 +1871,16 @@ border-color: #356191;
 .status-link.pending {
   color: #ff9800;
 }
+.status-link.sementara {
+  color: #dd7927;
+}
+.status-link.fix {
+  color:#2e7d32;
+}
+.status-link.bermasalah {
+  color: #c62828;
 
-
+}
 /* Container semua filter */
 .filter-container {
   display: flex;
