@@ -749,12 +749,16 @@ const removeEditKomponen = (index) => {
               onChange={(e) => handleEditKomponenChange(index, "jumlah_bahan", e.target.value)}
               placeholder="Jumlah"
             />
-            <input
-              type="text"
+           <select
               value={komp.satuan_bahan}
               onChange={(e) => handleEditKomponenChange(index, "satuan_bahan", e.target.value)}
-              placeholder="Satuan"
-            />
+            >
+              <option value="">Pilih Satuan</option>
+              <option value="Kg">Kg</option>
+              <option value="Yard">Yard</option>
+              <option value="Gross">Gross</option>
+            </select>
+
             <button type="button" onClick={() => removeEditKomponen(index)}>Hapus</button>
           </div>
         ))}
