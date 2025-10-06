@@ -350,7 +350,7 @@ const removeEditKomponen = (index) => {
               <th>ID Produk</th>
               <th>Nama Produk</th>
               <th>Gambar Produk </th>
-              <th>Kategori Produk</th> 
+              <th>Jenis Produk</th> 
               <th>Status Produk</th>
               <th>Status HPP</th>
               <th>HPP</th>
@@ -598,9 +598,9 @@ const removeEditKomponen = (index) => {
               onChange={(e) => handleKomponenChange(index, "satuan_bahan", e.target.value)}
             >
               <option value="">Pilih Satuan</option>
-              <option value="atasan">Kg</option>
-              <option value="bawahan">Yard</option>
-              <option value="fullbody">Gross</option>
+              <option value="kg">Kg</option>
+              <option value="yard">Yard</option>
+              <option value="gross">Gross</option>
             </select>
             <button type="button" onClick={() => removeKomponen(index)}>Hapus</button>
           </div>
