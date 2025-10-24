@@ -38,6 +38,10 @@
     use App\Http\Controllers\HutangJasaController;
     use App\Http\Controllers\CashboanJasaController;
     use App\Http\Controllers\PendapatanJasaController;
+    use App\Http\Controllers\GudangController;
+    use App\Http\Controllers\OrderController;
+    use App\Http\Controllers\GineeSyncController;
+
 
 
 
@@ -209,7 +213,23 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::post('/pendapatan/simulasi/jasa', [PendapatanJasaController::class, 'simulasiPendapatanCutting']);
         Route::post('/pendapatan/jasa', [PendapatanJasaController::class, 'tambahPendapatanJasa']);
         Route::get('pendapatan/{id}/jasa', [PendapatanJasaController::class, 'showPengiriman']);
-      Route::get('/pendapatan/jasa', [PendapatanJasaController::class, 'index']);
+        Route::get('/pendapatan/jasa', [PendapatanJasaController::class, 'index']);
+    
+        Route::apiResource('gudang', GudangController::class);
+
+        Route::get('/orders/tracking/{trackingNumber}', [OrderController::class, 'showByTracking']);
+        Route::post('/orders/scan/{trackingNumber}', [OrderController::class, 'validateScan']);
+        
+        
+        Route::post('/ginee/list-orders', [GineeSyncController::class, 'listOrders']);
+        Route::post('/ginee/list-orders/detail', [GineeSyncController::class, 'orderDetails']);
+        Route::post('/ginee/orders/sync', [GineeSyncController::class, 'syncRecentOrders']);
+
+        Route::get('/orders/logs', [OrderController::class, 'getAllLogs']);
+        Route::post('/orders/summary', [OrderController::class, 'getSummaryReport']);
+
+
+
     });
 
    
