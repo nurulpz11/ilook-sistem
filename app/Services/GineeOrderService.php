@@ -31,54 +31,53 @@ class GineeOrderService
             'Authorization' => $accessKey . ':' . $signatureList
         ];
 
-        $syncLog = SyncLog::firstOrCreate(['type' => 'orders'], ['last_sync_at' => now()->subDays(15)]);
+        // Ambil waktu terakhir sync (default mundur 1 hari kalau belum ada)
+        $syncLog = SyncLog::firstOrCreate(['type' => 'orders'], [
+            'last_sync_at' => now()->subDay()
+        ]);
+
+        $since = $syncLog->last_sync_at->toIso8601String();
+        $to = now()->toIso8601String();
 
         $totalProcessed = 0;
         $newCount = 0;
         $updatedCount = 0;
 
-        // ambil 15 hari terakhir
-        for ($i = 45; $i >= 0; $i--) {
-            $since = now()->subDays($i + 1)->toIso8601String();
-            $to    = now()->subDays($i)->toIso8601String();
+        $nextCursor = null;
+        $page = 1;
 
-            $nextCursor = null;
-            $page = 1;
+        do {
+            $bodyList = [
+                'lastUpdateSince' => $since,
+                'lastUpdateTo'    => $to,
+                'orderStatus'     => 'READY_TO_SHIP',
+                'size'            => 100,
+            ];
 
-            do {
-                $bodyList = [
-                    'lastUpdateSince' => $since,
-                    'lastUpdateTo'    => $to,
-                    'orderStatus'     => 'READY_TO_SHIP',
-                    'size'            => 100,
-                ];
+            if ($nextCursor) {
+                $bodyList['nextCursor'] = $nextCursor;
+            }
 
-                if ($nextCursor) {
-                    $bodyList['nextCursor'] = $nextCursor;
-                }
-                
+            $listResponse = Http::timeout(90)
+                ->withHeaders($headersList)
+                ->post($host . $endpointList, $bodyList);
 
-                $listResponse = Http::timeout(90)
-                    ->withHeaders($headersList)
-                    ->post($host . $endpointList, $bodyList);
+            $responseData = $listResponse->json();
+            $listData = $responseData['data']['content'] ?? [];
+            $hasMore = $responseData['data']['more'] ?? false;
+            $nextCursor = $responseData['data']['nextCursor'] ?? null;
 
-                $responseData = $listResponse->json();
-                $listData = $responseData['data']['content'] ?? [];
-                $hasMore = $responseData['data']['more'] ?? false;
-                $nextCursor = $responseData['data']['nextCursor'] ?? null;
+            dump("Tanggal {$since} s/d {$to} | Page {$page} -> dapat " . count($listData) . " order | more: " . ($hasMore ? 'yes' : 'no'));
 
-                dump("Tanggal {$since} s/d {$to} | Page {$page} -> dapat " . count($listData) . " order | more: " . ($hasMore ? 'yes' : 'no'));
+            if (!empty($listData)) {
+                $this->saveOrderBatch($listData, $endpointBatch, $accessKey, $secretKey, $country, $host, $newCount, $updatedCount, $totalProcessed);
+            }
 
-                if (!empty($listData)) {
-                    // langsung ambil detail batch dan simpan
-                    $this->saveOrderBatch($listData, $endpointBatch, $accessKey, $secretKey, $country, $host, $newCount, $updatedCount, $totalProcessed);
-                }
+            $page++;
+            sleep(1);
+        } while ($hasMore);
 
-                $page++;
-                sleep(1);
-            } while ($hasMore);
-        }
-
+        // Update waktu terakhir sync ke sekarang
         $syncLog->update(['last_sync_at' => now()]);
 
         return [
@@ -86,6 +85,7 @@ class GineeOrderService
             'new' => $newCount,
             'updated' => $updatedCount,
         ];
+
     }
 
     private function saveOrderBatch($listData, $endpointBatch, $accessKey, $secretKey, $country, $host, &$newCount, &$updatedCount, &$totalProcessed)
