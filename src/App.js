@@ -41,6 +41,8 @@ import HutangJasa from "./components/Jasa/HutangJasa";
 import PendapatanJasa from "./components/Jasa/PendapatanJasa";
 import HistoryPendapatanJasa from "./components/Jasa/HistoryPendapatanJasa";
 import HppProduk from "./components/Produk/HppProduk";
+import Packing from "./components/Packing/Packing";
+import Logs from "./components/Packing/Logs";
 
 
 const App = () => {
@@ -88,6 +90,8 @@ const App = () => {
           <Route path="pendapatanjasa" element={<PendapatanJasa/>}/>
           <Route path="pendapatanhistoryjasa" element={<HistoryPendapatanJasa/>} />
           <Route path="hppProduk" element={<HppProduk/>}/>
+          <Route path="packing" element={<Packing/>}/>
+          <Route path="logs" element={<Logs/>}/>
          
         </Route>
       </Routes>

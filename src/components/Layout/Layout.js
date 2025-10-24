@@ -8,7 +8,8 @@ const Layout = () => {
   const [isCmtOpen, setIsCmtOpen] = useState(false);
   const [isCuttingOpen, setIsCuttingOpen] = useState(false);
   const [isJasaOpen, setIsJasaOpen] = useState(false);
-   const [isHppOpen, setIsHppOpen] = useState(false);
+  const [isHppOpen, setIsHppOpen] = useState(false);
+  const [isPackingOpen, setIsPackingOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("home"); // Tambahkan state untuk menu aktif
   const [role, setRole] = useState(""); // State untuk menyimpan role user
   const [isAksesorisOpen, setIsAksesorisOpen] = useState(false);
@@ -28,9 +29,14 @@ const Layout = () => {
     setIsJasaOpen(!isJasaOpen);
   };
 
-      const toggleHppMenu = () => {
+    const toggleHppMenu = () => {
     setIsHppOpen(!isHppOpen);
   };
+    const togglePackingMenu = () => {
+    setIsPackingOpen(!isPackingOpen);
+  };
+
+
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu); 
@@ -352,6 +358,30 @@ const Layout = () => {
                   <li>
                     <Link to="hppProduk" className={`dropdown-link ${activeMenu === "hppProduk" ? "active" : ""}`} onClick={() => handleMenuClick("hppProduk")}>
                       Hpp Produk
+                    </Link>
+                  </li>
+                  
+                  
+                </ul>
+              )}            
+          </li>     
+
+          
+          <li>
+              <div onClick={togglePackingMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "packing" ? "active" : ""}`}>
+                <FaCogs className="icon" /> Packing
+                <span className={`arrow ${isPackingOpen ? "open" : ""}`}>{isPackingOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+              </div>
+              {isPackingOpen && (
+                <ul className="dropdown-menu">
+                  <li>
+                    <Link to="packing" className={`dropdown-link ${activeMenu === "packing" ? "active" : ""}`} onClick={() => handleMenuClick("packing")}>
+                      Packing
+                    </Link>
+                  </li>
+                   <li>
+                    <Link to="logs" className={`dropdown-link ${activeMenu === "hppProduk" ? "active" : ""}`} onClick={() => handleMenuClick("logs")}>
+                      History scan
                     </Link>
                   </li>
                   

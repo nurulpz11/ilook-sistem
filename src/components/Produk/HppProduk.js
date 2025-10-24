@@ -11,7 +11,7 @@ const HppProduk = () => {
   const [showForm, setShowForm] = useState(false); 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedKategori, setSelectedKategori] = useState("");
-   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [showCustomJenis, setShowCustomJenis] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedProduk, setSelectedProduk] = useState(null);
@@ -578,11 +578,11 @@ const removeEditKomponen = (index) => {
             <input
               type="text"
               placeholder="Nama Bahan"
-              value={komp.nama_bahan}
+              value={komp.nama_bahan} 
               onChange={(e) => handleKomponenChange(index, "nama_bahan", e.target.value)}
             />
             <input
-              type="number"
+              type="number" 
               placeholder="Harga Bahan"
               value={komp.harga_bahan}
               onChange={(e) => handleKomponenChange(index, "harga_bahan", e.target.value)}
