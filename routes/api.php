@@ -227,6 +227,8 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
 
         Route::get('/orders/logs', [OrderController::class, 'getAllLogs']);
         Route::post('/orders/summary', [OrderController::class, 'getSummaryReport']);
+        
+        Route::get('/ginee/test-order/{orderId}', [GineeSyncController::class, 'testSingleOrder']);
 
 
 

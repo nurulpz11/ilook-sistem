@@ -21,6 +21,10 @@ class OrderController extends Controller
             return response()->json(['message' => 'Order tidak ditemukan'], 404);
         }
 
+        if (strtolower($order->status) == 'packed'){
+            return response()->json(['message' => 'Orderan sudah di packing'], 409);
+        }
+
         return response()->json($order);
     }
     public function validateScan(Request $request, $trackingNumber)

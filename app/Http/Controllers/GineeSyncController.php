@@ -129,6 +129,7 @@ class GineeSyncController extends Controller
                         'product_name' => $item['productName'] ?? null,
                         'quantity'     => $item['quantity'] ?? 0,
                         'price'        => $item['actualPrice'] ?? 0,
+                        'actual_total_price'=> $item['actualTotalPrice'] ?? null,
                         'image'          => $item['productImageUrl'] ?? null,
                     ];
                 })->toArray(),
@@ -231,6 +232,8 @@ class GineeSyncController extends Controller
             'total' => count($batchData)
         ]);
     }
+
+    
 }
 
 
