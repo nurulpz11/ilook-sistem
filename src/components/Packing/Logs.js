@@ -130,10 +130,10 @@ const Logs = () => {
         <table className="penjahit-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>order id</th>
+              <th>Tracking Number</th>
               <th>Kasir</th>
               <th>Total Item</th>
+              <th>Total Harga</th>
               <th>Tanggal</th>
             
             
@@ -143,11 +143,10 @@ const Logs = () => {
           <tbody>
             {logs.map((tc) => (
               <tr key={tc.id}>
-                <td data-label="Id logs : ">{tc.id}</td>
-                <td data-label="Order id : ">{tc.order_id}</td>
+                <td data-label="tracking number : ">{tc.order?.tracking_number}</td>
                 <td data-label="Kasir : ">{tc.performed_by}</td>
                  <td data-label="Total : ">{tc.order?.total_items}</td>
-                 
+                  <td data-label="Total : ">Rp. {tc.order?.total_amount}</td>
                 <td data-label="tanggal : ">{tc.created_at}</td>
               </tr>
             ))}

@@ -12,33 +12,70 @@ const Packing = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+
+  
+
+  const playSound = (type) => {
+    const soundMap = {
+      success: "/sounds/success.mp3",
+      error: "/sounds/failed.mp3",
+      scanproduk: "/sounds/scanprodukberhasil.mp3",
+      noproduk: "/sounds/produktidaksesuai.mp3",
+      sudahpacking: "/sounds/orderansudahpacking.mp3",
+      validasiok: "/sounds/validasiberhasil.mp3",
+      
+    };
+    const audio = new Audio(soundMap[type]);
+    audio.play();
+};
+
+
   // 🔸 1. Cek Tracking Number
-  const handleSearchOrder = async () => {
-    if (!trackingNumber) return;
-    setLoading(true);
-    setMessage("");
+  // 🔸 1. Cek Tracking Number
+const handleSearchOrder = async () => {
+  if (!trackingNumber) return;
+  setLoading(true);
+  setMessage("");
 
-    try {
-      const response = await API.get(`/orders/tracking/${trackingNumber}`);
-      const orderData = response.data;
-      const initialScan = orderData.items.map((item) => ({
-        sku: item.sku,
-        product_name: item.product_name,
-        ordered_qty: item.quantity,
-        scanned_qty: 0,
-        image: item.image,
-      }));
+  try {
+    const response = await API.get(`/orders/tracking/${trackingNumber}`);
+    const orderData = response.data;
 
-      setOrder(orderData);
-      setScannedItems(initialScan);
-    } catch (error) {
-      setOrder(null);
-      setScannedItems([]);
-      setMessage(error.response?.data?.message || "Order tidak ditemukan");
-    } finally {
+    if (orderData.status === "packed") {
+      setMessage("⚠️ Order ini sudah berstatus packed dan tidak bisa discan ulang.");
+      playSound("sudahpacking");
       setLoading(false);
+      return;
     }
-  };
+
+    const initialScan = orderData.items.map((item) => ({
+      sku: item.sku,
+      product_name: item.product_name,
+      ordered_qty: item.quantity,
+      scanned_qty: 0,
+      image: item.image,
+    }));
+
+    setOrder(orderData);
+    setScannedItems(initialScan);
+  } catch (error) {
+    setOrder(null);
+    setScannedItems([]);
+
+    const msg = error.response?.data?.message || "Order tidak ditemukan";
+    setMessage(msg);
+
+    // 🔊 Tambahan: mainkan sound berdasarkan pesan
+    if (msg.includes("sudah di packing")) {
+      playSound("sudahpacking");
+    } else {
+      playSound("error");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // 🔸 2. Scan SKU produk (barcode / manual)
   const handleScanSku = (e) => {
@@ -46,38 +83,31 @@ const Packing = () => {
     const sku = scannedSku.trim();
     if (!sku) return;
 
-    const updated = scannedItems.map((item) => {
-      if (item.sku === sku) {
-        const newQty = item.scanned_qty + 1;
-        if (newQty > item.ordered_qty) {
-          setMessage(`⚠️ SKU ${sku} discan melebihi jumlah pesanan`);
-        }
-        return { ...item, scanned_qty: newQty };
-      }
-      return item;
-    });
+    const itemIndex = scannedItems.findIndex((item) => item.sku == sku);
 
-    const found = scannedItems.some((item) => item.sku === sku);
-    if (!found) {
-      setMessage(`❌ SKU ${sku} tidak ditemukan dalam order`);
+    if (itemIndex === -1) {
+       setMessage(`❌ SKU ${sku} tidak ditemukan dalam order`);
+         playSound("noproduk");
+       setScannedSku("");
+    return;
+  
+    }
+    const updatedItems = [...scannedItems];
+    const target = updatedItems[itemIndex];
+
+    // Cek apakah sudah melebihi jumlah order
+    if (target.scanned_qty >= target.ordered_qty) {
+      setMessage(`⚠️ SKU ${sku} discan melebihi jumlah pesanan`);
+      playSound("error");
     } else {
+      target.scanned_qty += 1;
       setMessage(`✅ SKU ${sku} berhasil discan`);
+      playSound("scanproduk");
     }
 
-    setScannedItems(updated);
+    setScannedItems(updatedItems);
     setScannedSku("");
   };
-
-
-
-  const playSound = (type) => {
-    const soundMap = {
-      success: "/sounds/success.mp3",
-      error: "/sounds/failed.mp3",
-    };
-    const audio = new Audio(soundMap[type]);
-    audio.play();
-};
 
 
 
@@ -98,7 +128,7 @@ const Packing = () => {
         payload
       );
       setMessage(response.data.message || "✅ Order berhasil divalidasi");
-       playSound("success");
+       playSound("validasiok");
       setOrder(null);
       setScannedItems([]);
       setTrackingNumber("");
@@ -143,7 +173,9 @@ const Packing = () => {
           <h2>Order #{order.order_number}</h2>
           <p>
             <strong>Nama Customer:</strong> {order.customer_name} <br />
-            <strong>No. HP:</strong> {order.customer_phone}
+            <strong>No. HP:</strong> {order.customer_phone}  <br />
+             <strong>Total Produk:</strong> {order.total_qty}
+
           </p>
 
           <table className="packing-table">
@@ -162,8 +194,9 @@ const Packing = () => {
                 <tr key={idx}>
                   <td>{item.sku}</td>
                   <td>{item.product_name}</td>
-                  <td>{item.ordered_qty}</td>
-                  <td>{item.scanned_qty}</td>
+                  <td className="qty-cell ordered">{item.ordered_qty}</td>
+                  <td className="qty-cell scanned">{item.scanned_qty}</td>
+
                    <td>
                     {item.image ? (
                       <img
@@ -172,7 +205,7 @@ const Packing = () => {
                         className="product-image"
                       />
                     ) : (
-                      <span style={{ color: "#aaa", fontSize: "12px" }}>No Image</span>
+                      <span style={{ color: "#aaa", fontSize: "13px" }}>No Image</span>
                     )}
                   </td>
                   <td>

@@ -99,6 +99,11 @@
   margin-top: 10px;
 }
 
+.packing-table th{
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
 .packing-table th,
 .packing-table td {
   border: 1px solid #ddd;
@@ -107,6 +112,17 @@
 
 .packing-table th {
   background-color: #3d546b;
+}
+/* Biar font-nya lebih besar dan warnanya merah */
+.qty-cell {
+  font-size: 18px; /* ubah sesuai selera */
+  font-weight: bold;
+  text-align: center;
+}
+
+.qty-cell.ordered,
+.qty-cell.scanned {
+  color: red;
 }
 
 .status-ok {
@@ -165,4 +181,24 @@
   padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
+}
+/* === PRODUCT IMAGE === */
+.product-image {
+  width: 170px;          /* ukuran default (bisa ubah misal 60px atau 80px) */
+  height: auto;         /* biar proporsional (nggak gepeng) */
+  object-fit: contain;  /* pastikan gambar nggak terpotong */
+  border-radius: 6px;   /* sedikit membulatkan sudut */
+  border: 1px solid #ddd;
+  padding: 3px;
+  background: #f9f9f9;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-image:hover {
+  transform: scale(1.05); /* efek zoom kecil pas hover */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+td img.product-image {
+  display: block;
+  margin: 0 auto;
 }
