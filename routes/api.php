@@ -41,6 +41,9 @@
     use App\Http\Controllers\GudangController;
     use App\Http\Controllers\OrderController;
     use App\Http\Controllers\GineeSyncController;
+    use App\Http\Controllers\PabrikController;
+   
+    use App\Http\Controllers\PembelianBahanController;
 
 
 
@@ -229,6 +232,12 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::post('/orders/summary', [OrderController::class, 'getSummaryReport']);
         
         Route::get('/ginee/test-order/{orderId}', [GineeSyncController::class, 'testSingleOrder']);
+        Route::get('/orders/logs/export', [OrderController::class, 'exportLogsToExcel']);
+
+        Route::get('/pabrik', [PabrikController::class, 'index']);
+        Route::post('/pabrik', [PabrikController::class, 'store']);
+        Route::get('/pembelian-bahan', [PembelianBahanController::class, 'index']);
+        Route::post('/pembelian-bahan', [PembelianBahanController::class, 'store']);
 
 
 

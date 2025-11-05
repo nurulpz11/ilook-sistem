@@ -8,6 +8,9 @@ use App\Models\OrderLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\OrderLogsExport; 
+
 
 class OrderController extends Controller
 {
@@ -69,6 +72,7 @@ class OrderController extends Controller
 
         // Jika semua valid → update status order
        $order->status = 'packed';
+       
        $order->save();
 
         // Simpan log scan ke tabel order_logs
@@ -97,44 +101,61 @@ class OrderController extends Controller
     }
     
 
-public function getSummaryReport(Request $request)
-{
-    $startDate = $request->input('start_date')
-        ? \Carbon\Carbon::parse($request->input('start_date'))->startOfDay()
-        : now()->startOfDay();
+    public function getSummaryReport(Request $request)
+    {
+        $startDate = $request->input('start_date')
+            ? \Carbon\Carbon::parse($request->input('start_date'))->startOfDay()
+            : now()->startOfDay();
 
-    $endDate = $request->input('end_date')
-        ? \Carbon\Carbon::parse($request->input('end_date'))->endOfDay()
-        : now()->endOfDay();
+        $endDate = $request->input('end_date')
+            ? \Carbon\Carbon::parse($request->input('end_date'))->endOfDay()
+            : now()->endOfDay();
 
-    $action = $request->input('action');
+        $action = $request->input('action');
 
-    $query = DB::table('order_logs')
-        ->join('order', 'order.id', '=', 'order_logs.order_id')
-        ->join('order_items', 'order_items.order_id', '=', 'order.id')
-        ->selectRaw('
-            COUNT(DISTINCT order.id) as total_order,
-            SUM(order_items.quantity) as total_items,
-            SUM(order.total_amount) as total_amount
-        ')
-        ->whereBetween('order_logs.created_at', [$startDate, $endDate]);
-      
-    if ($action) {
-        $query->where('order_logs.action', $action);
+        $query = DB::table('order_logs')
+            ->join('order', 'order.id', '=', 'order_logs.order_id')
+            ->join('order_items', 'order_items.order_id', '=', 'order.id')
+            ->selectRaw('
+                COUNT(DISTINCT order.id) as total_order,
+                SUM(order_items.quantity) as total_items,
+                SUM(order.total_amount) as total_amount
+            ')
+            ->whereBetween('order_logs.created_at', [$startDate, $endDate]);
+        
+        if ($action) {
+            $query->where('order_logs.action', $action);
+        }
+
+        $report = $query->get();
+
+        return response()->json([
+            'message' => 'Summary report berhasil diambil',
+            'filters' => [
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
+                'action' => $action ?? 'Semua',
+            ],
+            'data' => $report
+        ]);
     }
 
-    $report = $query->get();
+    public function exportLogsToExcel(Request $request)
+    {
+        $startDate = $request->input('start_date')
+            ? \Carbon\Carbon::parse($request->input('start_date'))->startOfDay()
+            : now()->startOfDay();
 
-    return response()->json([
-        'message' => 'Summary report berhasil diambil',
-        'filters' => [
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-            'action' => $action ?? 'Semua',
-        ],
-        'data' => $report
-    ]);
-}
+        $endDate = $request->input('end_date')
+            ? \Carbon\Carbon::parse($request->input('end_date'))->endOfDay()
+            : now()->endOfDay();
+
+        $action = $request->input('action');
+
+        $fileName = 'order_logs_' . $startDate->format('Ymd') . '_to_' . $endDate->format('Ymd') . '.xlsx';
+
+        return Excel::download(new OrderLogsExport($startDate, $endDate, $action), $fileName);
+    }
 
 
 }

@@ -1,6 +1,8 @@
 <?php
 
+
 namespace App\Services;
+
 
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -9,9 +11,10 @@ use Carbon\Carbon;
 use App\Helpers\GineeSignature;
 use App\Models\SyncLog;
 
+
 class GineeOrderService
 {
-    public function syncRecentOrders(): array
+     public function syncRecentOrders(): array
     {
         ini_set('max_execution_time', 0);
         ini_set('memory_limit', '1024M');
@@ -46,36 +49,45 @@ class GineeOrderService
         $nextCursor = null;
         $page = 1;
 
-        do {
-            $bodyList = [
-                'lastUpdateSince' => $since,
-                'lastUpdateTo'    => $to,
-                'orderStatus'     => 'READY_TO_SHIP',
-                'size'            => 100,
-            ];
+        $statuses = ['READY_TO_SHIP', 'PAID'];
 
-            if ($nextCursor) {
-                $bodyList['nextCursor'] = $nextCursor;
-            }
+        
+        foreach ($statuses as $status) {
 
-            $listResponse = Http::timeout(90)
-                ->withHeaders($headersList)
-                ->post($host . $endpointList, $bodyList);
+            $nextCursor = null;
+            $page = 1;
+            do {
+                $bodyList = [
+                    'lastUpdateSince' => $since,
+                    'lastUpdateTo'    => $to,
+                    'orderStatus'     => $status, // ✅ satu status per request
+                    'size'            => 100,
+                ];
 
-            $responseData = $listResponse->json();
-            $listData = $responseData['data']['content'] ?? [];
-            $hasMore = $responseData['data']['more'] ?? false;
-            $nextCursor = $responseData['data']['nextCursor'] ?? null;
+                if ($nextCursor) {
+                    $bodyList['nextCursor'] = $nextCursor;
+                }
 
-            dump("Tanggal {$since} s/d {$to} | Page {$page} -> dapat " . count($listData) . " order | more: " . ($hasMore ? 'yes' : 'no'));
+                $listResponse = Http::timeout(90)
+                    ->withHeaders($headersList)
+                    ->post($host . $endpointList, $bodyList);
 
-            if (!empty($listData)) {
-                $this->saveOrderBatch($listData, $endpointBatch, $accessKey, $secretKey, $country, $host, $newCount, $updatedCount, $totalProcessed);
-            }
+                $responseData = $listResponse->json();
+                $listData = $responseData['data']['content'] ?? [];
+                $hasMore = $responseData['data']['more'] ?? false;
+                $nextCursor = $responseData['data']['nextCursor'] ?? null;
 
-            $page++;
-            sleep(1);
-        } while ($hasMore);
+                dump("Tanggal {$since} s/d {$to} | Page {$page} -> dapat " . count($listData) . " order | more: " . ($hasMore ? 'yes' : 'no'));
+                dump("Status {$status} | Page {$page} -> dapat " . count($listData) . " order");
+            
+                if (!empty($listData)) {
+                    $this->saveOrderBatch($listData, $endpointBatch, $accessKey, $secretKey, $country, $host, $newCount, $updatedCount, $totalProcessed);
+                }
+
+                $page++;
+                sleep(1);
+            } while ($hasMore);
+        }
 
         // Update waktu terakhir sync ke sekarang
         $syncLog->update(['last_sync_at' => now()]);
@@ -88,11 +100,97 @@ class GineeOrderService
 
     }
 
+
+
+    public function syncFirstTime(): array
+    {
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', '1024M');
+
+        $accessKey = env('GINEE_ACCESS_KEY');
+        $secretKey = env('GINEE_SECRET_KEY');
+        $country   = env('GINEE_COUNTRY', 'ID');
+        $host      = env('GINEE_API_HOST', 'https://api.ginee.com');
+
+        $endpointList  = '/openapi/order/v2/list-order';
+        $endpointBatch = '/openapi/order/v1/batch-get';
+
+        $signatureList = str_replace(["\r", "\n"], '', GineeSignature::generate('POST', $endpointList, $secretKey));
+        $headersList = [
+            'Content-Type' => 'application/json',
+            'X-Advai-Country' => $country,
+            'Authorization' => $accessKey . ':' . $signatureList
+        ];
+
+        $totalProcessed = 0;
+        $newCount = 0;
+        $updatedCount = 0;
+
+        $statuses = ['READY_TO_SHIP', 'PAID'];
+
+        for ($i = 7; $i >= 0; $i--) {
+
+            $since = now()->subDays($i + 1)->toIso8601String();
+            $to    = now()->subDays($i)->toIso8601String();
+
+            foreach ($statuses as $status) {
+
+                $nextCursor = null;
+                $page = 1;
+
+                do {
+                    $bodyList = [
+                        'lastUpdateSince' => $since,
+                        'lastUpdateTo'    => $to,
+                        'orderStatus'     => $status,
+                        'size'            => 100,
+                    ];
+
+                    if ($nextCursor) {
+                        $bodyList['nextCursor'] = $nextCursor;
+                    }
+
+                    $listResponse = Http::timeout(90)
+                        ->withHeaders($headersList)
+                        ->post($host . $endpointList, $bodyList);
+
+                    $responseData = $listResponse->json();
+                    $listData = $responseData['data']['content'] ?? [];
+                    $hasMore = $responseData['data']['more'] ?? false;
+                    $nextCursor = $responseData['data']['nextCursor'] ?? null;
+
+                    dump("[FIRST SYNC] {$since} -> {$to} | {$status} | Page {$page} | dapat " . count($listData));
+
+                    if (!empty($listData)) {
+                        $this->saveOrderBatch($listData, $endpointBatch, $accessKey, $secretKey, $country, $host, $newCount, $updatedCount, $totalProcessed);
+                    }
+
+                    $page++;
+                    sleep(1);
+
+                } while ($hasMore);
+            }
+        }
+
+        SyncLog::updateOrCreate(
+            ['type' => 'orders'],
+            ['last_sync_at' => now()]
+        );
+
+        return [
+            'totalProcessed' => $totalProcessed,
+            'new' => $newCount,
+            'updated' => $updatedCount,
+        ];
+    }
+
+
     private function saveOrderBatch($listData, $endpointBatch, $accessKey, $secretKey, $country, $host, &$newCount, &$updatedCount, &$totalProcessed)
     {
         // ambil orderId
         $orderIds = collect($listData)->pluck('orderId')->filter()->unique()->values()->toArray();
         $chunks = array_chunk($orderIds, 20);
+
 
         foreach ($chunks as $chunk) {
             $signatureBatch = str_replace(["\r", "\n"], '', GineeSignature::generate('POST', $endpointBatch, $secretKey));
@@ -102,13 +200,16 @@ class GineeOrderService
                 'Authorization' => $accessKey . ':' . $signatureBatch
             ];
 
+
             $bodyBatch = [
                 'orderIds' => $chunk,
                 'historicalData' => false
             ];
 
+
             $batchResponse = Http::timeout(90)->withHeaders($headersBatch)->post($host . $endpointBatch, $bodyBatch);
             $batchData = $batchResponse->json()['data'] ?? [];
+
 
             foreach ($batchData as $order) {
                 $trackingNumber =
@@ -118,29 +219,28 @@ class GineeOrderService
                     ?? ($order['logisticsInfos'][0]['logisticsTrackingNumber'] ?? null)
                     ?? ($order['logisticInfoList'][0]['trackingNumber'] ?? null);
 
+
                 $updateData = [
                     'platform'        => $order['channel'] ?? null,
                     'customer_name'   => $order['customerInfo']['name'] ?? null,
                     'customer_phone'  => $order['customerInfo']['mobile'] ?? null,
-                    'total_amount' => collect($order['items'] ?? [])
-                        ->sum(fn($item) =>
-                            $item['actualTotalPrice']
-                            ?? ($item['actualPrice'] ?? 0) * ($item['quantity'] ?? 1)
-                        ),
-
+                    'total_amount'    => $order['paymentInfo']['totalAmount'] ?? 0,
                     'status'          => $order['orderStatus'] ?? null,
                     'order_date'      => isset($order['createAt']) ? Carbon::parse($order['createAt'])->format('Y-m-d H:i:s') : null,
                     'total_qty'       => $order['totalQuantity'] ?? (isset($order['items']) ? collect($order['items'])->sum('quantity') : 0),
                 ];
 
+
                 if (!empty($trackingNumber)) {
                     $updateData['tracking_number'] = $trackingNumber;
                 }
+
 
                 $orderModel = Order::updateOrCreate(
                     ['order_number' => $order['externalOrderSn'] ?? null],
                     $updateData
                 );
+
 
                 if (!empty($order['items'])) {
                     foreach ($order['items'] as $item) {
@@ -159,13 +259,21 @@ class GineeOrderService
                     }
                 }
 
+
                 if ($orderModel->wasRecentlyCreated) $newCount++;
                 else $updatedCount++;
 
+
                 $totalProcessed++;
             }
+
 
             sleep(1);
         }
     }
 }
+
+
+
+
+
