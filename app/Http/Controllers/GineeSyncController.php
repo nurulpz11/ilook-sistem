@@ -34,11 +34,14 @@ class GineeSyncController extends Controller
         $lastUpdateTo = now()->toIso8601String();
 
         // 🔹 1. Ambil list order
-        $body = [
+       $body = [
             'lastUpdateSince' => $lastUpdateSince,
             'lastUpdateTo' => $lastUpdateTo,
-            'pageSize' => 15
+            'orderStatus' => $request->orderStatus ?? null,
+            'pageSize' => $request->pageSize ?? 15,
+            'page' => $request->page ?? 1,
         ];
+
 
         $response = Http::timeout(60)->withHeaders($headers)->post($host . $endpointList, $body);
         $responseData = $response->json();

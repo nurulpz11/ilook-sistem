@@ -49,7 +49,14 @@ class GineeOrderService
         $nextCursor = null;
         $page = 1;
 
-        $statuses = ['READY_TO_SHIP', 'PAID'];
+        $statuses = [
+            'PAID',
+            'READY_TO_SHIP',
+            'SHIPPING',
+            'DELIVERED',
+            'CANCELLED',
+            'RETURNED',
+        ];
 
         
         foreach ($statuses as $status) {
@@ -126,9 +133,17 @@ class GineeOrderService
         $newCount = 0;
         $updatedCount = 0;
 
-        $statuses = ['READY_TO_SHIP', 'PAID'];
+        $statuses = [
+            'PAID',
+            'READY_TO_SHIP',
+            'SHIPPING',
+            'DELIVERED',
+            'CANCELLED',
+            'RETURNED',
+        ];
 
-        for ($i = 7; $i >= 0; $i--) {
+
+        for ($i = 30; $i >= 0; $i--) {
 
             $since = now()->subDays($i + 1)->toIso8601String();
             $to    = now()->subDays($i)->toIso8601String();
@@ -219,7 +234,10 @@ class GineeOrderService
                     ?? ($order['logisticsInfos'][0]['logisticsTrackingNumber'] ?? null)
                     ?? ($order['logisticInfoList'][0]['trackingNumber'] ?? null);
 
-
+                 $skuList = !empty($order['items'])
+                    ? collect($order['items'])->pluck('sku')->filter()->unique()->implode(',')
+                    : null;
+                    
                 $updateData = [
                     'platform'        => $order['channel'] ?? null,
                     'customer_name'   => $order['customerInfo']['name'] ?? null,
@@ -228,6 +246,7 @@ class GineeOrderService
                     'status'          => $order['orderStatus'] ?? null,
                     'order_date'      => isset($order['createAt']) ? Carbon::parse($order['createAt'])->format('Y-m-d H:i:s') : null,
                     'total_qty'       => $order['totalQuantity'] ?? (isset($order['items']) ? collect($order['items'])->sum('quantity') : 0),
+                     'sku'             => $skuList,
                 ];
 
 

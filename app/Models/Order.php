@@ -20,6 +20,7 @@ class Order extends Model
         'status',
         'order_date',
         'total_qty',
+        'sku',
     ];
 
     public function items()
