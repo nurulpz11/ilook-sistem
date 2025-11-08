@@ -143,7 +143,7 @@ class GineeOrderService
         ];
 
 
-        for ($i = 2; $i >= 0; $i--) {
+        for ($i = 30; $i >= 0; $i--) {
 
             $since = now()->subDays($i + 1)->toIso8601String();
             $to    = now()->subDays($i)->toIso8601String();
@@ -200,6 +200,8 @@ class GineeOrderService
     }
 
 
+    
+
     private function saveOrderBatch($listData, $endpointBatch, $accessKey, $secretKey, $country, $host, &$newCount, &$updatedCount, &$totalProcessed)
     {
         // ambil orderId
@@ -254,30 +256,39 @@ class GineeOrderService
                     $updateData['tracking_number'] = $trackingNumber;
                 }
 
+                // ✅ Cari order existing dengan 2 step:
+                $orderModel = null;
 
-              if (!empty($trackingNumber)) {
+                // 1️⃣ Cek berdasarkan tracking number dulu
+                if (!empty($trackingNumber)) {
                     $orderModel = Order::where('tracking_number', $trackingNumber)->first();
-                } else {
-                    $orderModel = Order::where('order_number', $order['externalOrderSn'] ?? null)->first();
                 }
 
+                // 2️⃣ Kalau belum ketemu → cek berdasarkan order_number
+                $orderNumber = $order['externalOrderSn'] ?? null;
+                if (!$orderModel && !empty($orderNumber)) {
+                    $orderModel = Order::where('order_number', $orderNumber)->first();
+                }
+
+                // ✅ Insert / Update
                 if ($orderModel) {
                     $orderModel->update($updateData);
                     $updatedCount++;
                 } else {
-                    $updateData['order_number'] = $order['externalOrderSn'] ?? null;
+                    $updateData['order_number'] = $orderNumber;
                     $orderModel = Order::create($updateData);
                     $newCount++;
                 }
 
                 $totalProcessed++;
 
+                // ✅ Save Items
                 if (!empty($order['items'])) {
                     foreach ($order['items'] as $item) {
                         OrderItem::updateOrCreate(
                             [
                                 'order_id' => $orderModel->id,
-                                'sku' => $item['sku'] ?? null,
+                                'sku'      => $item['sku'] ?? null,
                             ],
                             [
                                 'product_name' => $item['productName'] ?? null,
@@ -288,15 +299,13 @@ class GineeOrderService
                         );
                     }
                 }
-
-
             }
 
-
-            sleep(1);
+            sleep(1); // biar ga kena rate limit
+        }
         }
     }
-}
+
 
 
 
