@@ -143,7 +143,7 @@ class GineeOrderService
         ];
 
 
-        for ($i = 3; $i >= 0; $i--) {
+        for ($i = 2; $i >= 0; $i--) {
 
             $since = now()->subDays($i + 1)->toIso8601String();
             $to    = now()->subDays($i)->toIso8601String();
@@ -255,11 +255,22 @@ class GineeOrderService
                 }
 
 
-                $orderModel = Order::updateOrCreate(
-                    ['order_number' => $order['externalOrderSn'] ?? null],
-                    $updateData
-                );
+              if (!empty($trackingNumber)) {
+                    $orderModel = Order::where('tracking_number', $trackingNumber)->first();
+                } else {
+                    $orderModel = Order::where('order_number', $order['externalOrderSn'] ?? null)->first();
+                }
 
+                if ($orderModel) {
+                    $orderModel->update($updateData);
+                    $updatedCount++;
+                } else {
+                    $updateData['order_number'] = $order['externalOrderSn'] ?? null;
+                    $orderModel = Order::create($updateData);
+                    $newCount++;
+                }
+
+                $totalProcessed++;
 
                 if (!empty($order['items'])) {
                     foreach ($order['items'] as $item) {
@@ -279,11 +290,6 @@ class GineeOrderService
                 }
 
 
-                if ($orderModel->wasRecentlyCreated) $newCount++;
-                else $updatedCount++;
-
-
-                $totalProcessed++;
             }
 
 
