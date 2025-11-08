@@ -30,7 +30,7 @@ class OrderController extends Controller
 
         return response()->json($order);
     }
-    public function validateScan(Request $request, $trackingNumber)
+  public function validateScan(Request $request, $trackingNumber)
     {
         $request->validate([
             'items' => 'required|array',
@@ -45,14 +45,15 @@ class OrderController extends Controller
         if (!$order) {
             return response()->json(['message' => 'Order tidak ditemukan'], 404);
         }
-        if ($order->status === 'packed') {
-        return response()->json([
-            'message' => 'Order ini sudah berstatus packed dan tidak bisa divalidasi ulang.'
-        ], 422);
-    }
 
-        // Validasi SKU & qty
+        if ($order->is_packed) {
+            return response()->json([
+                'message' => 'Order ini sudah berstatus packed dan tidak bisa divalidasi ulang.'
+            ], 422);
+        }
+
         $expectedItems = $order->items->keyBy('sku');
+
         foreach ($request->items as $scannedItem) {
             $sku = $scannedItem['sku'];
             $qty = $scannedItem['quantity'];
@@ -70,23 +71,21 @@ class OrderController extends Controller
             }
         }
 
-        // Jika semua valid → update status order
-       $order->status = 'packed';
-       
-       $order->save();
+        $order->update(['is_packed' => 1]);
 
-        // Simpan log scan ke tabel order_logs
         OrderLog::create([
             'order_id'     => $order->id,
             'action'       => 'scan_validasi',
-            'performed_by' => Auth::user()->name ?? 'System', // ambil dari token user
+            'performed_by' => Auth::user()->name ?? 'System',
             'notes'        => 'Order berhasil discan dan divalidasi',
         ]);
-                return response()->json([
+
+        return response()->json([
             'message' => 'Order berhasil divalidasi & ditandai packed',
             'order' => $order
         ]);
     }
+
 
     public function getAllLogs()
     {
