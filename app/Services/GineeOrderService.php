@@ -139,6 +139,7 @@ class GineeOrderService
             'DELIVERED',
             'CANCELLED',
             'RETURNED',
+            'COMPLETED',
         ];
 
 
@@ -154,8 +155,8 @@ class GineeOrderService
 
                 do {
                     $bodyList = [
-                        'lastUpdateSince' => $since,
-                        'lastUpdateTo'    => $to,
+                        'createSince' => $since,
+                        'createTo'    => $to,
                         'orderStatus'     => $status,
                         'size'            => 100,
                     ];
