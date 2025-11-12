@@ -10,8 +10,7 @@ class Kernel extends ConsoleKernel
 
   protected function schedule(Schedule $schedule)
 {
-    // jalankan setiap 5 menit
-   $schedule->command('ginee:sync-orders')->everyMinute();
+    $schedule->command('ginee:sync-order')->everyThirtyMinutes();
 
 }
 

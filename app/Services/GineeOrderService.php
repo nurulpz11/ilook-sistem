@@ -14,7 +14,7 @@ use App\Models\SyncLog;
 
 class GineeOrderService
 {
-     public function syncRecentOrders(): array
+    public function syncRecentOrders(): array
     {
         ini_set('max_execution_time', 0);
         ini_set('memory_limit', '1024M');
@@ -34,12 +34,11 @@ class GineeOrderService
             'Authorization' => $accessKey . ':' . $signatureList
         ];
 
-        // Ambil waktu terakhir sync (default mundur 1 hari kalau belum ada)
         $syncLog = SyncLog::firstOrCreate(['type' => 'orders'], [
             'last_sync_at' => now()->subDay()
         ]);
 
-        $since = $syncLog->last_sync_at->toIso8601String();
+        $since = $syncLog->last_sync_at->subHours(2)->toIso8601String(); 
         $to = now()->toIso8601String();
 
         $totalProcessed = 0;

@@ -87,18 +87,37 @@ class OrderController extends Controller
     }
 
 
-    public function getAllLogs()
+  public function getAllLogs(Request $request)
     {
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))->startOfDay()
+            : null;
+
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))->endOfDay()
+            : null;
+
+        $status = $request->input('status');
+
         $logs = OrderLog::with(['order' => function ($q) {
             $q->select('id', 'order_number', 'tracking_number', 'status', 'total_amount')
-              ->withCount('items as total_items');
+            ->withCount('items as total_items');
         }])
+        ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+            $q->whereBetween('created_at', [$startDate, $endDate]);
+        })
+        ->when($status, function ($q) use ($status) {
+            $q->whereHas('order', function ($sub) use ($status) {
+                $sub->whereRaw('LOWER(status) = ?', [strtolower($status)]);
+            });
+        })
         ->orderBy('created_at', 'desc')
         ->get();
 
         return response()->json($logs);
     }
-    
+
+        
 
     public function getSummaryReport(Request $request)
     {
@@ -112,28 +131,31 @@ class OrderController extends Controller
 
         $action = $request->input('action');
 
+        $status = $request->input('status');
+
         $query = DB::table('order_logs')
-            ->join('order', 'order.id', '=', 'order_logs.order_id')
-            ->join('order_items', 'order_items.order_id', '=', 'order.id')
+            ->join(DB::raw('`order`'), 'order.id', '=', 'order_logs.order_id')
+            ->leftJoin('order_items', 'order_items.order_id', '=', 'order.id')
             ->selectRaw('
-                COUNT(DISTINCT order.id) as total_order,
+                COUNT(DISTINCT `order`.id) as total_order,
                 SUM(order_items.quantity) as total_items,
-                SUM(order.total_amount) as total_amount
+                SUM(`order`.total_amount) as total_amount
             ')
             ->whereBetween('order_logs.created_at', [$startDate, $endDate]);
-        
-        if ($action) {
-            $query->where('order_logs.action', $action);
+
+        if ($status) {
+            $query->whereRaw('LOWER(`order`.status) = ?', [strtolower($status)]);
         }
 
         $report = $query->get();
+
 
         return response()->json([
             'message' => 'Summary report berhasil diambil',
             'filters' => [
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),
-                'action' => $action ?? 'Semua',
+                 'status'     => $status ?? 'Semua',
             ],
             'data' => $report
         ]);
