@@ -26,33 +26,39 @@ class PembelianBController extends Controller
     
 
    
-    public function store(Request $request)
-    {
-        $request->validate([
-            'pembelian_a_id' => 'required|exists:pembelian_aksesoris_a,id',
-            'user_id' => 'required|exists:users,id',
-            'jumlah_terverifikasi' => 'required|integer',
-           
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'pembelian_a_id' => 'required|exists:pembelian_aksesoris_a,id',
+        'user_id' => 'required|exists:users,id',
+        'jumlah_terverifikasi' => 'required|integer',
+    ]);
 
-        $pembelianA = PembelianA::findOrFail($request->pembelian_a_id);
-        
-        $status = $request->jumlah_terverifikasi == $pembelianA->jumlah ? 'valid' :'invalid';
+    $pembelianA = PembelianA::findOrFail($request->pembelian_a_id);
 
-
-        $pembelianB = PembelianB::create([
-            'pembelian_a_id'=>$request->pembelian_a_id,
-            'user_id'=>$request->user_id,
-            'jumlah_terverifikasi' => $request->jumlah_terverifikasi,
-            'status_verifikasi' => $status,
-        ]);
-
-        if ($status === 'valid'){
-            $this->generateBarcodeForPembelianB($pembelianB);
-        }
-
-        return response()->json($pembelianB, 201);
+    // Cek kecocokan jumlah
+    if ((int) $request->jumlah_terverifikasi !== (int) $pembelianA->jumlah) {
+        return response()->json([
+            'message' => 'Jumlah terverifikasi tidak sesuai.'
+        ], 422);
     }
+
+    // Jika sesuai → buat pembelian B & auto status "valid"
+    $pembelianB = PembelianB::create([
+        'pembelian_a_id' => $request->pembelian_a_id,
+        'user_id' => $request->user_id,
+        'jumlah_terverifikasi' => $request->jumlah_terverifikasi,
+        'status_verifikasi' => 'valid',
+    ]);
+
+    // Generate barcode
+    $this->generateBarcodeForPembelianB($pembelianB);
+
+    return response()->json([
+        'message' => 'Pembelian B berhasil disimpan dan status valid.',
+        'data' => $pembelianB
+    ], 201);
+}
 
     private function generateBarcodeForPembelianB($pembelianB)
     {
