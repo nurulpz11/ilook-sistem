@@ -143,7 +143,7 @@ class GineeOrderService
         ];
 
 
-        for ($i = 6; $i >= 0; $i--) {
+        for ($i = 5; $i >= 0; $i--) {
 
             $since = now()->subDays($i + 1)->toIso8601String();
             $to    = now()->subDays($i)->toIso8601String();
