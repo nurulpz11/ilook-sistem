@@ -17,6 +17,8 @@ const PesananPetugasC = () => {
     const [penjahitList, setPenjahitList] = useState([]);
     const [aksesorisList, setAksesorisList] = useState([]);
      const [verifikasiList, setVerifikasiList] = useState([]);
+const [barcodeInput, setBarcodeInput] = useState("");
+
 
     const [newData, setNewData] = useState({
       penjahit_id: "",
@@ -27,7 +29,7 @@ const PesananPetugasC = () => {
       barcode: [], // array berisi string barcode
     });
 
-    const [barcodeInput, setBarcodeInput] = useState("");
+  
 
 useEffect(() => {
     const fetchPetugasC = async () => {
@@ -222,6 +224,28 @@ const addBarcode = () => {
     setBarcodeInput(""); // reset input setelah ditambahkan
   }
 };
+
+
+
+// Fungsi baru untuk tiap scan
+const handleBarcodeScan = (e) => {
+  const scanned = e.target.value.trim();
+  if (!scanned) return;
+
+  if (newDataPetugasD.barcode.includes(scanned)) {
+    alert("Barcode sudah dimasukkan!");
+  } else if (newDataPetugasD.barcode.length >= selectedPesanan.jumlah_dipesan) {
+    alert("Jumlah barcode sudah penuh!");
+  } else {
+    setNewDataPetugasD(prev => ({
+      ...prev,
+      barcode: [...prev.barcode, scanned],
+    }));
+  }
+
+  setBarcodeInput(""); // Clear input untuk scan berikutnya
+};
+
 
 
 
@@ -480,17 +504,21 @@ const addBarcode = () => {
         {/* Barcode (input satuan yang nanti ditambahkan ke array) */}
         <div className="form-group">
           <label>Barcode yang Discan:</label>
-          <input
-            type="text"
-            name="barcode"
-            value={barcodeInput}              // <- pakai barcodeInput
-            onChange={handleBarcodeChange}
-            placeholder="Masukkan Barcode"
-          
-          />
-          <button type="button" onClick={addBarcode}>
-            Tambah Barcode
-          </button>
+       <input
+          type="text"
+          value={barcodeInput}
+          onChange={(e) => setBarcodeInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleBarcodeScan(e);
+            }
+          }}
+          placeholder="Scan barcode di sini..."
+          autoFocus
+        />
+
+
         </div>
 
        {/* Daftar barcode yang sudah dimasukkan */}

@@ -10,14 +10,12 @@ const TukangJasa = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); 
   const [newTukangJasa, setNewTukangJasa] = useState({
-     nama: "",
+    nama: "",
     kontak: "",
     bank: "",
     no_rekening: "",
     alamat: "",
     jenis_jasa: "",
-
-    
   });
 
   useEffect(() => {

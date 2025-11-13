@@ -10,8 +10,9 @@ const Layout = () => {
   const [isJasaOpen, setIsJasaOpen] = useState(false);
   const [isHppOpen, setIsHppOpen] = useState(false);
   const [isPackingOpen, setIsPackingOpen] = useState(false);
-  const [activeMenu, setActiveMenu] = useState("home"); // Tambahkan state untuk menu aktif
-  const [role, setRole] = useState(""); // State untuk menyimpan role user
+   const [isGudangOpen, setIsGudangOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState("home"); 
+  const [role, setRole] = useState(""); 
   const [isAksesorisOpen, setIsAksesorisOpen] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,9 @@ const Layout = () => {
   };
     const togglePackingMenu = () => {
     setIsPackingOpen(!isPackingOpen);
+  };
+    const toggleGudangMenu = () => {
+    setIsGudangOpen(!isGudangOpen);
   };
 
 
@@ -390,6 +394,42 @@ const Layout = () => {
               )}            
           </li>     
 
+
+
+
+<li>
+              <div onClick={toggleGudangMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "hpp" ? "active" : ""}`}>
+                <FaCogs className="icon" /> Gudang
+                <span className={`arrow ${isGudangOpen ? "open" : ""}`}>{isGudangOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+              </div>
+              {isGudangOpen && (
+                <ul className="dropdown-menu">
+                  <li>
+                    <Link to="bahan" 
+                    className={`dropdown-link ${activeMenu === "bahan" ? "active" : ""}`} 
+                    onClick={() => handleMenuClick("bahan")}>
+                      Bahan
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="pabrik"
+                    className={`dropdown-link ${activeMenu === "pabrik" ? "active" : ""}`}
+                    onClick={() => handleMenuClick("pabrik")}>
+                      Pabrik
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="gudang"
+                    className={`dropdown-link ${activeMenu === "gudang" ? "active" : ""}`}
+                    onClick={() => handleMenuClick("gudang")}>
+                      Gudang
+                    </Link>
+                  </li>
+                  
+                  
+                </ul>
+              )}            
+          </li>     
 
           </ul>
         </nav>

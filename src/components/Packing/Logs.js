@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import "../Jahit/Penjahit.css";
 import API from "../../api"; 
-import {FaInfoCircle, FaCalendarAlt } from 'react-icons/fa';
+import {FaInfoCircle,FaFileExcel, FaCalendarAlt } from 'react-icons/fa';
 
 const Logs = () => {
   const [logs, setLogs] = useState([]);
@@ -11,29 +11,36 @@ const Logs = () => {
   const [loading, setLoading] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [error, setError] = useState(null);
-
-  // 🔹 Fungsi ambil tanggal hari ini (format yyyy-mm-dd)
+  const [exporting, setExporting] = useState(false);
+  const [status, setStatus] = useState("");
   const today = new Date().toISOString().slice(0, 10);
 
-  // 🔹 Ambil data logs
-  const fetchLogs = async () => {
-    try {
-      const response = await API.get("/orders/logs");
-      setLogs(response.data);
-    } catch (error) {
-      setError("Gagal mengambil data logs.");
-    } finally {
-      setLoading(false);
-    }
-  };
+ const fetchLogs = async (start = startDate, end = endDate, stat = status) => {
+  try {
+    setLoading(true);
+    const response = await API.get("/orders/logs", {
+      params: {
+        start_date: start,
+        end_date: end,
+        ...(stat && { status: stat }),
+      },
+    });
+    setLogs(response.data);
+  } catch (error) {
+    setError("Gagal mengambil data logs.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  // 🔹 Ambil summary
-  const fetchSummary = async (start = today, end = today) => {
+ 
+  const fetchSummary = async (start = today, end = today, stat = status) => {
     try {
       setLoadingSummary(true);
       const response = await API.post("/orders/summary", {
         start_date: start,
         end_date: end,
+       ...(stat && { status: stat }),
       });
       if (response.data.data.length > 0) {
         setSummary(response.data.data[0]);
@@ -48,20 +55,50 @@ const Logs = () => {
     }
   };
 
-  // 🔹 Saat pertama kali halaman load → tampilkan data hari ini
-  useEffect(() => {
-    setStartDate(today);
-    setEndDate(today);
-    fetchLogs();
-    fetchSummary(today, today);
-  }, []);
+ useEffect(() => {
+  setStartDate(today);
+  setEndDate(today);
+  fetchLogs(today, today); 
+  fetchSummary(today, today);
+}, []);
+
 
   const handleFilter = () => {
-    if (!startDate || !endDate) {
-      alert("Silakan pilih tanggal awal dan akhir!");
-      return;
+  if (!startDate || !endDate) {
+    alert("Silakan pilih tanggal awal dan akhir!");
+    return;
+  }
+
+  fetchSummary(startDate, endDate, status);
+  fetchLogs(startDate, endDate, status); 
+};
+
+
+  // 🔹 Fungsi Export ke Excel
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const response = await API.get("/orders/logs/export", {
+        responseType: "blob",
+        params: {
+          start_date: startDate,
+          end_date: endDate,
+           status: status || null,
+        },
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `logs_order_${startDate}_to_${endDate}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      console.error("Gagal export:", error);
+      alert("Gagal mengunduh file Excel.");
+    } finally {
+      setExporting(false);
     }
-    fetchSummary(startDate, endDate);
   };
   
  return (
@@ -71,7 +108,7 @@ const Logs = () => {
     </div>
 
      <div className="table-container">
-        <div className="filter-header1">
+ 
          <div className="logs-container">
       
 
@@ -94,10 +131,35 @@ const Logs = () => {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
+
+          
+          {/* ✅ Dropdown status */}
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">Semua Status</option>
+            <option value="READY_TO_SHIP">READY_TO_SHIP</option>
+            <option value="PAID">PAID</option>
+            <option value="SHIPPING">SHIPPING</option>
+            <option value="DELIVERED">DELIVERED</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+
           <button onClick={handleFilter} className="btn-summary">
             Tampilkan
           </button>
+          {/* 🔹 Tombol Export Excel */}
+            <button
+            onClick={handleExport}
+            className="btn-export"
+             disabled={exporting}
+           >
+           <FaFileExcel style={{ marginRight: 6 }} />
+           {exporting ? "Mengunduh..." : "Export Excel"}
+          </button>
+
+
+        
         </div>
+        
       </div>
 
       {/* Summary Cards */}
@@ -135,6 +197,7 @@ const Logs = () => {
               <th>Total Item</th>
               <th>Total Harga</th>
               <th>Tanggal</th>
+              <th>Status</th>
             
             
             
@@ -145,17 +208,17 @@ const Logs = () => {
               <tr key={tc.id}>
                 <td data-label="tracking number : ">{tc.order?.tracking_number}</td>
                 <td data-label="Kasir : ">{tc.performed_by}</td>
-                 <td data-label="Total : ">{tc.order?.total_items}</td>
-                  <td data-label="Total : ">Rp. {tc.order?.total_amount}</td>
+                <td data-label="Total : ">{tc.order?.total_items}</td>
+                <td data-label="Total : ">Rp. {tc.order?.total_amount}</td>
                 <td data-label="tanggal : ">{tc.created_at}</td>
+                <td data-label="Total : ">{tc.order?.status}</td>
               </tr>
             ))}
           </tbody>
         </table>
         </div>
 
-   
-        </div>
+  
 </div>
   );
 };

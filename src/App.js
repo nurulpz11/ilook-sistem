@@ -43,6 +43,9 @@ import HistoryPendapatanJasa from "./components/Jasa/HistoryPendapatanJasa";
 import HppProduk from "./components/Produk/HppProduk";
 import Packing from "./components/Packing/Packing";
 import Logs from "./components/Packing/Logs";
+import Bahan from "./components/Bahan/Bahan";
+import Pabrik from "./components/Bahan/Pabrik";
+import Gudang from "./components/Bahan/Gudang";
 
 
 const App = () => {
@@ -74,6 +77,7 @@ const App = () => {
           <Route path="pembelianB" element={<PembelianBAksesoris/>} />
           <Route path="stok-aksesoris" element={<StokAksesoris/>} />
           <Route path="petugas-c" element={<PesananPetugasC/>} />
+           <Route path="petugas-d" element={<PesananPetugasD/>} />
           <Route path="tukangCutting" element={<TukangCutting/>} />
           <Route path="spkcutting" element={<SpkCutting/>} />
           <Route path="hasilcutting" element={<HasilCutting/>} />
@@ -92,6 +96,9 @@ const App = () => {
           <Route path="hppProduk" element={<HppProduk/>}/>
           <Route path="packing" element={<Packing/>}/>
           <Route path="logs" element={<Logs/>}/>
+          <Route path="bahan" element={<Bahan/>}/>
+          <Route path="pabrik" element={<Pabrik/>}/>
+          <Route path="gudang" element={<Gudang/>}/>
          
         </Route>
       </Routes>

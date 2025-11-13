@@ -1,8 +1,7 @@
 .penjahit-container {
   display: flex;
-  justify-content: space-between; /* Pisahkan elemen ke kiri dan kanan */
-  align-items: center; /* Ratakan elemen secara vertikal */
-  padding: 10px 20px;
+  justify-content: space-between; 
+  align-items: center; 
   background-color: #ffffff;
   border-radius: 10px;
   border-bottom: 1px solid #e9ecef;
@@ -11,12 +10,11 @@
 
 .penjahit-container h1 {
   font-size: 30px;
-  font-weight: 600; /* Sesuaikan berat font */
-  color: #3d546b;
-  margin: 0; /* Hilangkan margin bawaan */
+  font-weight: 600; 
+  margin: 0; 
 }
 .notif-icon {
-  font-size: 24px; /* Atur ukuran ikon */
+  font-size: 24px; 
   cursor: pointer;
   color: #b5b7b8;
 }
@@ -29,7 +27,6 @@
 }
 
 
-/* Filter wrapper */
 
 
 .filter-header1 {
@@ -2157,15 +2154,15 @@ border-color: #356191;
 }
 
 .card-blue {
-  background: #007bff;
+  background: #3facf5;
 }
 
 .card-green {
-  background: #28a745;
+  background: #9ec438;
 }
 
 .card-orange {
-  background: #fd7e14;
+  background: #f3872f;
 }
 
 .table-container {
@@ -2204,4 +2201,32 @@ border-color: #356191;
 .calendar-icon {
   color: #007bff;
   margin-right: 5px;
+}
+/* Tombol Export Excel */
+.btn-export {
+  background-color: #1d6f42; /* hijau khas Excel */
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-left: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-export:hover {
+  background-color: #218c52;
+  transform: translateY(-1px);
+}
+
+.btn-export:active {
+  transform: scale(0.98);
+}
+
+.btn-export:disabled {
+  background-color: #b5cbb8;
+  cursor: not-allowed;
 }
