@@ -10,7 +10,7 @@ const Layout = () => {
   const [isJasaOpen, setIsJasaOpen] = useState(false);
   const [isHppOpen, setIsHppOpen] = useState(false);
   const [isPackingOpen, setIsPackingOpen] = useState(false);
-   const [isGudangOpen, setIsGudangOpen] = useState(false);
+  const [isGudangOpen, setIsGudangOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("home"); 
   const [role, setRole] = useState(""); 
   const [isAksesorisOpen, setIsAksesorisOpen] = useState(false);
@@ -40,7 +40,9 @@ const Layout = () => {
     setIsGudangOpen(!isGudangOpen);
   };
 
-
+   const toggleAksesorisMenu = () => {
+    setIsAksesorisOpen(!isAksesorisOpen);
+  };
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu); 
@@ -50,9 +52,6 @@ const Layout = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const toggleAksesorisMenu = () => {
-    setIsAksesorisOpen(!isAksesorisOpen);
-  };
 
   return (
     <div className="layout-container">
@@ -166,17 +165,20 @@ const Layout = () => {
                       </li>
                       
                      
-                    <li>
-                    <div
-                      onClick={toggleAksesorisMenu}
-                      className={`sidebar-link dropdown-toggle ${activeMenu === "aksesoris" ? "active" : ""}`}
-                    >
-                      Aksesoris
-                      <span className={`arrow ${isAksesorisOpen ? "open" : ""}`}>
-                        {isAksesorisOpen ? <FaChevronUp /> : <FaChevronDown />}
-                      </span>
-                    </div>
-                    {isAksesorisOpen && (
+                    
+
+                    </>
+                  )}
+                </ul>
+              )}
+        <li>
+    
+          <li>
+              <div onClick={toggleAksesorisMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "aksesoris" ? "active" : ""}`}>
+                <FaCogs className="icon" /> Aksesoris
+                <span className={`arrow ${isAksesorisOpen ? "open" : ""}`}>{isAksesorisOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+              </div>
+              {isAksesorisOpen && (
                       <ul className="dropdown-menu">
                         <li>
                           <Link
@@ -236,14 +238,9 @@ const Layout = () => {
                     )}
                   </li>
 
-
-                    </>
-                  )}
-                </ul>
-              )}
-
+        </li>     
               
-            </li>
+        </li>
           <li>
               <div onClick={toggleCuttingMenu} className={`sidebar-link dropdown-toggle ${activeMenu === "cutting" ? "active" : ""}`}>
                 <FaCogs className="icon" /> CUTTING

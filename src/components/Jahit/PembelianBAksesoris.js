@@ -108,19 +108,19 @@ return (
                   </td>
 
                   <td>
-  {!pembelianB.barcode_downloaded && (
-    <button
-      onClick={() => handleDownloadBarcode(pembelianB.id)}
-      className="download-button"
-      style={{ color: 'green', textDecoration: 'underline' }} // Garis bawah dan warna hijau
-    >
-      Download Barcode
-    </button>
-  )}
-  {pembelianB.barcode_downloaded === 1 && (
-    <span style={{ color: '#4F4F4F' }}>Barcode Sudah Didownload</span>
-  )}
-</td>
+                {!pembelianB.barcode_downloaded && (
+                  <button
+                    onClick={() => handleDownloadBarcode(pembelianB.id)}
+                    className="download-button"
+                    style={{ color: 'green', textDecoration: 'underline' }} // Garis bawah dan warna hijau
+                  >
+                    Download Barcode
+                  </button>
+                )}
+                {pembelianB.barcode_downloaded === 1 && (
+                  <span style={{ color: '#4F4F4F' }}>Barcode Sudah Didownload</span>
+                )}
+              </td>
 
                   </tr>
                 ))}

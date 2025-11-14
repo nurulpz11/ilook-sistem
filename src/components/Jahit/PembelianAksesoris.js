@@ -144,6 +144,24 @@ const handleFormSubmit = async (e) => {
       alert("Gagal verifikasi, coba lagi.");
     }
   };
+
+  const handleDownloadBarcode = async (id) => {
+    try {
+      const response = await API.get(`/barcode-download/${id}`, {
+        responseType: "blob", // file binary
+      });
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `barcode_aksesoris_${id}.pdf`;
+      link.click();
+    } catch (error) {
+      console.error("Terjadi kesalahan saat mengunduh barcode:", error);
+      alert("Gagal mengunduh barcode. Silakan coba lagi.");
+    }
+  };
+
   
 return (
     <div>
@@ -180,6 +198,7 @@ return (
                   <th>tanggal pembelian</th>
                   <th>bukti pembelian</th>
                   <th>Status Verifikasi</th>
+                  <th>Download barcode</th>
                 
     
                 </tr>
@@ -193,7 +212,11 @@ return (
                     </td>
 
                     <td data-label="Jumlah Pembelian : ">{pembelianA.jumlah}</td>
-                    <td data-label="Harga Satuan : ">{pembelianA.harga_satuan}</td>
+                    <td data-label="Harga Satuan : ">
+                    Rp {Number(pembelianA.harga_satuan).toLocaleString('id-ID', { minimumFractionDigits: 2 })}
+
+                    </td>
+
                     <td data-label="Tanggal Pembelian : ">{pembelianA.tanggal_pembelian}</td>
                     <td data-label="Bukti Pembelian : ">
                       {pembelianA.bukti_pembelian ? (
@@ -218,6 +241,25 @@ return (
                       </button>
                     )}
                   </td>
+                  <td>
+  {pembelianA.pembelian_b_id ? (
+    pembelianA.barcode_downloaded === 1 ? (
+      <span style={{ color: '#4F4F4F' }}>Barcode Sudah Didownload</span>
+    ) : (
+      <button
+        onClick={() => handleDownloadBarcode(pembelianA.pembelian_b_id)}
+        className="download-button"
+        style={{ color: 'green', textDecoration: 'underline' }}
+      >
+        Download Barcode
+      </button>
+    )
+  ) : (
+    <span>Belum diverifikasi</span>
+  )}
+</td>
+
+
 
                   </tr>
                 ))}
