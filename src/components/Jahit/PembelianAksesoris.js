@@ -285,22 +285,22 @@ return (
               </tbody>
             </table>
             <div className="pagination">
-  <button 
-    disabled={pembelianA.current_page === 1}
-    onClick={() => fetchPage(pembelianA.current_page - 1)}
-  >
-    Prev
-  </button>
+                <button 
+                    disabled={pembelianA.current_page === 1}
+                    onClick={() => fetchPage(pembelianA.current_page - 1)}
+                >
+                    Prev
+                </button>
 
-  <span>Halaman {pembelianA.current_page} / {pembelianA.last_page}</span>
+                <span>Halaman {pembelianA.current_page} / {pembelianA.last_page}</span>
 
-  <button 
-    disabled={pembelianA.current_page === pembelianA.last_page}
-    onClick={() => fetchPage(pembelianA.current_page + 1)}
-  >
-    Next
-  </button>
-</div>
+                <button 
+                    disabled={pembelianA.current_page === pembelianA.last_page}
+                    onClick={() => fetchPage(pembelianA.current_page + 1)}
+                >
+                    Next
+                </button>
+                </div>
 
             </div>
      </div>

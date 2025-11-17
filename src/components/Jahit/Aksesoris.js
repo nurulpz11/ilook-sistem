@@ -9,6 +9,8 @@ const Aksesoris = () => {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [showCustomJenisAksesoris, setShowCustomJenisAksesoris] = useState(false);
+
 
  const [newAksesoris, setNewAksesoris] =useState({
         nama_aksesoris: "",
@@ -28,8 +30,23 @@ const Aksesoris = () => {
       const JENIS_AKSESORIS = {
         handtag: 'Handtag',
         renda: 'Renda',
+        kancing: 'Kancing',
+        resleting: 'Resetling',
       };
-      
+
+
+const handleJenisAksesorisChange = (e) => {
+  const value = e.target.value;
+
+  if (value === "custom") {
+    setShowCustomJenisAksesoris(true);
+    setNewAksesoris(prev => ({ ...prev, jenis_aksesoris: "" }));
+  } else {
+    setShowCustomJenisAksesoris(false);
+    setNewAksesoris(prev => ({ ...prev, jenis_aksesoris: value }));
+  }
+};
+
 
 
       
@@ -180,21 +197,35 @@ const filteredAksesoris = aksesoris.filter((item) =>
                   required
                 />
               </div>
-              <div className="form-group">
-                <label>Jenis Aksesoris</label>
-                <select
-                    name="jenis_aksesoris"
-                    value={newAksesoris.jenis_aksesoris}
-                    onChange={handleInputChange}
-                >
-                    <option value="">Pilih Jenis</option>
-                    {Object.keys(JENIS_AKSESORIS).map((key) => (
-                    <option key={key} value={key}>
-                        {JENIS_AKSESORIS[key]}
-                    </option>
-                    ))}
-                </select>
-                </div>
+             <div className="form-group">
+              <label>Jenis Aksesoris</label>
+              <select
+                name="jenis_aksesoris"
+                value={showCustomJenisAksesoris ? "custom" : newAksesoris.jenis_aksesoris}
+                onChange={handleJenisAksesorisChange}
+              >
+                <option value="">Pilih Jenis</option>
+                {Object.keys(JENIS_AKSESORIS).map((key) => (
+                  <option key={key} value={key}>
+                    {JENIS_AKSESORIS[key]}
+                  </option>
+                ))}
+                <option value="custom">Lainnya...</option>
+              </select>
+
+              {/* Muncul kalau user pilih “custom” */}
+              {showCustomJenisAksesoris && (
+                <input
+                  type="text"
+                  name="jenis_aksesoris"
+                  placeholder="Masukkan jenis aksesoris baru"
+                  value={newAksesoris.jenis_aksesoris}
+                  onChange={handleInputChange}
+                  className="form-control mt-2"
+                />
+              )}
+            </div>
+
 
                 <div className="form-group">
                 <label>Satuan Aksesoris</label>
