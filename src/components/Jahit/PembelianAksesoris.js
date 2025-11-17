@@ -241,7 +241,7 @@ return (
                         <img
                             src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${pembelianA.bukti_pembelian}`}
                             alt="Bukti Pembelian"
-                            style={{ width: "80px", height: "auto", objectFit: "cover" }}
+                            style={{ width: "80px", height: "47px", objectFit: "cover" }}
                         />
 
                       ) : (
