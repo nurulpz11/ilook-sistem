@@ -25,18 +25,20 @@ const [showModal, setShowModal] = useState(false);
 });
 
   
- useEffect(() => {
-    const fetchPembelianA = async () => {
-        try{
-            setLoading(true);
-            const response = await API.get("pembelian-aksesoris-a");
-            setPembelianA(response.data);
-        }catch (error){
-            setError(false);
-        }
-    };
-    fetchPembelianA();
+
+const fetchPembelianA = async (page = 1) => {
+  try {
+    const response = await API.get(`pembelian-aksesoris-a?page=${page}`);
+    setPembelianA(response.data);
+  } catch (error) {
+    setError(true);
+  }
+};
+
+useEffect(() => {
+  fetchPembelianA();
 }, []);
+
 
 
 const handleFormSubmit = async (e) => {
@@ -69,10 +71,7 @@ const handleFormSubmit = async (e) => {
       });
   
       alert("Pembelian berhasil disimpan!");
-      setPembelianA((prev) => ({
-        ...prev,
-        data: [...(prev.data || []), response.data]
-      }));
+     await fetchPembelianA();
 
       setShowForm(false);
       setNewPembelian({
@@ -219,7 +218,7 @@ return (
                 </tr>
               </thead>
               <tbody>
-                {pembelianA.data.map((pembelianA) => (
+                {(pembelianA?.data ?? []).map((pembelianA) => (
                   <tr key={pembelianA.id}>
                     <td data-label="Id  : ">{pembelianA.id}</td>
                     <td data-label="Id Aksesoris : ">
@@ -240,10 +239,11 @@ return (
                     <td data-label="Bukti Pembelian : ">
                       {pembelianA.bukti_pembelian ? (
                         <img
-                          src={`http://localhost:8000/storage/${pembelianA.bukti_pembelian}`}
-                          alt="Bukti Pembelian"
-                          style={{ width: "80px", height: "auto", objectFit: "cover" }}
+                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${pembelianA.bukti_pembelian}`}
+                            alt="Bukti Pembelian"
+                            style={{ width: "80px", height: "auto", objectFit: "cover" }}
                         />
+
                       ) : (
                         "-"
                       )}
