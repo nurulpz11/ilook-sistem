@@ -3,7 +3,7 @@ import "./Penjahit.css";
 import API from "../../api"; 
 
 const PembelianAksesoris = () => {
- const [pembelianA, setPembelianA] = useState([]);
+ 
  const [loading, setLoading] = useState(true);
  const [error,setError] = useState(null);
  const [showForm, setShowForm] = useState(false);
@@ -19,6 +19,12 @@ const [showModal, setShowModal] = useState(false);
     tanggal_pembelian: "",
     bukti_pembelian: null,
   });
+  const [pembelianA, setPembelianA] = useState({
+  data: [],
+  current_page: 1,
+  last_page: 1,
+});
+
   
  useEffect(() => {
     const fetchPembelianA = async () => {
@@ -64,7 +70,11 @@ const handleFormSubmit = async (e) => {
       });
   
       alert("Pembelian berhasil disimpan!");
-      setPembelianA((prev) => [...prev, response.data]);
+      setPembelianA((prev) => ({
+        ...prev,
+        data: [...(prev.data || []), response.data]
+      }));
+
       setShowForm(false);
       setNewPembelian({
         aksesoris_id: "",
@@ -162,6 +172,11 @@ const handleFormSubmit = async (e) => {
     }
   };
 
+  const fetchPage = async (page) => {
+  const response = await API.get(`pembelian-aksesoris-a?page=${page}`);
+  setPembelianA(response.data);
+};
+
   
 return (
     <div>
@@ -195,6 +210,7 @@ return (
                   <th>Aksesoris</th>
                   <th>Jumlah Pembelian</th>
                   <th>harga satuan</th>
+                  <th>Total harga</th>
                   <th>tanggal pembelian</th>
                   <th>bukti pembelian</th>
                   <th>Status Verifikasi</th>
@@ -204,7 +220,7 @@ return (
                 </tr>
               </thead>
               <tbody>
-                {pembelianA.map((pembelianA) => (
+                {pembelianA.data.map((pembelianA) => (
                   <tr key={pembelianA.id}>
                     <td data-label="Id  : ">{pembelianA.id}</td>
                     <td data-label="Id Aksesoris : ">
@@ -214,8 +230,12 @@ return (
                     <td data-label="Jumlah Pembelian : ">{pembelianA.jumlah}</td>
                     <td data-label="Harga Satuan : ">
                     Rp {Number(pembelianA.harga_satuan).toLocaleString('id-ID', { minimumFractionDigits: 2 })}
-
                     </td>
+
+                      <td data-label="Harga Satuan : ">
+                    Rp {Number(pembelianA.total_harga).toLocaleString('id-ID', { minimumFractionDigits: 2 })}
+                    </td>
+
 
                     <td data-label="Tanggal Pembelian : ">{pembelianA.tanggal_pembelian}</td>
                     <td data-label="Bukti Pembelian : ">
@@ -241,23 +261,23 @@ return (
                       </button>
                     )}
                   </td>
-                  <td>
-  {pembelianA.pembelian_b_id ? (
-    pembelianA.barcode_downloaded === 1 ? (
-      <span style={{ color: '#4F4F4F' }}>Barcode Sudah Didownload</span>
-    ) : (
-      <button
-        onClick={() => handleDownloadBarcode(pembelianA.pembelian_b_id)}
-        className="download-button"
-        style={{ color: 'green', textDecoration: 'underline' }}
-      >
-        Download Barcode
-      </button>
-    )
-  ) : (
-    <span>Belum diverifikasi</span>
-  )}
-</td>
+                <td>
+                  {pembelianA.pembelian_b_id ? (
+                    pembelianA.barcode_downloaded === 1 ? (
+                      <span style={{ color: '#4F4F4F' }}>Barcode Sudah Didownload</span>
+                    ) : (
+                      <button
+                        onClick={() => handleDownloadBarcode(pembelianA.pembelian_b_id)}
+                        className="download-button"
+                        style={{ color: 'green', textDecoration: 'underline' }}
+                      >
+                        Download Barcode
+                      </button>
+                    )
+                  ) : (
+                    <span>Belum diverifikasi</span>
+                  )}
+                </td>
 
 
 
@@ -265,6 +285,24 @@ return (
                 ))}
               </tbody>
             </table>
+            <div className="pagination">
+  <button 
+    disabled={pembelianA.current_page === 1}
+    onClick={() => fetchPage(pembelianA.current_page - 1)}
+  >
+    Prev
+  </button>
+
+  <span>Halaman {pembelianA.current_page} / {pembelianA.last_page}</span>
+
+  <button 
+    disabled={pembelianA.current_page === pembelianA.last_page}
+    onClick={() => fetchPage(pembelianA.current_page + 1)}
+  >
+    Next
+  </button>
+</div>
+
             </div>
      </div>
      {showForm && (

@@ -195,45 +195,23 @@ const Layout = () => {
                             className={`dropdown-link ${activeMenu === "pembelianA" ? "active" : ""}`}
                             onClick={() => handleMenuClick("pembelianA")}
                           >
-                            Pembelian Aksesoris A
+                            Pembelian Aksesoris Toko
                           </Link>
                         </li>
-                        <li>
-                          <Link
-                            to="pembelianB"
-                            className={`dropdown-link ${activeMenu === "pembelianb" ? "active" : ""}`}
-                            onClick={() => handleMenuClick("pembelianb")}
-                          >
-                            Pembelian Aksesoris B
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="stok-aksesoris"
-                            className={`dropdown-link ${activeMenu === "stok-aksesoris" ? "active" : ""}`}
-                            onClick={() => handleMenuClick("stok-aksesoris")}
-                          >
-                            Stok Aksesoris
-                          </Link>
-                        </li>
+                       
+                       
                         <li>
                           <Link
                             to="petugas-c"
                             className={`dropdown-link ${activeMenu === "petugas-c" ? "active" : ""}`}
                             onClick={() => handleMenuClick("petugas-c")}
                           >
-                            Pemesanan Aksesoris 
+                            Pembelian Aksesoris CMT
                           </Link>
                         </li>
-                        <li>
-                          <Link
-                            to="petugas-d"
-                            className={`dropdown-link ${activeMenu === "petugas-d" ? "active" : ""}`}
-                            onClick={() => handleMenuClick("petugas-d")}
-                          >
-                           Detail Pemesanan Aksesoris 
-                          </Link>
-                        </li>
+
+                         
+                       
                       </ul>
                     )}
                   </li>

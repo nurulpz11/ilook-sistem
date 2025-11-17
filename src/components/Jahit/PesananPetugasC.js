@@ -7,7 +7,12 @@ import { QRCodeSVG } from 'qrcode.react';
 
 
 const PesananPetugasC = () => {
-    const [petugasC, setPetugasC] = useState([]);
+    const [petugasC, setPetugasC] = useState({
+      data: [],
+      current_page: 1,
+      last_page: 1,
+    });
+
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -22,11 +27,12 @@ const [barcodeInput, setBarcodeInput] = useState("");
 
     const [newData, setNewData] = useState({
       penjahit_id: "",
-      detail_pesanan: [], // array of { aksesoris_id, jumlah_dipesan }
+      detail_pesanan: [], 
     });
   const [newDataPetugasD, setNewDataPetugasD] = useState({
       petugas_c_id: "",
-      barcode: [], // array berisi string barcode
+      barcode: [], 
+      bukti_nota: null,
     });
 
   
@@ -81,16 +87,17 @@ const handleFormSubmit = async (e) => {
     console.log("Pesanan berhasil disimpan:", response.data);
     alert("Pesanan berhasil disimpan!");
 
-    // Tambahkan ke list atau refresh data
-    setPetugasC((prev) => [...prev, response.data]);
+ setPetugasC((prev) => ({
+  ...prev,
+  data: [...(prev.data || []), response.data]
+}));
 
-    // Reset form
     setNewData({
       penjahit_id: "",
       detail_pesanan: [],
     });
 
-    // Tutup form/modal
+ 
     setShowForm(false);
   } catch (error) {
     console.error("Error:", error.response?.data || error.message);
@@ -174,27 +181,43 @@ const handlePetugasDFormSubmit = async (e) => {
     return;
   }
 
-  // Cek apakah jumlah barcode sesuai
   if (newDataPetugasD.barcode.length !== selectedPesanan.jumlah_dipesan) {
     alert(`Jumlah barcode harus sama dengan ${selectedPesanan.jumlah_dipesan}`);
     return;
   }
 
-  const payload = {
-    user_id: userId,
-    petugas_c_id: selectedPesanan.id,
-    barcode: newDataPetugasD.barcode,
-  };
+  const formData = new FormData();
+    formData.append("user_id", userId);
+    formData.append("petugas_c_id", selectedPesanan.id);
+
+    newDataPetugasD.barcode.forEach((code, index) => {
+      formData.append(`barcode[${index}]`, code);
+    });
+
+    if (newDataPetugasD.bukti_nota) {
+      formData.append("bukti_nota", newDataPetugasD.bukti_nota);
+    }
 
   try {
-    const response = await API.post("/verifikasi-aksesoris", payload);
+    const response = await API.post("/verifikasi-aksesoris", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
     console.log("Verifikasi berhasil disimpan:", response.data);
     alert("Verifikasi berhasil disimpan!");
 
     setVerifikasiList((prev) => [...prev, response.data]);
-    setNewDataPetugasD({ barcode: [] });
+
+    // reset
+    setNewDataPetugasD({
+      barcode: [],
+      bukti_nota: null,
+    });
+
     setShowFormPetugasD(false);
+
   } catch (error) {
     console.error("Error:", error.response?.data || error.message);
     alert(error.response?.data?.error || "Gagal menyimpan verifikasi.");
@@ -227,15 +250,38 @@ const addBarcode = () => {
 
 
 
-// Fungsi baru untuk tiap scan
-const handleBarcodeScan = (e) => {
+const handleBarcodeScan = async (e) => {
   const scanned = e.target.value.trim();
   if (!scanned) return;
 
+  try {
+    // Cek barcode ke backend
+    const res = await API.get(`/cek-barcode/${scanned}`);
+    const aksesorisScan = res.data.aksesoris_id;
+
+    // Ambil daftar aksesoris valid dari pesanan
+    const aksesorisValid = selectedPesanan.detail_pesanan.map(
+      (dp) => dp.aksesoris_id
+    );
+
+    // Cek apakah aksesoris dari barcode sesuai pesanan
+    if (!aksesorisValid.includes(aksesorisScan)) {
+      alert("❌ Barcode ini untuk aksesoris yang berbeda dari pesanan!");
+      setBarcodeInput("");
+      return;
+    }
+
+  } catch (error) {
+    alert("❌ Barcode tidak ditemukan di stok aksesoris!");
+    setBarcodeInput("");
+    return;
+  }
+
+  // Barcode valid → masukkan
   if (newDataPetugasD.barcode.includes(scanned)) {
-    alert("Barcode sudah dimasukkan!");
+    alert("⚠ Barcode sudah pernah ditambahkan!");
   } else if (newDataPetugasD.barcode.length >= selectedPesanan.jumlah_dipesan) {
-    alert("Jumlah barcode sudah penuh!");
+    alert("⚠ Jumlah barcode sudah penuh sesuai pesanan!");
   } else {
     setNewDataPetugasD(prev => ({
       ...prev,
@@ -243,16 +289,21 @@ const handleBarcodeScan = (e) => {
     }));
   }
 
-  setBarcodeInput(""); // Clear input untuk scan berikutnya
+  setBarcodeInput(""); // reset input
 };
 
+
+const fetchPage = async (page) => {
+  const response = await API.get(`petugas-c?page=${page}`);
+  setPetugasC(response.data);
+};
 
 
 
   return (
     <div>
     <div className="penjahit-container">
-      <h1>Data Aksesoris</h1>
+      <h1>Pembelian Aksesoris CMT</h1>
     </div>
 
     <div className="table-container">
@@ -275,25 +326,31 @@ const handleBarcodeScan = (e) => {
         <table className="penjahit-table">
           <thead>
             <tr>
-              <th>id</th>
+              
               <th>Nama Petugas </th>
               <th>penjahit</th>
-              <th>Banyak Produk</th>
-              <th>Waktu</th>
-              <th>Status</th>
+              <th>Jumlah barang</th>
+              <th>Total Harga</th>
+             
+               <th>Waktu</th>
              <th> Pesanan</th>
+              <th>Status</th>
             
 
             </tr>
           </thead>
           <tbody>
-            {petugasC.map((petugasC) => (
+            {petugasC.data?.map((petugasC) => (
               <tr key={petugasC.id}>
-                <td data-label="ID: ">{petugasC.id}</td>
+                
                 <td data-label="User : ">{petugasC.user?.name || 'Tidak Diketahui'}</td>
                 <td data-label="Penjahit  : ">{petugasC.penjahit?.nama_penjahit || 'Tidak Diketahui'}</td>
-                <td data-label="Banyak : ">{petugasC.jumlah_jenis_aksesoris}</td>
-                <td data-label="Waktu:">
+                <td data-label="Banyak : ">{petugasC.jumlah_dipesan}</td>
+                <td data-label="Harga Satuan : ">
+                     Rp {Number(petugasC.total_harga).toLocaleString('id-ID', { minimumFractionDigits: 2 })}
+                </td>
+               
+                 <td data-label="Waktu:">
                   {new Date(petugasC.created_at).toLocaleDateString('id-ID', {
                     day: '2-digit',
                     month: 'short',
@@ -306,7 +363,14 @@ const handleBarcodeScan = (e) => {
                 </td>
 
 
-                <td data-label="Status:">
+
+                <td data-label="Pesanan:">
+                  <button className="link-button blue" onClick={() => handleOpenModal(petugasC)}>
+                    Detail Pesanan
+                  </button>
+                </td>
+
+                 <td data-label="Status:">
                   {petugasC.status === "pending" ? (
                     <button
                       className="link-button green"
@@ -326,17 +390,29 @@ const handleBarcodeScan = (e) => {
                 </td>
 
 
-                <td data-label="Pesanan:">
-                  <button className="link-button blue" onClick={() => handleOpenModal(petugasC)}>
-                    Detail Pesanan
-                  </button>
-                </td>
-
 
               </tr>
             ))}
           </tbody>
         </table>
+        <div className="pagination">
+  <button 
+    disabled={petugasC.current_page === 1}
+    onClick={() => fetchPage(petugasC.current_page - 1)}
+  >
+    Prev
+  </button>
+
+  <span>Halaman {petugasC.current_page} / {petugasC.last_page}</span>
+
+  <button 
+    disabled={petugasC.current_page === petugasC.last_page}
+    onClick={() => fetchPage(petugasC.current_page + 1)}
+  >
+    Next
+  </button>
+</div>
+
         </div>
  </div>
 
@@ -481,31 +557,48 @@ const handleBarcodeScan = (e) => {
     )}
 
 
-{showFormPetugasD && selectedPesanan && ( 
+{showFormPetugasD && selectedPesanan && (
   <div className="modal">
-    <div className="modal-content">
-      <h2>Verifikasi Pesanan - Petugas D</h2>
-      <form onSubmit={handlePetugasDFormSubmit} className="modern-form">
-        <input
-          type="hidden"
-          name="petugas_c_id"
-          value={selectedPesanan.id}
-        />
-          {/* Petugas (userId dari localStorage) */}
-          <div className="form-group">
-          <label>Petugas:</label>
-          <input
-            type="text"
-            value={localStorage.getItem("userId")}
-            disabled
-          />
-        </div>
+    <div className="modal-content verif-modal">
+      <h2 className="verif-title">Verifikasi Pesanan Aksesoris</h2>
 
-        {/* Barcode (input satuan yang nanti ditambahkan ke array) */}
-        <div className="form-group">
-          <label>Barcode yang Discan:</label>
-       <input
+      <div className="verif-section">
+        <label className="verif-label">Petugas</label>
+        <input
           type="text"
+          value={localStorage.getItem("userId")}
+          disabled
+          className="verif-input disabled"
+        />
+      </div>
+      {/* Informasi pesanan */}
+<div className="info-box">
+  <p>
+    <strong>Penjahit:</strong> {selectedPesanan.penjahit?.nama_penjahit}
+  </p>
+
+  <p>
+    <strong>Total Item:</strong> {selectedPesanan.jumlah_dipesan}
+  </p>
+
+  <p><strong>Detail Aksesoris:</strong></p>
+  <ul>
+    {selectedPesanan.detail_pesanan.map((dp, index) => (
+      <li key={index}>
+        {dp.aksesoris.nama_aksesoris} — {dp.jumlah_dipesan} pcs
+      </li>
+    ))}
+  </ul>
+</div>
+
+
+      <div className="verif-section">
+        <label className="verif-label">Scan Barcode</label>
+
+        <input
+          type="text"
+          className="verif-input"
+          placeholder="Scan barcode di sini..."
           value={barcodeInput}
           onChange={(e) => setBarcodeInput(e.target.value)}
           onKeyDown={(e) => {
@@ -514,61 +607,97 @@ const handleBarcodeScan = (e) => {
               handleBarcodeScan(e);
             }
           }}
-          placeholder="Scan barcode di sini..."
           autoFocus
         />
 
+        <small className="hint-text">
+          Arahkan scanner ke input ini dan tekan Enter setelah scan.
+        </small>
+      </div>
 
+      {/* PROGRESS */}
+      <div className="progress-container">
+        <div className="progress-info">
+          {newDataPetugasD.barcode.length} dari {selectedPesanan.jumlah_dipesan} barcode
         </div>
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{
+              width:
+                (newDataPetugasD.barcode.length / selectedPesanan.jumlah_dipesan) *
+                  100 +
+                "%",
+            }}
+          ></div>
+        </div>
+      </div>
+      
 
-       {/* Daftar barcode yang sudah dimasukkan */}
-<div className="form-group">
-  <label>Barcode yang Dimasukkan:</label>
-  <ul>
-    {newDataPetugasD.barcode.map((barcode, index) => (
-      <li key={index}>{barcode}</li>
-    ))}
-  </ul>
+      <div className="verif-section">
+        <label className="verif-label">Barcode Masuk</label>
 
-  {/* Info jumlah barcode */}
-  {selectedPesanan && (
-    <div className="barcode-info">
-      <p>
-        Total barcode dimasukkan: <strong>{newDataPetugasD.barcode.length}</strong> dari{' '}
-        <strong>{selectedPesanan.jumlah_dipesan}</strong>
-      </p>
-      {newDataPetugasD.barcode.length < selectedPesanan.jumlah_dipesan && (
-        <p style={{ color: "orange" }}>
-          Masukkan <strong>{selectedPesanan.jumlah_dipesan - newDataPetugasD.barcode.length}</strong> barcode lagi.
-        </p>
-      )}
-    </div>
+        <div className="barcode-list">
+          {newDataPetugasD.barcode.map((code, i) => (
+            <span key={i} className="barcode-chip">
+              {code}
+            </span>
+          ))}
+
+          {newDataPetugasD.barcode.length === 0 && (
+            <p className="empty-text">Belum ada barcode.</p>
+          )}
+        </div>
+      </div>
+      <div className="verif-section">
+  <label className="verif-label">Upload Bukti Nota</label>
+
+  <input
+    type="file"
+    accept="image/*,application/pdf"
+    className="verif-input"
+    onChange={(e) =>
+      setNewDataPetugasD((prev) => ({
+        ...prev,
+        bukti_nota: e.target.files[0], // simpan file di state
+      }))
+    }
+  />
+
+  <small className="hint-text">Format: JPG, PNG, atau PDF</small>
+
+  {newDataPetugasD.bukti_nota && (
+    <p className="file-preview">
+      File dipilih: {newDataPetugasD.bukti_nota.name}
+    </p>
   )}
 </div>
 
-        {/* Tombol aksi */}
-        <div className="form-actions">
-          <button
-            type="submit"
-            className="btn btn-submit"
-            disabled={newDataPetugasD.barcode.length !== selectedPesanan.jumlah_dipesan}
-          >
-            Verifikasi
-          </button>
 
-          <button
-            type="button"
-            className="btn btn-cancel"
-            onClick={() => setShowFormPetugasD(false)}
-          >
-            Batal
-          </button>
-        </div>
+      {/* ACTION BUTTONS */}
+      <div className="verif-actions">
+        <button
+          className={`btn-submit2 ${
+            newDataPetugasD.barcode.length === selectedPesanan.jumlah_dipesan
+              ? ""
+              : "disabled"
+          }`}
+          disabled={
+            newDataPetugasD.barcode.length !== selectedPesanan.jumlah_dipesan
+          }
+          onClick={handlePetugasDFormSubmit}
+        >
+          ✔ Verifikasi
+        </button>
 
-      </form>
+        <button className="btn-cancel2" onClick={() => setShowFormPetugasD(false)}>
+          ✖ Batal
+        </button>
+      </div>
     </div>
   </div>
 )}
+
 
 
 
