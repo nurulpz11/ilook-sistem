@@ -24,7 +24,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Order tidak ditemukan'], 404);
         }
 
-        if (strtolower($order->status) == 'packed'){
+        if ($order->is_packed == '1'){
             return response()->json(['message' => 'Orderan sudah di packing'], 409);
         }
 

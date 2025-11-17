@@ -173,6 +173,7 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::apiResource('stok-aksesoris', StokAksesorisController::class);
         Route::get('/barcode-download/{pembelianB}', [PembelianBController::class, 'downloadBarcodes'])->name('barcode.download');
         Route::get('/detail-pesanan-aksesoris', [PetugasDVerifController::class, 'getDetailPesananAksesoris']);
+        Route::get('/cek-barcode/{barcode}', [StokAksesorisController::class, 'cekBarcode']);
 
 
         Route::apiResource('spk_cutting', SpkCuttingController::class);

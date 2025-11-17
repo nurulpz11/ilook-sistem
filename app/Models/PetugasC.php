@@ -16,7 +16,8 @@ class PetugasC extends Model
         'user_id',
         'penjahit_id',
         'jumlah_dipesan',
-        'status'
+        'status',
+        'total_harga',
     ];
 
     protected $appends = ['jumlah_jenis_aksesoris'];
@@ -33,9 +34,6 @@ class PetugasC extends Model
     {
         return $this->detailPesanan->count(); // hitung jumlah item di detail_pesanan
     }
-
-
-
 
 
     public function user()

@@ -16,6 +16,7 @@ class PembelianA extends Model
         'aksesoris_id',
         'jumlah',
         'harga_satuan',
+        'total_harga',
         'tanggal_pembelian',
         'bukti_pembelian',
     ];

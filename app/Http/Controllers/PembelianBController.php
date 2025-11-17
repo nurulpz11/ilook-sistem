@@ -8,6 +8,8 @@ use App\Models\StokAksesoris;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Milon\Barcode\Facades\DNS1D;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 
 
 class PembelianBController extends Controller
@@ -62,14 +64,14 @@ class PembelianBController extends Controller
 
     private function generateBarcodeForPembelianB($pembelianB)
     {
-        // Ambil data aksesoris terkait dari pembelian B
-        $aksesoris = $pembelianB->pembelianA->aksesoris; // asumsi relasi sudah ada
+        
+        $aksesoris = $pembelianB->pembelianA->aksesoris; 
     
         for ($i = 0; $i < $pembelianB->jumlah_terverifikasi; $i++) {
-            // Generate barcode unik untuk tiap item aksesoris
+           
             $barcode = 'barcode-' . uniqid();
     
-            // Simpan stok aksesoris dengan barcode yang telah di-generate
+
             StokAksesoris::create([
                 'pembelian_aksesoris_b_id' => $pembelianB->id,
                 'aksesoris_id' => $aksesoris->id,
@@ -79,29 +81,30 @@ class PembelianBController extends Controller
         }
     }
 
-        public function downloadBarcodes($id)
-    {
-        $pembelianB = PembelianB::with(['stokAksesoris', 'pembelianA.aksesoris'])->findOrFail($id);
+       public function downloadBarcodes($id)
+{
+    $pembelianB = PembelianB::with(['stokAksesoris', 'pembelianA.aksesoris'])->findOrFail($id);
 
-        // Cek apakah sudah pernah didownload
-        if ($pembelianB->barcode_downloaded) {
-            return response()->json(['message' => 'Barcode sudah pernah didownload.'], 403);
-        }
+    // Cek apakah sudah pernah didownload
+    //if ($pembelianB->barcode_downloaded) {
+      //  return response()->json(['message' => 'Barcode sudah pernah didownload.'], 403);
+    //}
 
-        $barcodes = $pembelianB->stokAksesoris;
+    $barcodes = $pembelianB->stokAksesoris;
 
-        // Generate PDF dari view
-        $pdf = Pdf::loadView('pdf.barcode_stok_aksesoris', [
-            'pembelianB' => $pembelianB,
-            'barcodes' => $barcodes
-        ]);
+    // Buat satu PDF dengan banyak halaman
+    $pdf = Pdf::loadView('pdf.barcode_stok_aksesoris', [
+        'barcodes'    => $barcodes,
+        'pembelianB'  => $pembelianB,
+    ])->setPaper([0, 0, 141.73, 141.73], 'portrait');
 
-        // Tandai bahwa barcode sudah didownload
-        $pembelianB->update(['barcode_downloaded' => true]);
+    // Tandai sudah didownload
+    $pembelianB->update(['barcode_downloaded' => true]);
 
-        return $pdf->download('barcode_aksesoris_' . $pembelianB->id . '.pdf');
-    }
+    return $pdf->download("barcode-{$pembelianB->id}.pdf");
+}
 
+    
 
 
     public function show($id)

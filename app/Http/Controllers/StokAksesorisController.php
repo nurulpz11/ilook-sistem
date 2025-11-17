@@ -24,24 +24,21 @@ class StokAksesorisController extends Controller
         return response()->json($stok);
     }
     
-    public function store(Request $request)
-    {
-        //
+    public function cekBarcode($barcode)
+{
+    $stok = StokAksesoris::where('barcode', $barcode)->first();
+
+    if (!$stok) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Barcode tidak ditemukan.'
+        ], 404);
     }
 
-    public function show($id)
-    {
-        //
-    }
+    return response()->json([
+        'status' => true,
+        'aksesoris_id' => $stok->aksesoris_id
+    ]);
+}
 
-  
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    public function destroy($id)
-    {
-        //
-    }
 }

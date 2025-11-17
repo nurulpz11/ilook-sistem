@@ -4,20 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Models\PembelianA;
 use Illuminate\Http\Request;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PembelianAController extends Controller
 {
   
-    public function index()
-    {
-        $pembelianAksesoris = PembelianA::with([
-            'pembelianB',
-            'aksesoris:id,nama_aksesoris'
-            ])->get();
+  public function index()
+{
+    $pembelianAksesoris = PembelianA::with([
+        'pembelianB',
+        'aksesoris:id,nama_aksesoris'
+    ])
+    ->orderBy('created_at', 'desc')
+    ->paginate(9);
 
-        return response()->json($pembelianAksesoris);
-    }
 
+    //ini kita harus map datanya karna mau joinkan gabsia hanya pake with kaya biasa
+    $pembelianAksesoris->map(function ($item) {
+        $item->status_verifikasi = $item->pembelianB ? $item->pembelianB->status_verifikasi : 'belum';
+        $item->pembelian_b_id = $item->pembelianB ? $item->pembelianB->id : null;
+        $item->barcode_downloaded = $item->pembelianB ? $item->pembelianB->barcode_downloaded : 0; // tambahin ini
+        return $item;
+    });
+
+    return response()->json($pembelianAksesoris);
+}
+
+
+       
     
     public function store(Request $request)
     {
@@ -31,6 +45,8 @@ class PembelianAController extends Controller
         ]);
 
         $data = $request->all();
+
+        $data['total_harga'] = $request->harga_satuan * $request->jumlah;
 
         // Menyimpan bukti pembelian jika ada
         if ($request->hasFile('bukti_pembelian')) {

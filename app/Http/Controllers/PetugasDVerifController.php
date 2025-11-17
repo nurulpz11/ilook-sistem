@@ -30,82 +30,99 @@ class PetugasDVerifController extends Controller
         return response()->json($verifikasiList);
     }
     
-   public function store(Request $request)
+  public function store(Request $request)
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'petugas_c_id' => 'required|exists:petugas_c,id',
             'barcode' => 'required|array|min:1',
-            'barcode.*' => 'required|string|distinct'
+            'barcode.*' => 'required|string|distinct',
+            'bukti_nota' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
-    
+
         DB::beginTransaction();
         try {
             $barcodes = $validated['barcode'];
-    
-            // Ambil data petugas C dan jumlah dipesan
-            $petugasC = PetugasC::with('detailPesanan')->findOrFail($validated['petugas_c_id']);
-    
-            // Total jumlah_dipesan (dari semua detail aksesoris)
+
+            $petugasC = PetugasC::with(['detailPesanan.aksesoris'])->findOrFail($validated['petugas_c_id']);
+
             $jumlahDipesan = $petugasC->detailPesanan->sum('jumlah_dipesan');
-    
+
             if (count($barcodes) !== $jumlahDipesan) {
                 return response()->json(['error' => 'Jumlah barcode tidak sesuai dengan jumlah yang dipesan'], 422);
             }
-    
-            // Cek semua barcode ada di stok_aksesoris dan masih tersedia
-            $stokValid = StokAksesoris::whereIn('barcode', $barcodes)->where('status', 'tersedia')->get();
 
-            // Cek jumlah barcode valid dulu
+            $stokValid = StokAksesoris::whereIn('barcode', $barcodes)
+                ->where('status', 'tersedia')
+                ->get();
+
             if ($stokValid->count() !== count($barcodes)) {
                 return response()->json(['error' => 'Beberapa barcode tidak ditemukan di stok aksesoris atau sudah terpakai'], 422);
             }
 
-            // Ambil semua aksesoris_id dari detailPesanan
-            $aksesorisIdValid = $petugasC->detailPesanan->pluck('aksesoris_id')->toArray();
-
-            // Baru cek apakah aksesoris_id dari barcode valid cocok dengan pesanan
+            // Hitung jumlah barcode per aksesoris
+            $barcodeCountPerAksesoris = [];
             foreach ($stokValid as $stok) {
-                if (!in_array($stok->aksesoris_id, $aksesorisIdValid)) {
+                if (!isset($barcodeCountPerAksesoris[$stok->aksesoris_id])) {
+                    $barcodeCountPerAksesoris[$stok->aksesoris_id] = 0;
+                }
+                $barcodeCountPerAksesoris[$stok->aksesoris_id]++;
+            }
+
+            // Validasi jumlah barcode tiap jenis aksesoris
+            foreach ($petugasC->detailPesanan as $detail) {
+                $aksId = $detail->aksesoris_id;
+                $jumlahSeharusnya = $detail->jumlah_dipesan;
+                $jumlahBarcodeMasuk = $barcodeCountPerAksesoris[$aksId] ?? 0;
+
+                if ($jumlahBarcodeMasuk !== $jumlahSeharusnya) {
                     return response()->json([
-                        'error' => 'Barcode ditemukan tetapi tidak cocok dengan aksesoris yang dipesan'
+                        'error' => "Jumlah barcode untuk aksesoris {$detail->aksesoris->nama_aksesoris} tidak sesuai",
+                        'detail' => [
+                            'dipesan' => $jumlahSeharusnya,
+                            'barcode_masuk' => $jumlahBarcodeMasuk
+                        ]
                     ], 422);
                 }
             }
-    
-            // Simpan ke petugas_d_verif
+
+          
             $verifikasi = PetugasDVerif::create([
                 'user_id' => $validated['user_id'],
                 'petugas_c_id' => $validated['petugas_c_id'],
                 'barcode' => $barcodes,
+
             ]);
 
-            // Simpan petugas_d_verif_id di detail pesanan aksesoris
-            foreach ($petugasC->detailPesanan as $detail) {
-                // Mengaitkan dengan petugas_d_verif
-                $detail->petugas_d_verif_id = $verifikasi->id;
-                $detail->save();
+            if ($request->hasFile('bukti_nota')) {
+                $path = $request->file('bukti_nota')->store('bukti_nota', 'public');
+                $verifikasi->bukti_nota = $path;
+                $verifikasi->save();
+            }
 
-                // Menghitung total harga berdasarkan harga satuan dari pembelian terbaru
+            foreach ($petugasC->detailPesanan as $detail) {
+                $detail->petugas_d_verif_id = $verifikasi->id;
+
                 $pembelianTerbaru = PembelianA::where('aksesoris_id', $detail->aksesoris_id)
                     ->orderBy('created_at', 'desc')
                     ->first();
-            
+
                 $hargaSatuan = $pembelianTerbaru ? $pembelianTerbaru->harga_satuan : 0;
                 $detail->total_harga = $hargaSatuan * $detail->jumlah_dipesan;
                 $detail->save();
             }
-    
-            // Update status menjadi 'terpakai' di stok_aksesoris
+
+           
+
             StokAksesoris::whereIn('barcode', $barcodes)->update(['status' => 'terpakai']);
-    
-            // Perbarui status petugas_c menjadi 'selesai'
+
+            // Update status
             $petugasC->status = 'selesai';
             $petugasC->save();
-            
+
             DB::commit();
             return response()->json($verifikasi, 201);
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -116,9 +133,10 @@ class PetugasDVerifController extends Controller
     }
 
 
+
     public function getDetailPesananAksesoris(Request $request)
     {
-        // Ambil semua detail pesanan aksesoris
+        
         $detailPesanan = DetailPesananAksesoris::with([
             'aksesoris:id,nama_aksesoris',
             'petugasC.penjahit:id_penjahit,nama_penjahit',
