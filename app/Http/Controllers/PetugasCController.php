@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PetugasC;
+use App\Models\Aksesoris;
 use App\Models\DetailPesananAksesoris;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,12 +49,15 @@ class PetugasCController extends Controller
         ]);
 
         
-        foreach ($validated['detail_pesanan'] as $item) {
+       foreach ($validated['detail_pesanan'] as $item) {
+            $aksesoris = Aksesoris::find($item['aksesoris_id']);
+            $totalHarga = $aksesoris ? $aksesoris->harga_jual * $item['jumlah_dipesan'] : 0;
+
             DetailPesananAksesoris::create([
                 'petugas_c_id' => $pesanan->id,
                 'aksesoris_id' => $item['aksesoris_id'],
                 'jumlah_dipesan' => $item['jumlah_dipesan'],
-                'total_harga' => null 
+                'total_harga' => $totalHarga
             ]);
         }
 

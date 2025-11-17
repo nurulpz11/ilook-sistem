@@ -39,13 +39,10 @@ class DetailPesananAksesoris extends Model
 }
 public function setTotalHargaAttribute()
 {
-    $pembelianTerbaru = PembelianA::where('aksesoris_id', $this->aksesoris_id)
-        ->orderBy('created_at', 'desc')
-        ->first();
-
-    $hargaSatuan = $pembelianTerbaru ? $pembelianTerbaru->harga_satuan : 0;
+    $hargaSatuan = $this->aksesoris ? $this->aksesoris->harga_jual : 0;
     $this->attributes['total_harga'] = $hargaSatuan * $this->jumlah_dipesan;
 }
+
 
 
 }

@@ -23,6 +23,7 @@ class AksesorisController extends Controller
            'nama_aksesoris' => 'required|string',
            'jenis_aksesoris' => 'required|string|max:255',
            'satuan' => 'required|in:' . implode(',', array_keys(Aksesoris::getSatuanAksesorisOptions())),
+           'harga_jual' => 'nullable|numeric|min:0',
         ]);
 
         $aksesoris = Aksesoris::create($request->all());
@@ -51,8 +52,25 @@ class AksesorisController extends Controller
    
     public function update(Request $request, $id)
     {
-        //
-    }
+        $aksesoris = Aksesoris::find($id);
+
+        if (!$aksesoris){
+            return response()->json([
+                'error' => 'Aksesoris tidak ditemukan'
+            ],404);
+        }
+
+        $request->validate([
+            'nama_aksesoris' => 'sometimes|required|string',
+            'jenis_aksesoris' => 'sometimes|required|string|max:255',
+            'satuan' => 'sometimes|required|in:' . implode(',', array_keys(Aksesoris::getSatuanAksesorisOptions())),
+            'harga_jual' => 'nullable|numeric|min:0',
+        ]);
+
+        $aksesoris->update($request->all());
+
+        return response()->json($aksesoris);
+        }
 
    
     public function destroy($id)

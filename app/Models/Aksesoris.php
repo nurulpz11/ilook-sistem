@@ -14,7 +14,8 @@ class Aksesoris extends Model
     protected $fillable =[
         'nama_aksesoris',
         'jenis_aksesoris',
-        'satuan'
+        'satuan',
+        'harga_jual',
     ];
 
     const SATUAN_AKSESORIS = [

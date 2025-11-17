@@ -157,7 +157,7 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::resource('laporancmt', LaporanCmtController::class);
       
         Route::apiResource('aksesoris', AksesorisController::class);
-
+        Route::put('/{id}', [AksesorisController::class, 'update']); 
         Route::get('/aksesoris/options', function() {
             dd('Options route is working!');
         });
