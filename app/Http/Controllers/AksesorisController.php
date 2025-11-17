@@ -21,7 +21,7 @@ class AksesorisController extends Controller
     {
         $request->validate([
            'nama_aksesoris' => 'required|string',
-           'jenis_aksesoris' => 'required|in:' . implode(',', array_keys(Aksesoris::getJenisAksesorisOptions())),
+           'jenis_aksesoris' => 'required|string|max:255',
            'satuan' => 'required|in:' . implode(',', array_keys(Aksesoris::getSatuanAksesorisOptions())),
         ]);
 
