@@ -396,22 +396,22 @@ const fetchPage = async (page) => {
           </tbody>
         </table>
         <div className="pagination">
-  <button 
-    disabled={petugasC.current_page === 1}
-    onClick={() => fetchPage(petugasC.current_page - 1)}
-  >
-    Prev
-  </button>
+    <button 
+      disabled={petugasC.current_page === 1}
+      onClick={() => fetchPage(petugasC.current_page - 1)}
+    >
+      Prev
+    </button>
 
-  <span>Halaman {petugasC.current_page} / {petugasC.last_page}</span>
+    <span>Halaman {petugasC.current_page} / {petugasC.last_page}</span>
 
-  <button 
-    disabled={petugasC.current_page === petugasC.last_page}
-    onClick={() => fetchPage(petugasC.current_page + 1)}
-  >
-    Next
-  </button>
-</div>
+    <button 
+      disabled={petugasC.current_page === petugasC.last_page}
+      onClick={() => fetchPage(petugasC.current_page + 1)}
+    >
+      Next
+    </button>
+  </div>
 
         </div>
  </div>

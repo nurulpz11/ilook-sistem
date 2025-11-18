@@ -4,11 +4,11 @@ import axios from "axios";
 const API = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
   headers: {
-    Accept: "application/json", // ✅ Boleh dipertahankan
-    // ❌ Hapus Content-Type biar Axios yang atur otomatis
+    Accept: "application/json", 
+   
   },
 });
-// Interceptor untuk menambahkan token secara otomatis di setiap request
+
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -16,5 +16,19 @@ API.interceptors.request.use((config) => {
   }
   return config;
 }, (error) => Promise.reject(error));
+API.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem("role");
+            window.location.href = '/';
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default API;

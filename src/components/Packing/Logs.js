@@ -14,18 +14,34 @@ const Logs = () => {
   const [exporting, setExporting] = useState(false);
   const [status, setStatus] = useState("");
   const today = new Date().toISOString().slice(0, 10);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+  });
 
- const fetchLogs = async (start = startDate, end = endDate, stat = status) => {
+const fetchLogs = async (
+  start = startDate,
+  end = endDate,
+  stat = status,
+  page = 1
+) => {
   try {
     setLoading(true);
     const response = await API.get("/orders/logs", {
       params: {
+        page: page,
         start_date: start,
         end_date: end,
         ...(stat && { status: stat }),
       },
     });
-    setLogs(response.data);
+
+    setLogs(response.data.data); // ⬅ data hasil paginasi
+    setPagination({
+      current_page: response.data.current_page,
+      last_page: response.data.last_page,
+    });
+
   } catch (error) {
     setError("Gagal mengambil data logs.");
   } finally {
@@ -70,7 +86,7 @@ const Logs = () => {
   }
 
   fetchSummary(startDate, endDate, status);
-  fetchLogs(startDate, endDate, status); 
+  fetchLogs(startDate, endDate, status, 1); 
 };
 
 
@@ -216,6 +232,31 @@ const Logs = () => {
             ))}
           </tbody>
         </table>
+          <div className="pagination">
+
+        <button
+          disabled={pagination.current_page === 1}
+          onClick={() =>
+            fetchLogs(startDate, endDate, status, pagination.current_page - 1)
+          }
+        >
+          Prev
+        </button>
+
+        <span>
+          Page {pagination.current_page} / {pagination.last_page}
+        </span>
+
+        <button
+          disabled={pagination.current_page === pagination.last_page}
+          onClick={() =>
+            fetchLogs(startDate, endDate, status, pagination.current_page + 1)
+          }
+        >
+          Next
+        </button>
+      </div>
+
         </div>
 
   
