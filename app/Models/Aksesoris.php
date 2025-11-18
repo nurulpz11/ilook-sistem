@@ -16,6 +16,7 @@ class Aksesoris extends Model
         'jenis_aksesoris',
         'satuan',
         'harga_jual',
+        'foto_aksesoris',
     ];
 
     const SATUAN_AKSESORIS = [

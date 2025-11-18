@@ -20,13 +20,22 @@ class AksesorisController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-           'nama_aksesoris' => 'required|string',
-           'jenis_aksesoris' => 'required|string|max:255',
-           'satuan' => 'required|in:' . implode(',', array_keys(Aksesoris::getSatuanAksesorisOptions())),
-           'harga_jual' => 'nullable|numeric|min:0',
+        'nama_aksesoris' => 'required|string',
+        'jenis_aksesoris' => 'required|string|max:255',
+        'satuan' => 'required|in:' . implode(',', array_keys(Aksesoris::getSatuanAksesorisOptions())),
+        'harga_jual' => 'nullable|numeric|min:0',
+        'foto_aksesoris' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
-        $aksesoris = Aksesoris::create($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('foto_aksesoris')) {
+            $path = $request->file('foto_aksesoris')->store('foto_aksesoris', 'public');
+            $data['foto_aksesoris'] = $path; // simpan path file ke data
+        }
+
+        $aksesoris = Aksesoris::create($data);
+
         return response()->json($aksesoris, 201);
     }
 
