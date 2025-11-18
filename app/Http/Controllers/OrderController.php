@@ -112,7 +112,7 @@ class OrderController extends Controller
             });
         })
         ->orderBy('created_at', 'desc')
-        ->get();
+           ->paginate(20);
 
         return response()->json($logs);
     }
