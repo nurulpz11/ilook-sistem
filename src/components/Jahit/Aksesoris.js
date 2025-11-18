@@ -16,6 +16,8 @@ const Aksesoris = () => {
         nama_aksesoris: "",
         jenis_aksesoris: "",
         satuan: "",
+        harga_jual:"",
+        foto_aksesoris:  null,
     })
 
     const SATUAN_AKSESORIS = {
@@ -78,12 +80,20 @@ const filteredAksesoris = aksesoris.filter((item) =>
       nama_aksesoris: newAksesoris.nama_aksesoris,
       jenis_aksesoris: newAksesoris.jenis_aksesoris,
       satuan: newAksesoris.satuan,
+      harga_jual: newAksesoris.harga_jual,
+      foto_aksesoris: newAksesoris.foto_aksesoris
+      
     });
     const formData = new FormData();
     formData.append("nama_aksesoris", newAksesoris.nama_aksesoris);
     formData.append("jenis_aksesoris", newAksesoris.jenis_aksesoris);
     formData.append("satuan", newAksesoris.satuan);
-    
+    formData.append("harga_jual", newAksesoris.harga_jual);
+
+
+    if (newAksesoris.foto_aksesoris) {
+    formData.append("foto_aksesoris", newAksesoris.foto_aksesoris);
+}
  
   
     try {
@@ -114,9 +124,6 @@ const filteredAksesoris = aksesoris.filter((item) =>
   };
 
   
-
-
-    
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewAksesoris((prev) => ({
@@ -124,6 +131,14 @@ const filteredAksesoris = aksesoris.filter((item) =>
         [name]: value, 
     }));
 };
+
+const handleFileChange = (e) => {
+    setNewAksesoris(prev => ({
+        ...prev,
+        foto_aksesoris: e.target.files[0] || null
+    }));
+};
+
   
   return (
    <div>
@@ -158,7 +173,11 @@ const filteredAksesoris = aksesoris.filter((item) =>
                  <th>Nama Aksesoris</th>
                  <th>Jenis Aksesoris</th>
                  <th>Satuan</th>
+                 <th> Harga Jual</th>
                  <th>Jumlah Stok</th>
+                 <th>Foto Aksesoris</th>
+                 
+                 
               
    
                </tr>
@@ -170,7 +189,23 @@ const filteredAksesoris = aksesoris.filter((item) =>
                    <td data-label="Nama Aksesoris : ">{aksesoris.nama_aksesoris}</td>
                    <td data-label="Jenis Produk : ">{aksesoris.jenis_aksesoris}</td>
                    <td data-label="Satuan : ">{aksesoris.satuan}</td>
+                    <td data-label="Harga Jual : ">
+                    Rp {Number(aksesoris.harga_jual).toLocaleString('id-ID', { minimumFractionDigits: 2 })}
+                    </td>
+
                    <td data-label="Stok : ">{aksesoris.jumlah_stok}</td>
+                   <td data-label="Foto Aksesoris : ">
+                      {aksesoris.foto_aksesoris ? (
+                        <img
+                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${aksesoris.foto_aksesoris}`}
+                            alt="Foto Aksesoris"
+                            style={{ width: "80px", height: "47px", objectFit: "cover" }}
+                        />
+
+                      ) : (
+                        "-"
+                      )}
+                    </td>
 
                  </tr>
                ))}
@@ -242,6 +277,39 @@ const filteredAksesoris = aksesoris.filter((item) =>
                     ))}
                 </select>
                 </div>
+
+                <div className="form-group">
+                    <label>Harga Jual:</label>
+                    <input
+                        type="number"
+                        name="harga_jual"
+                        value={newAksesoris.harga_jual}
+                        onChange={handleInputChange}
+                        placeholder="Masukkan harga jual"
+                        min="0"
+                    />
+                </div>
+
+                 <div className="form-group">
+                  <label>Gambar Produk</label>
+                  <input
+                    type="file"
+                    name="foto_aksesoris"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                                  />
+                  {newAksesoris.foto_aksesoris && !(newAksesoris.foto_aksesoris instanceof File) && (
+                    <div>
+                      <p>Gambar Saat Ini:</p>
+                      <img
+                        src={`${process.env.REACT_APP_API_URL}/storage/${newAksesoris.foto_aksesoris}`}
+                        alt="Foto Aksesoris"
+                        width="100"
+                      />
+                    </div>
+                  )}
+                </div>
+
 
               <div className="form-actions">
                 <button type="submit" className="btn btn-submit">

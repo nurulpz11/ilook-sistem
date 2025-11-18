@@ -250,8 +250,8 @@ const addBarcode = () => {
 
 
 
-const handleBarcodeScan = async (e) => {
-  const scanned = e.target.value.trim();
+const handleBarcodeScan = async () => {
+  const scanned = barcodeInput.trim();
   if (!scanned) return;
 
   try {
@@ -264,7 +264,7 @@ const handleBarcodeScan = async (e) => {
       (dp) => dp.aksesoris_id
     );
 
-    // Cek apakah aksesoris dari barcode sesuai pesanan
+    // Jika barcode bukan aksesoris yang dipesan
     if (!aksesorisValid.includes(aksesorisScan)) {
       alert("❌ Barcode ini untuk aksesoris yang berbeda dari pesanan!");
       setBarcodeInput("");
@@ -289,7 +289,7 @@ const handleBarcodeScan = async (e) => {
     }));
   }
 
-  setBarcodeInput(""); // reset input
+  setBarcodeInput(""); // reset
 };
 
 
@@ -604,7 +604,7 @@ const fetchPage = async (page) => {
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              handleBarcodeScan(e);
+              handleBarcodeScan();
             }
           }}
           autoFocus
@@ -649,7 +649,8 @@ const fetchPage = async (page) => {
           )}
         </div>
       </div>
-      <div className="verif-section">
+      
+  <div className="verif-section">
   <label className="verif-label">Upload Bukti Nota</label>
 
   <input
@@ -659,7 +660,7 @@ const fetchPage = async (page) => {
     onChange={(e) =>
       setNewDataPetugasD((prev) => ({
         ...prev,
-        bukti_nota: e.target.files[0], // simpan file di state
+        bukti_nota: e.target.files[0], 
       }))
     }
   />
