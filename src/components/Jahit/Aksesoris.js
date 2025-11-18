@@ -436,31 +436,56 @@ const handleEditFileChange = (e) => {
           />
         </div>
 
-        <div className="form-group">
-          <label>Jenis Aksesoris</label>
+       <div className="form-group">
+        <label>Jenis Aksesoris</label>
+        <select
+          name="jenis_aksesoris"
+          value={editAksesoris.jenis_aksesoris}
+          onChange={handleChangeEdit}
+        >
+          <option value="">Pilih Jenis</option>
+
+          {Object.keys(JENIS_AKSESORIS).map((key) => (
+            <option key={key} value={key}>
+              {JENIS_AKSESORIS[key]}
+            </option>
+          ))}
+
+          <option value="custom">Lainnya...</option>
+        </select>
+
+        {/* Jika pilih custom → muncul input manual */}
+        {editAksesoris.jenis_aksesoris === "custom" && (
           <input
             type="text"
             name="jenis_aksesoris"
-            value={editAksesoris.jenis_aksesoris}
-            onChange={handleChangeEdit}
-            required
+            placeholder="Masukkan jenis aksesoris baru"
+            onChange={(e) =>
+              setEditAksesoris(prev => ({ ...prev, jenis_aksesoris: e.target.value }))
+            }
+            className="form-control mt-2"
           />
-        </div>
+        )}
+      </div>
 
-        <div className="form-group">
-          <label>Satuan</label>
-          <select
-            name="satuan"
-            value={editAksesoris.satuan}
-            onChange={handleChangeEdit}
-            required
-          >
-            <option value="">Pilih satuan</option>
-            <option value="pcs">PCS</option>
-            <option value="lusin">Lusin</option>
-            <option value="pack">Pack</option>
-          </select>
-        </div>
+
+          <div className="form-group">
+            <label>Satuan Aksesoris</label>
+            <select
+              name="satuan"
+              value={editAksesoris.satuan}
+              onChange={handleChangeEdit}
+            >
+              <option value="">Pilih Satuan</option>
+
+              {Object.keys(SATUAN_AKSESORIS).map((key) => (
+                <option key={key} value={key}>
+                  {SATUAN_AKSESORIS[key]}
+                </option>
+              ))}
+            </select>
+          </div>
+
 
         <div className="form-group">
           <label>Harga Satuan</label>
