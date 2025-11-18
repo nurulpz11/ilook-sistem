@@ -10,6 +10,9 @@ const Aksesoris = () => {
     const [showForm, setShowForm] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [showCustomJenisAksesoris, setShowCustomJenisAksesoris] = useState(false);
+    const [editAksesoris, setEditAksesoris] = useState(null);
+      const [showEditForm, setShowEditForm] = useState(false);
+
 
 
  const [newAksesoris, setNewAksesoris] =useState({
@@ -139,6 +142,81 @@ const handleFileChange = (e) => {
     }));
 };
 
+const handleEdit = (item) => {
+  setEditAksesoris({
+    id: item.id,
+    nama_aksesoris: item.nama_aksesoris,
+    jenis_aksesoris: item.jenis_aksesoris,
+    satuan: item.satuan,
+    harga_jual: item.harga_jual,
+    foto: item.foto,   // ⬅️ PENTING
+  });
+
+  setShowEditForm(true);
+};
+
+
+
+
+const handleUpdateAksesoris = async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData();
+  formData.append("nama_aksesoris", editAksesoris.nama_aksesoris);
+  formData.append("jenis_aksesoris", editAksesoris.jenis_aksesoris);
+  formData.append("satuan", editAksesoris.satuan);
+  formData.append("harga_jual", editAksesoris.harga_jual);
+
+  // Hanya jika ada gambar baru
+  if (editAksesoris.foto_aksesoris instanceof File) {
+    formData.append("foto_aksesoris", editAksesoris.foto_aksesoris);
+  }
+
+  try {
+    const response = await API.post(
+      `/aksesoris/${editAksesoris.id}?_method=PUT`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    setAksesoris(prev =>
+      prev.map(a => (a.id === editAksesoris.id ? response.data : a))
+    );
+
+    alert("Aksesoris diperbarui!");
+    setShowEditForm(false);
+
+  } catch (error) {
+    console.error(error.response?.data);
+    alert("Gagal update!");
+  }
+};
+
+
+const handleChangeEdit = (e) => {
+  const { name, value } = e.target;
+
+  setEditAksesoris((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
+
+const handleEditFileChange = (e) => {
+  setEditAksesoris(prev => ({
+    ...prev,
+    foto_aksesoris: e.target.files[0] || null
+  }));
+};
+
+
+
+
   
   return (
    <div>
@@ -176,6 +254,7 @@ const handleFileChange = (e) => {
                  <th> Harga Jual</th>
                  <th>Jumlah Stok</th>
                  <th>Foto Aksesoris</th>
+                 <th> Edit</th>
                  
                  
               
@@ -205,6 +284,16 @@ const handleFileChange = (e) => {
                       ) : (
                         "-"
                       )}
+                    </td>
+                    <td>
+                      <div className="action-card">  
+                        <button  
+                        className="btn1-icon"
+                        onClick={() => handleEdit(aksesoris)}
+                        >
+                        <FaEdit className="icon" />
+                        </button>
+                      </div>
                     </td>
 
                  </tr>
@@ -327,6 +416,91 @@ const handleFileChange = (e) => {
           </div>
         </div>
       )}
+
+
+     {showEditForm && (
+  <div className="modal">
+    <div className="modal-content">
+      <h2>Edit Aksesoris</h2>
+
+      <form onSubmit={handleUpdateAksesoris} className="modern-form">
+
+        <div className="form-group">
+          <label>Nama Aksesoris</label>
+          <input
+            type="text"
+            name="nama_aksesoris"
+            value={editAksesoris.nama_aksesoris}
+            onChange={handleChangeEdit}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Jenis Aksesoris</label>
+          <input
+            type="text"
+            name="jenis_aksesoris"
+            value={editAksesoris.jenis_aksesoris}
+            onChange={handleChangeEdit}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Satuan</label>
+          <select
+            name="satuan"
+            value={editAksesoris.satuan}
+            onChange={handleChangeEdit}
+            required
+          >
+            <option value="">Pilih satuan</option>
+            <option value="pcs">PCS</option>
+            <option value="lusin">Lusin</option>
+            <option value="pack">Pack</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Harga Satuan</label>
+          <input
+            type="number"
+            name="harga_jual"
+            value={editAksesoris.harga_jual}
+            onChange={handleChangeEdit}
+            placeholder="Masukkan harga satuan"
+          />
+        </div>
+
+          <div className="form-group">
+            <label>Gambar Produk:</label>
+            <input
+              type="file"
+              accept="image/*"
+               onChange={handleEditFileChange}
+            />
+            </div>
+
+        <div className="form-actions">
+          <button type="submit" className="btn btn-submit">Simpan</button>
+          <button
+            type="button"
+            className="btn btn-cancel"
+            onClick={() => setShowEditForm(false)}
+          >
+            Batal
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+)}
+
+
+    
 
 
       
