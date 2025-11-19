@@ -244,6 +244,7 @@ const handleEditFileChange = (e) => {
          </div>
          
            <div className="table-container">
+            <div className="table-wrapper">
            <table className="penjahit-table">
              <thead>
                <tr>
@@ -300,6 +301,7 @@ const handleEditFileChange = (e) => {
                ))}
              </tbody>
            </table>
+           </div>
            </div>
     </div>
 

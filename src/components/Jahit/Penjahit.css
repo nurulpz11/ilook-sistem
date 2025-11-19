@@ -134,19 +134,31 @@ border-color: #356191;
   }
 }
 .table-wrapper {
-  max-height: 625px; /* Atur tinggi maksimum agar tabel bisa di-scroll */
-  overflow-y: auto; /* Scroll hanya di dalam tabel */
-  border: 1px solid #ddd; /* Opsional: Tambahkan border untuk pembatas */
-  border-radius: 8px;
+  max-height: 700px; 
+  overflow-y: auto; 
+  border: 1px solid #ddd; 
   background: white;
 }
+
+@media (max-width: 1366px) {
+   .table-wrapper {
+     max-height: 600px; 
+   }
+}
+
+@media (min-width: 1367px) {
+   .table-wrapper {
+     max-height: 600px; 
+   }
+}
+
 .table-container {
   padding: 7px;
   background-color: #ffffff;
   border-radius: 10px;
   border: 1px solid #e9ecef;
   margin-top: 4px;
-  overflow-x: auto;
+
   width: 100%;
   min-width: 200px;
 
@@ -156,11 +168,12 @@ border-color: #356191;
   margin: 0 auto; /* Pusatkan tabel secara horizontal */
   table-layout: fixed;
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate !important;
+  border-spacing: 0;
   margin: 0px 0;
   background-color: #fff;
   border-radius: 10px;
-  overflow: hidden;
+ 
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -181,7 +194,7 @@ border-color: #356191;
   text-transform: uppercase; /* Teks kapital di header */
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 4;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Bayangan untuk header */
 }
 
@@ -1796,7 +1809,7 @@ border-color: #356191;
 }
 
 .scrollable-table {
-  max-height: 200px; /* Atur sesuai kebutuhan */
+  max-height: 200px; 
   overflow-y: auto;
 }
 
@@ -2152,6 +2165,7 @@ border-color: #356191;
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-y: auto
 }
 
 .logs-table {
