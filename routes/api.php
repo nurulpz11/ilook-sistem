@@ -42,8 +42,8 @@
     use App\Http\Controllers\OrderController;
     use App\Http\Controllers\GineeSyncController;
     use App\Http\Controllers\PabrikController;
-   
     use App\Http\Controllers\PembelianBahanController;
+    use App\Http\Controllers\SeriController;
 
 
 
@@ -240,8 +240,12 @@ Route::middleware(['auth:api', 'role:supervisor|super-admin'])->group(function (
         Route::get('/pembelian-bahan', [PembelianBahanController::class, 'index']);
         Route::post('/pembelian-bahan', [PembelianBahanController::class, 'store']);
 
+        Route::get('/seri', [SeriController::class, 'index']);
+        Route::post('/seri', [SeriController::class, 'store']);
+        Route::get('/seri/{id}', [SeriController::class, 'show']); 
+        Route::get('/seri/{id}/download', [SeriController::class, 'download']);
 
-
+        
     });
 
    

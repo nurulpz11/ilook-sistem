@@ -33,6 +33,7 @@ class OrderController extends Controller
   public function validateScan(Request $request, $trackingNumber)
     {
         $request->validate([
+             'nomor_seri' => 'required|string',
             'items' => 'required|array',
             'items.*.sku' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
@@ -71,7 +72,10 @@ class OrderController extends Controller
             }
         }
 
-        $order->update(['is_packed' => 1]);
+        $order->update([
+            'is_packed' => 1,
+            'nomor_seri' => $request->nomor_seri
+        ]);
 
         OrderLog::create([
             'order_id'     => $order->id,
@@ -100,7 +104,7 @@ class OrderController extends Controller
         $status = $request->input('status');
 
         $logs = OrderLog::with(['order' => function ($q) {
-            $q->select('id', 'order_number', 'tracking_number', 'status', 'total_amount')
+            $q->select('id', 'order_number', 'tracking_number', 'status', 'nomor_seri', 'total_amount')
             ->withCount('items as total_items');
         }])
         ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
