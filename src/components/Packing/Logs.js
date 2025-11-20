@@ -213,6 +213,7 @@ const fetchLogs = async (
               <th>Total Item</th>
               <th>Total Harga</th>
               <th>Tanggal</th>
+              <th>Nomor Seri</th>
               <th>Status</th>
             
             
@@ -227,6 +228,7 @@ const fetchLogs = async (
                 <td data-label="Total : ">{tc.order?.total_items}</td>
                 <td data-label="Total : ">Rp. {tc.order?.total_amount}</td>
                 <td data-label="tanggal : ">{tc.created_at}</td>
+                <td data-label="tanggal : ">{tc.order?.nomor_seri}</td>
                 <td data-label="Total : ">{tc.order?.status}</td>
               </tr>
             ))}

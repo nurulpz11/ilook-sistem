@@ -11,9 +11,8 @@ const Packing = () => {
   const [scannedItems, setScannedItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [nomorSeri, setNomorSeri] = useState("");
 
-
-  
 
   const playSound = (type) => {
     const soundMap = {
@@ -116,6 +115,7 @@ const handleSearchOrder = async () => {
 
     try {
       const payload = {
+        nomor_seri: nomorSeri,
         items: scannedItems.map((item) => ({
           sku: item.sku,
           quantity: item.scanned_qty,
@@ -223,17 +223,37 @@ const handleSearchOrder = async () => {
             </tbody>
           </table>
 
-          {/* Input Scan SKU */}
-          <form onSubmit={handleScanSku} className="sku-input">
-            <input
-              type="text"
-              placeholder="Scan SKU Produk..."
-              value={scannedSku}
-              onChange={(e) => setScannedSku(e.target.value)}
-              autoFocus
-            />
-            <button type="submit">Scan</button>
-          </form>
+
+          {/* Input Nomor Seri */}
+        <div className="nomor-seri-box">
+          <label>Nomor Seri</label>
+          <input
+            type="text"
+            placeholder="Scan / input Nomor Seri..."
+            value={nomorSeri}
+            onChange={(e) => setNomorSeri(e.target.value)}
+            className="nomor-seri-input"
+          />
+        </div>
+
+
+         {/* Input Scan SKU */}
+<div className="sku-input-wrapper">
+  <label className="sku-label">Scan SKU Produk</label>
+
+  <form onSubmit={handleScanSku} className="sku-input">
+    <input
+      type="text"
+      placeholder="Scan SKU Produk..."
+      value={scannedSku}
+      onChange={(e) => setScannedSku(e.target.value)}
+      autoFocus
+    />
+    <button type="submit">Scan</button>
+  </form>
+</div>
+
+          
 
           {/* Submit Validasi */}
           <div className="packing-actions">

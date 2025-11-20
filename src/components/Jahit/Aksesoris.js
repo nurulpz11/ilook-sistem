@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./Penjahit.css";
+import "./Aksesoris.css";
 import API from "../../api"; 
 import {FaInfoCircle, FaPlus, FaEdit, FaClock } from 'react-icons/fa';
 
@@ -220,92 +220,83 @@ const handleEditFileChange = (e) => {
   
   return (
    <div>
-       <div className="penjahit-container">
-         <h1>Data Aksesoris</h1>
-       </div>
-   
+      <div className="aksesoris-container">
+  <h1>Data Aksesoris</h1>
+</div>
 
-       <div className="table-container">
-           <div className="filter-header1">
-           <button 
-           onClick={() => setShowForm(true)}>
-             Tambah
-           </button>
-           <div className="search-bar1">
-             <input
-               type="text"
-               placeholder="Cari nama aksesoris..."
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-             />
-           </div>
+<div className="aksesoris-table-container">
+  <div className="aksesoris-filter-header">
+    <button onClick={() => setShowForm(true)}>Tambah</button>
 
-      
-         </div>
-         
-           <div className="table-container">
-            <div className="table-wrapper">
-           <table className="penjahit-table">
-             <thead>
-               <tr>
-                 <th>Id Aksesoris</th>
-                 <th>Nama Aksesoris</th>
-                 <th>Jenis Aksesoris</th>
-                 <th>Satuan</th>
-                 <th> Harga Jual</th>
-                 <th>Jumlah Stok</th>
-                 <th>Foto Aksesoris</th>
-                 <th> Edit</th>
-                 
-                 
-              
-   
-               </tr>
-             </thead>
-             <tbody>
-               {filteredAksesoris.map((aksesoris) => (
-                 <tr key={aksesoris.id}>
-                   <td data-label="Id Aksesoris : ">{aksesoris.id}</td>
-                   <td data-label="Nama Aksesoris : ">{aksesoris.nama_aksesoris}</td>
-                   <td data-label="Jenis Produk : ">{aksesoris.jenis_aksesoris}</td>
-                   <td data-label="Satuan : ">{aksesoris.satuan}</td>
-                    <td data-label="Harga Jual : ">
-                    Rp {Number(aksesoris.harga_jual).toLocaleString('id-ID', { minimumFractionDigits: 2 })}
-                    </td>
-
-                   <td data-label="Stok : ">{aksesoris.jumlah_stok}</td>
-                   <td data-label="Foto Aksesoris : ">
-                      {aksesoris.foto_aksesoris ? (
-                        <img
-                            src={`${process.env.REACT_APP_API_URL.replace('/api', '')}/storage/${aksesoris.foto_aksesoris}`}
-                            alt="Foto Aksesoris"
-                            style={{ width: "80px", height: "47px", objectFit: "cover" }}
-                        />
-
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td>
-                      <div className="action-card">  
-                        <button  
-                        className="btn1-icon"
-                        onClick={() => handleEdit(aksesoris)}
-                        >
-                        <FaEdit className="icon" />
-                        </button>
-                      </div>
-                    </td>
-
-                 </tr>
-               ))}
-             </tbody>
-           </table>
-           </div>
-           </div>
+    <div className="aksesoris-search-bar">
+      <input
+        type="text"
+        placeholder="Cari nama aksesoris..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
     </div>
+  </div>
 
+  <div className="aksesoris-table-wrapper">
+    <table className="aksesoris-table">
+      <thead>
+        <tr>
+          <th>Id Aksesoris</th>
+          <th>Nama Aksesoris</th>
+          <th>Jenis Aksesoris</th>
+          <th>Satuan</th>
+          <th>Harga Jual</th>
+          <th>Jumlah Stok</th>
+          <th>Foto Aksesoris</th>
+          <th>Edit</th>
+        </tr>
+      </thead>
 
+      <tbody>
+        {filteredAksesoris.map((aksesoris) => (
+          <tr key={aksesoris.id}>
+            <td data-label="Id Aksesoris : ">{aksesoris.id}</td>
+            <td data-label="Nama Aksesoris : ">{aksesoris.nama_aksesoris}</td>
+            <td data-label="Jenis Produk : ">{aksesoris.jenis_aksesoris}</td>
+            <td data-label="Satuan : ">{aksesoris.satuan}</td>
+
+            <td data-label="Harga Jual : ">
+              Rp {Number(aksesoris.harga_jual).toLocaleString("id-ID", {
+                minimumFractionDigits: 2,
+              })}
+            </td>
+
+            <td data-label="Stok : ">{aksesoris.jumlah_stok}</td>
+
+            <td data-label="Foto Aksesoris : ">
+              {aksesoris.foto_aksesoris ? (
+                <img
+                  src={`${process.env.REACT_APP_API_URL.replace("/api", "")}/storage/${aksesoris.foto_aksesoris}`}
+                  alt="Foto Aksesoris"
+                  style={{ width: "80px", height: "47px", objectFit: "cover" }}
+                />
+              ) : (
+                "-"
+              )}
+            </td>
+
+            <td>
+              <div className="action-card">
+                <button
+                  className="btn1-icon"
+                  onClick={() => handleEdit(aksesoris)}
+                >
+                  <FaEdit className="icon" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
         {/* Modal Form */}
         {showForm && (
         <div className="modal">

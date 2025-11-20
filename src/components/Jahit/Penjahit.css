@@ -173,9 +173,22 @@ border-color: #356191;
   margin: 0px 0;
   background-color: #fff;
   border-radius: 10px;
- 
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
+.penjahit-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+}
+
+.penjahit-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #3d546b;
+}
+
 
 .penjahit-table th,
 .penjahit-table td {

@@ -359,8 +359,13 @@ const Layout = () => {
                     </Link>
                   </li>
                    <li>
-                    <Link to="logs" className={`dropdown-link ${activeMenu === "hppProduk" ? "active" : ""}`} onClick={() => handleMenuClick("logs")}>
+                    <Link to="logs" className={`dropdown-link ${activeMenu === "logs" ? "active" : ""}`} onClick={() => handleMenuClick("logs")}>
                       History scan
+                    </Link>
+                  </li>
+                   <li>
+                    <Link to="seri" className={`dropdown-link ${activeMenu === "seri" ? "active" : ""}`} onClick={() => handleMenuClick("seri")}>
+                      Seri
                     </Link>
                   </li>
                   

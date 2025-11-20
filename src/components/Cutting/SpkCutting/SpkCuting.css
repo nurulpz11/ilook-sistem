@@ -463,7 +463,7 @@
 
 /* Tabel */
 table {
-    margin: 0 auto; /* Pusatkan tabel secara horizontal */
+    
     table-layout: fixed;
     width: 100%;
     border-collapse: collapse;

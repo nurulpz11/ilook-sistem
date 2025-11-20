@@ -139,9 +139,22 @@
   gap: 4px;
 }
 
+
+.sku-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.sku-label {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 0px;
+}
+
 .sku-input {
   display: flex;
-  gap: 10px;
+  gap: 5px;
   margin-top: 15px;
   
 }
@@ -201,4 +214,30 @@
 td img.product-image {
   display: block;
   margin: 0 auto;
+}
+.nomor-seri-box {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.nomor-seri-box label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.nomor-seri-input {
+  padding: 10px 14px;
+  font-size: 15px;
+  border: 1.5px solid #d1d1d1;
+  border-radius: 8px;
+  transition: 0.2s ease;
+}
+
+.nomor-seri-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.35);
+  outline: none;
 }
