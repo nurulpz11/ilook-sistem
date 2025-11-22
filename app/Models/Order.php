@@ -22,7 +22,7 @@ class Order extends Model
         'total_qty',
         'sku',
         'is_packed',
-        'nomor_seri',
+       
     ];
 
     public function items()

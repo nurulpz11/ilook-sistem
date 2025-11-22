@@ -9,6 +9,8 @@ class OrderItem extends Model
 {
     use HasFactory;
 
+
+
     protected $fillable = [
         'order_id',
         'sku',
@@ -16,10 +18,16 @@ class OrderItem extends Model
         'quantity',
         'price',
         'image',
+        'nomor_seri',
     ];
 
     public function order()
     {
         return $this->belongsTo(Order::class);
     }
+    public function serials()
+    {
+        return $this->hasMany(OrderItemSerial::class);
+    }
+
 }

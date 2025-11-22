@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrderLogsExport; 
+use App\Models\OrderItemSerial;
+
 
 
 class OrderController extends Controller
@@ -33,13 +35,15 @@ class OrderController extends Controller
   public function validateScan(Request $request, $trackingNumber)
     {
         $request->validate([
-             'nomor_seri' => 'required|string',
             'items' => 'required|array',
             'items.*.sku' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.serials' => 'required|array',
+           'items.*.serials.*' => 'required|string|min:1',
+
         ]);
 
-        $order = Order::with('items')
+        $order = Order::with(['items', 'items.serials'])
             ->where('tracking_number', $trackingNumber)
             ->first();
 
@@ -55,9 +59,11 @@ class OrderController extends Controller
 
         $expectedItems = $order->items->keyBy('sku');
 
-        foreach ($request->items as $scannedItem) {
-            $sku = $scannedItem['sku'];
-            $qty = $scannedItem['quantity'];
+        foreach ($request->items as $item) {
+
+            $sku = $item['sku'];
+            $qty = $item['quantity'];
+            $serials = $item['serials'];
 
             if (!isset($expectedItems[$sku])) {
                 return response()->json([
@@ -70,12 +76,37 @@ class OrderController extends Controller
                     'message' => "Quantity SKU {$sku} tidak cocok. Diharapkan {$expectedItems[$sku]->quantity}, tapi scan {$qty}"
                 ], 422);
             }
+
+            if (count($serials) != $qty) {
+                return response()->json([
+                    'message' => "Jumlah nomor seri SKU {$sku} harus {$qty} buah"
+                ], 422);
+            }
+
+            if (count($serials) !== count(array_unique($serials))) {
+                return response()->json([
+                    'message' => "Nomor seri SKU {$sku} ada yang duplikat"
+                ], 422);
+            }
+
+            if (empty($serials)) {
+                return response()->json([
+                    'message' => "Nomor seri SKU {$sku} tidak boleh kosong"
+                ], 422);
+            }
+
+
+            OrderItemSerial::where('order_item_id', $expectedItems[$sku]->id)->delete();
+
+            foreach ($serials as $serial) {
+                OrderItemSerial::create([
+                    'order_item_id' => $expectedItems[$sku]->id,
+                    'serial_number' => $serial,
+                ]);
+            }
         }
 
-        $order->update([
-            'is_packed' => 1,
-            'nomor_seri' => $request->nomor_seri
-        ]);
+        $order->update(['is_packed' => 1]);
 
         OrderLog::create([
             'order_id'     => $order->id,
@@ -85,8 +116,8 @@ class OrderController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Order berhasil divalidasi & ditandai packed',
-            'order' => $order
+            'message' => 'Order berhasil divalidasi',
+            'order' => $order->fresh(['items', 'items.serials']) // reload data terbaru
         ]);
     }
 
@@ -103,10 +134,16 @@ class OrderController extends Controller
 
         $status = $request->input('status');
 
-        $logs = OrderLog::with(['order' => function ($q) {
-            $q->select('id', 'order_number', 'tracking_number', 'status', 'nomor_seri', 'total_amount')
+         $logs = OrderLog::with([
+        'order' => function ($q) {
+            $q->select('id', 'order_number', 'tracking_number', 'status', 'total_amount')
+            ->with([
+                'items:id,order_id,sku,quantity',  
+                'items.serials:id,order_item_id,serial_number'
+            ])
             ->withCount('items as total_items');
-        }])
+        }
+        ])
         ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
             $q->whereBetween('created_at', [$startDate, $endDate]);
         })
@@ -116,7 +153,7 @@ class OrderController extends Controller
             });
         })
         ->orderBy('created_at', 'desc')
-           ->paginate(20);
+        ->paginate(20);
 
         return response()->json($logs);
     }

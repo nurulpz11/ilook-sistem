@@ -47,11 +47,29 @@ class SeriController extends Controller
             'qr_svg_base64' => $svgBase64
         ]);
     }
-  public function download($id)
+ public function download($id)
 {
     $seri = Seri::findOrFail($id);
 
-    $svg = QrCode::format('svg')->size(200)->generate($seri->nomor_seri);
+    // QR raw SVG
+    $qrRaw = QrCode::format('svg')
+        ->size(200)
+        ->generate($seri->nomor_seri);
+
+    // Hapus XML declaration bawaan
+    $qrClean = preg_replace('/<\?xml.*?\?>/i', '', $qrRaw);
+
+    $qrSize = 200;
+    $canvas = 300;
+    $offset = ($canvas - $qrSize) / 2;
+
+    // Bungkus ulang dengan canvas, transparan, di tengah
+    $svg = "
+<svg width='{$canvas}' height='{$canvas}' xmlns='http://www.w3.org/2000/svg'>
+    <g transform='translate({$offset}, {$offset})'>
+        {$qrClean}
+    </g>
+</svg>";
 
     $cleanName = 'qr_' . preg_replace('/[^A-Za-z0-9_\-]/', '', $seri->nomor_seri) . '.svg';
 
@@ -59,12 +77,11 @@ class SeriController extends Controller
         echo $svg;
     }, 200, [
         "Content-Type" => "image/svg+xml",
-        "Content-Disposition" => "attachment; filename=\"qr.svg\"",
-        "Cache-Control" => "no-cache, no-store, must-revalidate",
-        "Pragma" => "no-cache",
-        "Expires" => "0",
+        "Content-Disposition" => "attachment; filename=\"{$cleanName}\"",
     ]);
 }
+
+
 
 
 
