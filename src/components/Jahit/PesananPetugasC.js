@@ -16,8 +16,8 @@ const PesananPetugasC = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [showForm, setShowForm] = useState(false);  // Form untuk tambah pesanan
-    const [showFormPetugasD, setShowFormPetugasD] = useState(false);  // Form untuk verifikasi Petugas D    
+    const [showForm, setShowForm] = useState(false);  
+    const [showFormPetugasD, setShowFormPetugasD] = useState(false); 
     const [selectedPesanan, setSelectedPesanan] = useState(null);
     const [penjahitList, setPenjahitList] = useState([]);
     const [aksesorisList, setAksesorisList] = useState([]);
@@ -429,6 +429,7 @@ const fetchPage = async (page) => {
             <table>
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Aksesoris ID</th>
                   <th>Jumlah Dipesan</th>
                 </tr>
@@ -436,6 +437,7 @@ const fetchPage = async (page) => {
               <tbody>
                 {selectedPesanan.detail_pesanan.map((dp, i) => (
                   <tr key={i}>
+                    <td>{dp.aksesoris.id}</td>
                     <td>{dp.aksesoris.nama_aksesoris}</td>
                     <td>{dp.jumlah_dipesan}</td>
                   </tr>
@@ -445,7 +447,7 @@ const fetchPage = async (page) => {
             <button onClick={handleCloseModal}>Tutup</button>
           </div>
      </div>
-      )}
+  )}
 
 
 

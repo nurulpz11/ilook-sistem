@@ -52,6 +52,7 @@ const handleSearchOrder = async () => {
       ordered_qty: item.quantity,
       scanned_qty: 0,
       image: item.image,
+       serials: []
     }));
 
     setOrder(orderData);
@@ -75,67 +76,99 @@ const handleSearchOrder = async () => {
 };
 
 
-  // 🔸 2. Scan SKU produk (barcode / manual)
-  const handleScanSku = (e) => {
-    e.preventDefault();
-    const sku = scannedSku.trim();
-    if (!sku) return;
+ const handleScanSku = (e) => {
+  e.preventDefault();
+  const sku = scannedSku.trim();
+  if (!sku) return;
 
-    const itemIndex = scannedItems.findIndex((item) => item.sku == sku);
+  // ⛔ CEK: Apakah ada nomor seri yang belum diisi?
+  const skuBelumLengkap = scannedItems.find(item =>
+    item.serials.some(s => !s || s.trim() === "")
+  );
 
-    if (itemIndex === -1) {
-       setMessage(`❌ SKU ${sku} tidak ditemukan dalam order`);
-         playSound("noproduk");
-       setScannedSku("");
+  if (skuBelumLengkap) {
+    setMessage(
+      `⚠️ Harap isi semua nomor seri untuk SKU ${skuBelumLengkap.sku} sebelum scan SKU lain.`
+    );
+    playSound("error");
+    setScannedSku("");  // ⬅️ Kosongkan input SKU
     return;
-  
-    }
-    const updatedItems = [...scannedItems];
-    const target = updatedItems[itemIndex];
+  }
 
-    // Cek apakah sudah melebihi jumlah order
-    if (target.scanned_qty >= target.ordered_qty) {
-      setMessage(`⚠️ SKU ${sku} discan melebihi jumlah pesanan`);
-      playSound("error");
-    } else {
-      target.scanned_qty += 1;
-      setMessage(`✅ SKU ${sku} berhasil discan`);
-      playSound("scanproduk");
-    }
+  // 🔍 Lanjut proses scan SKU normal
+  const itemIndex = scannedItems.findIndex((item) => item.sku == sku);
 
-    setScannedItems(updatedItems);
-    setScannedSku("");
-  };
+  if (itemIndex === -1) {
+    setMessage(`❌ SKU ${sku} tidak ditemukan dalam order`);
+    playSound("noproduk");
+    setScannedSku(""); // ⬅️ Kosongkan input SKU
+    return;
+  }
 
+  const updatedItems = [...scannedItems];
+  const target = updatedItems[itemIndex];
 
+  if (target.scanned_qty >= target.ordered_qty) {
+    setMessage(`⚠️ SKU ${sku} discan melebihi jumlah pesanan`);
+    playSound("error");
+  } else {
+    target.scanned_qty += 1;
+    target.serials.push(""); // buat input serial baru
+    setMessage(`✅ SKU ${sku} berhasil discan`);
+    playSound("scanproduk");
+  }
 
-  // 🔸 3. Submit Validasi ke Backend
+  setScannedItems(updatedItems);
+  setScannedSku(""); // kosongkan input setelah scan berhasil
+};
+
   const handleSubmitValidation = async () => {
-    if (!order) return;
+  if (!order) return;
 
-    try {
-      const payload = {
-        nomor_seri: nomorSeri,
-        items: scannedItems.map((item) => ({
-          sku: item.sku,
-          quantity: item.scanned_qty,
-        })),
-      };
 
-      const response = await API.post(
-        `/orders/scan/${trackingNumber}`,
-        payload
-      );
-      setMessage(response.data.message || "✅ Order berhasil divalidasi");
-       playSound("validasiok");
-      setOrder(null);
-      setScannedItems([]);
-      setTrackingNumber("");
-    } catch (error) {
-      setMessage(error.response?.data?.message || "❌ Validasi gagal");
-      playSound("error"); 
+  for (let item of scannedItems) {
+    const emptySerial = item.serials.some(s => !s || s.trim() === "");
+    if (emptySerial) {
+      setMessage(`⚠️ Ada nomor seri SKU ${item.sku} yang masih kosong.`);
+      playSound("error");
+      return;
     }
-  };
+
+    if (item.serials.length !== item.scanned_qty) {
+      setMessage(`⚠️ Jumlah nomor seri SKU ${item.sku} tidak sesuai qty scan`);
+      playSound("error");
+      return;
+    }
+  }
+
+  try {
+    const payload = {
+      items: scannedItems.map((item) => ({
+        sku: item.sku,
+        quantity: item.scanned_qty,
+       serials: item.serials,
+      })),
+    };
+
+    const response = await API.post(
+      `/orders/scan/${trackingNumber}`,
+      payload
+    );
+
+    setMessage(response.data.message || "✅ Order berhasil divalidasi");
+    playSound("validasiok");
+
+    // RESET
+    setOrder(null);
+    setScannedItems([]);
+    setTrackingNumber("");
+
+  } catch (error) {
+    setMessage(error.response?.data?.message || "❌ Validasi gagal");
+    playSound("error");
+  }
+};
+
   
 
   return (
@@ -185,6 +218,7 @@ const handleSearchOrder = async () => {
                 <th>Qty Pesanan</th>
                 <th>Qty Scan</th>
                 <th>Gambar</th>
+                <th>Nomor Seri</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -207,6 +241,24 @@ const handleSearchOrder = async () => {
                       <span style={{ color: "#aaa", fontSize: "13px" }}>No Image</span>
                     )}
                   </td>
+
+               <td>
+                {item.serials.map((serial, sIdx) => (
+                  <input
+                    key={sIdx}
+                    type="text"
+                    value={serial}
+                    placeholder={`Serial ${sIdx + 1}`}
+                    onChange={(e) => {
+                      const updated = [...scannedItems];
+                      updated[idx].serials[sIdx] = e.target.value;
+                      setScannedItems(updated);
+                    }}
+                    className="nomor-seri-input-table"
+                  />
+                ))}
+              </td>
+
                   <td>
                     {item.scanned_qty === item.ordered_qty ? (
                       <span className="status-ok">
@@ -224,17 +276,6 @@ const handleSearchOrder = async () => {
           </table>
 
 
-          {/* Input Nomor Seri */}
-        <div className="nomor-seri-box">
-          <label>Nomor Seri</label>
-          <input
-            type="text"
-            placeholder="Scan / input Nomor Seri..."
-            value={nomorSeri}
-            onChange={(e) => setNomorSeri(e.target.value)}
-            className="nomor-seri-input"
-          />
-        </div>
 
 
          {/* Input Scan SKU */}

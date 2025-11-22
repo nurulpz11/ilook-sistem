@@ -14,6 +14,8 @@ const Logs = () => {
   const [exporting, setExporting] = useState(false);
   const [status, setStatus] = useState("");
   const today = new Date().toISOString().slice(0, 10);
+  const [selectedLogs, setSelectedLogs] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -116,6 +118,16 @@ const fetchLogs = async (
       setExporting(false);
     }
   };
+
+  const handleOpenModal = (item) => {
+  setSelectedLogs(item);
+  setShowModal(true);
+};
+const handleCloseModal = () => {
+  setShowModal(false);
+  setSelectedLogs(null);
+};
+
   
  return (
    <div>
@@ -215,6 +227,7 @@ const fetchLogs = async (
               <th>Tanggal</th>
               <th>Nomor Seri</th>
               <th>Status</th>
+              <th>Aksi</th>
             
             
             
@@ -228,8 +241,18 @@ const fetchLogs = async (
                 <td data-label="Total : ">{tc.order?.total_items}</td>
                 <td data-label="Total : ">Rp. {tc.order?.total_amount}</td>
                 <td data-label="tanggal : ">{tc.created_at}</td>
-                <td data-label="tanggal : ">{tc.order?.nomor_seri}</td>
-                <td data-label="Total : ">{tc.order?.status}</td>
+                <td data-label="Nomor Seri : ">
+                {tc.order?.items
+                  ?.flatMap((it) => it.serials?.map((s) => s.serial_number))
+                  .join(", ")}
+
+                                </td>
+                <td data-label="Status : ">{tc.order?.status}</td>
+                 <td data-label="No Seri:">
+                  <button className="link-button blue" onClick={() => handleOpenModal(tc)}>
+                    Detail Nomor Seri
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -258,10 +281,39 @@ const fetchLogs = async (
           Next
         </button>
       </div>
+    </div>
 
-        </div>
+  {/* Modal */}
+ {showModal && selectedLogs && (
+       <div className="modal-pengiriman">
+    <div className="modal-content-pengiriman">
+         
+            <h3>Detail Nomor Seri - ID Logs #{selectedLogs.id}</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                 <th>Nomor Seri</th>
+                </tr>
+              </thead>
+              <tbody>
+             {selectedLogs.order?.items?.map((item) =>
+              item.serials?.map((serial) => (
+                <tr key={serial.serial_number}>
+                  <td>{item.sku}</td>
+                  <td>{serial.serial_number}</td>
+                </tr>
+              ))
+            )}
 
-  
+
+              </tbody>
+            </table>
+            <button onClick={handleCloseModal}>Tutup</button>
+          </div>
+     </div>
+  )}
+
 </div>
   );
 };

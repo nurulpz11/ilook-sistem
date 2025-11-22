@@ -8,6 +8,9 @@ const Seri = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [newSeri, setNewSeri] = useState({
+    nomor_seri: ""
+  });
 
   useEffect(() => {
     const fetchSeri = async () => {
@@ -43,6 +46,41 @@ const downloadQR = async (id, nomorSeri) => {
   }
 };
 
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+
+  console.log("Data yang dikirim:", newSeri.nomor_seri);
+
+  const formData = new FormData();
+  formData.append("nomor_seri", newSeri.nomor_seri);
+
+  try {
+    const response = await API.post("/seri", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    alert("Seri berhasil ditambahkan!");
+    setSeri((prev) => [...prev, response.data]);
+    setShowForm(false);
+    setNewSeri({ nomor_seri: "" });
+
+  } catch (error) {
+    console.error("Error:", error.response?.data?.message || error.message);
+    alert(error.response?.data?.message || "Terjadi kesalahan saat menambahkan seri.");
+  }
+};
+
+
+  
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewSeri((prev) => ({
+        ...prev,
+        [name]: value, 
+    }));
+};
 
 
 
@@ -98,25 +136,61 @@ const downloadQR = async (id, nomorSeri) => {
                     </td>
 
                   <td>
-  <button
-    onClick={() => downloadQR(item.id, item.nomor_seri)}
-    style={{
-      padding: "6px 12px",
-      background: "black",
-      color: "white",
-      borderRadius: "5px",
-      cursor: "pointer",
-    }}
-  >
-    Download QR
-  </button>
-</td>
+                <button
+                  onClick={() => downloadQR(item.id, item.nomor_seri)}
+                  style={{
+                    padding: "6px 12px",
+                    background: "black",
+                    color: "white",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Download QR
+                </button>
+              </td>
 
                   </tr>
                 ))}
             </tbody>
           </table>
         </div>
+
+          {/* Modal Form */}
+        {showForm && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>Tambah Aksesoris </h2>
+            <form onSubmit={handleFormSubmit} className="modern-form">
+              <div className="form-group">
+                <label>Nomor Seri:</label>
+                <input
+                  type="text"
+                  name="nomor_seri"
+                  value={newSeri.nomor_seri}
+                  onChange={handleInputChange}
+                  placeholder="Masukkan nomor_seri"
+                  required
+                />
+              </div>
+            
+              <div className="form-actions">
+                <button type="submit" className="btn btn-submit">
+                  Simpan
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-cancel"
+                  onClick={() => setShowForm(false)}
+                >
+                  Batal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       </div>
     </div>
   );
