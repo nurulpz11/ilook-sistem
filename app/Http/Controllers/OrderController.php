@@ -136,6 +136,8 @@ class OrderController extends Controller
 
         $tracking = $request->input('tracking_number');
 
+        $performedBy = $request->input('performed_by');
+
          $logs = OrderLog::with([
         'order' => function ($q) {
             $q->select('id', 'order_number', 'tracking_number', 'status', 'total_amount')
@@ -159,6 +161,10 @@ class OrderController extends Controller
                 $sub->where('tracking_number', 'LIKE', "%{$tracking}%");
             });
         })
+       ->when($performedBy, function ($q) use ($performedBy) {
+           $q->where('performed_by', 'LIKE', "%{$performedBy}%");
+
+        })
         ->orderBy('created_at', 'desc')
         ->paginate(20);
 
@@ -178,8 +184,9 @@ class OrderController extends Controller
             : now()->endOfDay();
 
         $action = $request->input('action');
-
         $status = $request->input('status');
+        $tracking = $request->input('tracking_number');
+        $performedBy = $request->input('performed_by');
 
         $query = DB::table('order_logs')
             ->join(DB::raw('`order`'), 'order.id', '=', 'order_logs.order_id')
@@ -194,6 +201,14 @@ class OrderController extends Controller
         if ($status) {
             $query->whereRaw('LOWER(`order`.status) = ?', [strtolower($status)]);
         }
+        
+        if ($tracking) {
+            $query->where('order.tracking_number', 'LIKE', "%{$tracking}%");
+        }
+
+        if ($performedBy) {
+            $query->where('order_logs.performed_by', $performedBy);
+        }
 
         $report = $query->get();
 
@@ -204,6 +219,8 @@ class OrderController extends Controller
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),
                  'status'     => $status ?? 'Semua',
+                 'tracking_number' => $tracking ?? 'Semua',
+                 'performed_by' => $performedBy ?? 'Semua',
             ],
             'data' => $report
         ]);

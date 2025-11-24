@@ -104,4 +104,11 @@ class AuthController extends Controller {
             ],
         ]);
     }
+
+    public function getKasir()
+    {
+        $kasir = User::role('kasir')->select('id', 'name')->get();
+        return response()->json($kasir);
+    }
+
 }
