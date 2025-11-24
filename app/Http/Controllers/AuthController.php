@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Illuminate\Validation\Rule;
 
-use Tymon\JWTAuth\Facades\JWTAuth; // Tambahkan ini
-use Illuminate\Support\Facades\Auth; // Tambahkan ini juga
+use Tymon\JWTAuth\Facades\JWTAuth; 
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller {
     
@@ -22,7 +22,7 @@ class AuthController extends Controller {
                 'name' => 'required|string',
                 'email' => 'required|string|email|unique:users',
                 'password' => 'required|string|min:6|confirmed',
-              'role' => ['required', Rule::in(Role::pluck('name')->toArray())],
+                'role' => ['required', Rule::in(Role::pluck('name')->toArray())],
                 'id_penjahit' => 'nullable|exists:penjahit_cmt,id_penjahit',
                 'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:15000',
             ]);
@@ -99,7 +99,7 @@ class AuthController extends Controller {
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $role, // Tambahkan role di sini
+                'role' => $role, 
                 'foto' => $user->foto,
             ],
         ]);

@@ -16,8 +16,8 @@ class RoleSeeder extends Seeder
         Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'api']);
         Role::firstOrCreate(['name' => 'penjahit', 'guard_name' => 'api']);
         Role::firstOrCreate(['name' => 'staff_bawah', 'guard_name' => 'api']);
-        
-        // Assign role ke user tertentu (misalnya user ID 1 adalah super admin)
+        Role::firstOrCreate(['name' => 'kasir', 'guard_name' =>'api']);
+      
         $user = User::find(1);
         if ($user) {
             $user->assignRole('super-admin');
