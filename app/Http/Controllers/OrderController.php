@@ -134,6 +134,8 @@ class OrderController extends Controller
 
         $status = $request->input('status');
 
+        $tracking = $request->input('tracking_number');
+
          $logs = OrderLog::with([
         'order' => function ($q) {
             $q->select('id', 'order_number', 'tracking_number', 'status', 'total_amount')
@@ -150,6 +152,11 @@ class OrderController extends Controller
         ->when($status, function ($q) use ($status) {
             $q->whereHas('order', function ($sub) use ($status) {
                 $sub->whereRaw('LOWER(status) = ?', [strtolower($status)]);
+            });
+        })
+        ->when ($tracking, function ($q) use ($tracking) {
+            $q->whereHas('order', function ($sub) use ($tracking) {
+                $sub->where('tracking_number', 'LIKE', "%{$tracking}%");
             });
         })
         ->orderBy('created_at', 'desc')
