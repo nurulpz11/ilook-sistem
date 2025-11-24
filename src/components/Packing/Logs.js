@@ -17,6 +17,8 @@ const Logs = () => {
   const [selectedLogs, setSelectedLogs] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [tracking, setTracking] = useState("");
+  const [kasirList, setKasirList] = useState([]);
+  const [performedBy, setPerformedBy] = useState("");
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -35,6 +37,7 @@ const fetchLogs = async (
         page: page,
         start_date: start,
         end_date: end,
+         performed_by: performedBy,
         ...(stat && { status: stat }),
         ...(tracking && { tracking_number: tracking }),
       },
@@ -54,13 +57,23 @@ const fetchLogs = async (
 };
 
  
-  const fetchSummary = async (start = today, end = today, stat = status) => {
+  const fetchSummary = async (
+    start = today,
+    end = today,
+    stat = status,
+    performed = performedBy,
+    track = tracking
+  ) => {
     try {
       setLoadingSummary(true);
       const response = await API.post("/orders/summary", {
         start_date: start,
         end_date: end,
        ...(stat && { status: stat }),
+       ...(performed && { performed_by: performed }),
+       ...(track && { tracking_number: track }),
+
+
       });
       if (response.data.data.length > 0) {
         setSummary(response.data.data[0]);
@@ -89,8 +102,9 @@ const fetchLogs = async (
       return;
     }
 
-    fetchSummary(startDate, endDate, status);
-    fetchLogs(startDate, endDate, status, 1); 
+  fetchSummary(startDate, endDate, status, performedBy, tracking);
+  fetchLogs(startDate, endDate, status, 1);
+
 };
 
 
@@ -129,6 +143,13 @@ const handleCloseModal = () => {
   setShowModal(false);
   setSelectedLogs(null);
 };
+
+
+useEffect(() => {
+  API.get('/users/kasir')
+    .then(res => setKasirList(res.data))
+    .catch(err => console.log(err));
+}, []);
 
   
  return (
@@ -190,6 +211,17 @@ const handleCloseModal = () => {
               onChange={(e) => setTracking(e.target.value)}
               className="input-tracking"
           />
+
+          <select 
+            value={performedBy}
+            onChange={(e) => setPerformedBy(e.target.value)}
+          >
+            <option value="">Semua Kasir</option>
+            {kasirList.map(u => (
+              <option key={u.name} value={u.name}>{u.name}</option>
+            ))}
+          </select>
+
 
           <button onClick={handleFilter} className="btn-summary">
             Tampilkan
