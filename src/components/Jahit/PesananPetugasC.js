@@ -21,8 +21,8 @@ const PesananPetugasC = () => {
     const [selectedPesanan, setSelectedPesanan] = useState(null);
     const [penjahitList, setPenjahitList] = useState([]);
     const [aksesorisList, setAksesorisList] = useState([]);
-     const [verifikasiList, setVerifikasiList] = useState([]);
-const [barcodeInput, setBarcodeInput] = useState("");
+    const [verifikasiList, setVerifikasiList] = useState([]);
+    const [barcodeInput, setBarcodeInput] = useState("");
 
 
     const [newData, setNewData] = useState({

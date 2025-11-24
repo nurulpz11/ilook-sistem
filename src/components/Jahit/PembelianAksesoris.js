@@ -53,7 +53,7 @@ const handleFormSubmit = async (e) => {
     
   
     const formData = new FormData();
-    formData.append("user_id", userId); // ⬅ set di sini
+    formData.append("user_id", userId); 
     formData.append("aksesoris_id", newPembelian.aksesoris_id);
     formData.append("jumlah", newPembelian.jumlah);
     formData.append("harga_satuan", newPembelian.harga_satuan);
