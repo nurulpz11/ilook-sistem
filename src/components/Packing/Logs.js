@@ -16,6 +16,7 @@ const Logs = () => {
   const today = new Date().toISOString().slice(0, 10);
   const [selectedLogs, setSelectedLogs] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [tracking, setTracking] = useState("");
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -35,6 +36,7 @@ const fetchLogs = async (
         start_date: start,
         end_date: end,
         ...(stat && { status: stat }),
+        ...(tracking && { tracking_number: tracking }),
       },
     });
 
@@ -82,13 +84,13 @@ const fetchLogs = async (
 
 
   const handleFilter = () => {
-  if (!startDate || !endDate) {
-    alert("Silakan pilih tanggal awal dan akhir!");
-    return;
-  }
+    if (!startDate || !endDate) {
+      alert("Silakan pilih tanggal awal dan akhir!");
+      return;
+    }
 
-  fetchSummary(startDate, endDate, status);
-  fetchLogs(startDate, endDate, status, 1); 
+    fetchSummary(startDate, endDate, status);
+    fetchLogs(startDate, endDate, status, 1); 
 };
 
 
@@ -171,21 +173,27 @@ const handleCloseModal = () => {
             <option value="CANCELLED">CANCELLED</option>
           </select>
 
+      
+          <button
+                onClick={handleExport}
+                className="btn-export"
+                disabled={exporting}
+              >
+              <FaFileExcel style={{ marginRight: 6 }} />
+              {exporting ? "Mengunduh..." : "Export Excel"}
+          </button>
+
+          <input
+              type="text"
+              placeholder="Cari Tracking Number..."
+              value={tracking}
+              onChange={(e) => setTracking(e.target.value)}
+              className="input-tracking"
+          />
+
           <button onClick={handleFilter} className="btn-summary">
             Tampilkan
           </button>
-          {/* 🔹 Tombol Export Excel */}
-            <button
-            onClick={handleExport}
-            className="btn-export"
-             disabled={exporting}
-           >
-           <FaFileExcel style={{ marginRight: 6 }} />
-           {exporting ? "Mengunduh..." : "Export Excel"}
-          </button>
-
-
-        
         </div>
         
       </div>
