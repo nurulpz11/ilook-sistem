@@ -117,12 +117,11 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Order berhasil divalidasi',
-            'order' => $order->fresh(['items', 'items.serials']) // reload data terbaru
+            'order' => $order->fresh(['items', 'items.serials']) 
         ]);
     }
 
-
-  public function getAllLogs(Request $request)
+public function getAllLogs(Request $request)
     {
         $startDate = $request->input('start_date')
             ? Carbon::parse($request->input('start_date'))->startOfDay()
@@ -212,6 +211,13 @@ class OrderController extends Controller
 
         $report = $query->get();
 
+        $kasirSummary = DB::table('order_logs')
+            ->join(DB::raw('`order`'), 'order.id', '=', 'order_logs.order_id')
+            ->whereBetween('order_logs.created_at', [$startDate, $endDate])
+            ->select('order_logs.performed_by', DB::raw('COUNT(*) as total_orders'))
+            ->groupBy('order_logs.performed_by')
+            ->get();
+
 
         return response()->json([
             'message' => 'Summary report berhasil diambil',
@@ -222,7 +228,8 @@ class OrderController extends Controller
                  'tracking_number' => $tracking ?? 'Semua',
                  'performed_by' => $performedBy ?? 'Semua',
             ],
-            'data' => $report
+            'data' => $report,
+            'kasir_summary' => $kasirSummary 
         ]);
     }
 
