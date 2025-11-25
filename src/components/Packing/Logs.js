@@ -19,6 +19,7 @@ const Logs = () => {
   const [tracking, setTracking] = useState("");
   const [kasirList, setKasirList] = useState([]);
   const [performedBy, setPerformedBy] = useState("");
+  const [kasirSummary, setKasirSummary] = useState([]);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -43,7 +44,7 @@ const fetchLogs = async (
       },
     });
 
-    setLogs(response.data.data); // ⬅ data hasil paginasi
+    setLogs(response.data.data); 
     setPagination({
       current_page: response.data.current_page,
       last_page: response.data.last_page,
@@ -80,6 +81,7 @@ const fetchLogs = async (
       } else {
         setSummary({ total_order: 0, total_items: 0, total_amount: 0 });
       }
+      setKasirSummary(response.data.kasir_summary || []);
     } catch (error) {
       console.error(error);
       setError("Gagal mengambil summary.");
@@ -107,8 +109,6 @@ const fetchLogs = async (
 
 };
 
-
-  // 🔹 Fungsi Export ke Excel
   const handleExport = async () => {
     try {
       setExporting(true);
@@ -163,35 +163,52 @@ useEffect(() => {
          <div className="logs-container">
       
 
-      {/* Filter tanggal */}
       <div className="filter-container">
         <div className="filter-group">
-          <label>
-            <FaCalendarAlt className="calendar-icon" /> Dari:
-          </label>
+          
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
           <label>
-            <FaCalendarAlt className="calendar-icon" /> Sampai:
+            -
           </label>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
+         <input
+              type="text"
+              placeholder="Cari Tracking Number..."
+              value={tracking}
+              onChange={(e) => setTracking(e.target.value)}
+              className="input-tracking"
+          />
 
           
           {/* ✅ Dropdown status */}
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select 
+          value={status} 
+          onChange={(e) => setStatus(e.target.value)}>
             <option value="">Semua Status</option>
             <option value="READY_TO_SHIP">READY_TO_SHIP</option>
             <option value="PAID">PAID</option>
             <option value="SHIPPING">SHIPPING</option>
             <option value="DELIVERED">DELIVERED</option>
             <option value="CANCELLED">CANCELLED</option>
+          </select>
+
+
+          <select 
+            value={performedBy}
+            onChange={(e) => setPerformedBy(e.target.value)}
+          >
+            <option value=""> Semua Kasir </option>
+            {kasirList.map(u => (
+              <option key={u.name} value={u.name}>{u.name}</option>
+            ))}
           </select>
 
       
@@ -204,23 +221,7 @@ useEffect(() => {
               {exporting ? "Mengunduh..." : "Export Excel"}
           </button>
 
-          <input
-              type="text"
-              placeholder="Cari Tracking Number..."
-              value={tracking}
-              onChange={(e) => setTracking(e.target.value)}
-              className="input-tracking"
-          />
-
-          <select 
-            value={performedBy}
-            onChange={(e) => setPerformedBy(e.target.value)}
-          >
-            <option value="">Semua Kasir</option>
-            {kasirList.map(u => (
-              <option key={u.name} value={u.name}>{u.name}</option>
-            ))}
-          </select>
+      
 
 
           <button onClick={handleFilter} className="btn-summary">
@@ -230,7 +231,7 @@ useEffect(() => {
         
       </div>
 
-      {/* Summary Cards */}
+  
       <div className="summary-cards">
         <div className="card-summary card-blue">
           <h3>Total Pesanan</h3>
@@ -252,9 +253,42 @@ useEffect(() => {
                 )}`}
           </p>
         </div>
+
+       <div className="card-summary card-white">
+          {kasirSummary.length === 0 ? (
+            <div className="kasir-empty">
+              Tidak ada data kasir
+            </div>
+          ) : (
+            <table className="kasir-table">
+              <thead>
+                <tr>
+                  <th>Kasir</th>
+                  <th>Pesanan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {kasirSummary.map((item) => (
+                  <tr key={item.performed_by}>
+                    <td>{item.performed_by}</td>
+                    <td>{item.total_orders}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+
       </div>
       </div>
-          
+
+
+      <div className="summary-cards">
+       
+      </div>
+
+
       </div>
         <div className="table-container">
         <table className="penjahit-table">
@@ -323,7 +357,7 @@ useEffect(() => {
       </div>
     </div>
 
-  {/* Modal */}
+
  {showModal && selectedLogs && (
        <div className="modal-pengiriman">
     <div className="modal-content-pengiriman">
